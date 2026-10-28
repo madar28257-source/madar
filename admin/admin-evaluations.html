@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إضافة تقييم — لوحة تحكم مدار</title>
+  
+  <link rel="stylesheet" href="../base.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/admin-evaluations.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+  <div class="bg-orbs"></div>
+
+  <aside class="sidebar">
+    <div class="logo">MADAR</div>
+    <nav class="nav-links">
+      <a href="admin.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg><span>لوحة التحكم</span></a>
+      <a href="admin-exams.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg><span>الامتحانات</span></a>
+      <a href="admin-evaluations.html" class="active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg><span>التقييمات</span></a>
+      <a href="admin-books.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path></svg><span>المكتبة</span></a>
+      <a href="admin-students.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg><span>الطلاب</span></a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <div class="top-bar">
+      <h2>إنشاء تقييم جديد</h2>
+      <div class="admin-info">
+        <span style="font-weight:600; font-size:0.9rem;" id="admin-name">جاري التحميل...</span>
+        <div class="admin-avatar">A</div>
+      </div>
+    </div>
+
+    <div class="form-panel glass-panel">
+      <h3 style="margin-bottom: 20px; color: #fff;">بيانات التقييم</h3>
+      <div class="form-grid">
+        
+        <div class="input-group">
+          <label>السنة الدراسية</label>
+          <select id="eval-grade">
+            <option value="" disabled selected>اختر السنة...</option>
+            <option value="1-prep">الأول الإعدادي</option>
+            <option value="2-prep">الثاني الإعدادي</option>
+            <option value="3-prep">الثالث الإعدادي</option>
+            <option value="1-sec">الأول الثانوي</option>
+            <option value="2-sec">الثاني الثانوي</option>
+          </select>
+        </div>
+
+        <div class="input-group hidden-field" id="system-group">
+          <label>النظام</label>
+          <select id="eval-system">
+            <option value="general">عام</option>
+            <option value="baccalaureate">بكالوريا</option>
+          </select>
+        </div>
+
+        <div class="input-group hidden-field" id="track-group">
+          <label>المسار</label>
+          <select id="eval-track">
+            <option value="medicine">الطب</option>
+            <option value="engineering">الهندسة</option>
+            <option value="business">الأعمال</option>
+            <option value="arts">الآداب</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label>المادة الدراسية</label>
+          <input type="text" id="eval-subject" placeholder="مثال: الرياضيات، العلوم...">
+        </div>
+
+        <div class="input-group">
+          <label>عنوان التقييم</label>
+          <input type="text" id="eval-title" placeholder="مثال: التقييم الأسبوعي الأول">
+        </div>
+        
+        <div class="input-group">
+          <label>المدة (بالدقائق)</label>
+          <input type="number" id="eval-duration" value="15" min="1">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-panel glass-panel">
+      <h3 style="margin-bottom: 20px; color: #fff;">أسئلة التقييم</h3>
+      <div id="questions-container"></div>
+      <button class="btn-add-q" id="add-question-btn">+ إضافة سؤال جديد</button>
+      <button class="btn-save" id="save-eval-btn">حفظ التقييم في قاعدة البيانات</button>
+    </div>
+  </main>
+
+  <script type="module" src="../js/admin-evaluations.js"></script>
+</body>
+</html>

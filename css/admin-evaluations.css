@@ -1,0 +1,54 @@
+/* ستايل خاص بصفحة التقييمات */
+.hidden-field { display: none; }
+
+.question-block { 
+  background: rgba(255, 255, 255, 0.02); 
+  border: 1px solid var(--glass-border); 
+  border-radius: var(--radius-sm); 
+  padding: 20px; 
+  margin-bottom: 20px; 
+  position: relative; 
+  animation: fadeIn 0.3s ease-out; 
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+.q-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 15px; 
+  border-bottom: 1px solid rgba(255,255,255,0.05); 
+  padding-bottom: 10px; 
+}
+
+.q-header h4 { color: var(--primary-light); font-size: 1.1rem; }
+
+.btn-delete-q { 
+  background: rgba(239, 68, 68, 0.1); 
+  color: #ef4444; 
+  border: 1px solid rgba(239, 68, 68, 0.3); 
+  padding: 5px 12px; 
+  border-radius: 6px; 
+  cursor: pointer; 
+  transition: var(--transition); 
+}
+.btn-delete-q:hover { background: #ef4444; color: #fff; }
+
+.options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+
+.btn-add-q { 
+  width: 100%; 
+  padding: 15px; 
+  background: rgba(124, 58, 237, 0.1); 
+  border: 1px dashed var(--primary); 
+  color: var(--primary-light); 
+  border-radius: var(--radius-sm); 
+  font-family: inherit; 
+  font-size: 1rem; 
+  font-weight: 700; 
+  cursor: pointer; 
+  transition: var(--transition); 
+  margin-bottom: 30px; 
+}
+.btn-add-q:hover { background: rgba(124, 58, 237, 0.2); }
