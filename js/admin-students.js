@@ -1,8 +1,10 @@
 import { auth, db } from "../firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import { collection, query, where, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
-// حماية الصفحة
+let allStudents = []; 
+let currentFilter = "all";
+
 onAuthStateChanged(auth, (user) => {
   if (user) {
     document.getElementById("admin-name").textContent = user.displayName || "الأدمن";
@@ -14,48 +16,95 @@ onAuthStateChanged(auth, (user) => {
 
 async function loadStudents() {
   const tbody = document.getElementById("students-table-body");
-
   try {
-    // جلب الطلاب بس (اللي الـ role بتاعهم student)
     const q = query(collection(db, "users"), where("role", "==", "student"));
     const querySnapshot = await getDocs(q);
+    allStudents = [];
 
-    tbody.innerHTML = ""; // مسح علامة التحميل
-
-    if (querySnapshot.empty) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted); padding: 30px;">لا يوجد طلاب مسجلين حتى الآن.</td></tr>`;
-      return;
-    }
-
-    let count = 1;
     querySnapshot.forEach((doc) => {
-      const student = doc.data();
-      
-      // تنسيق التاريخ
-      let dateStr = "غير معروف";
-      if (student.createdAt) {
-        // لو التاريخ متسجل كـ Timestamp في Firebase
-        if (student.createdAt.toDate) {
-          dateStr = student.createdAt.toDate().toLocaleDateString('ar-EG');
-        } else {
-          dateStr = new Date(student.createdAt).toLocaleDateString('ar-EG');
-        }
-      }
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td style="color: var(--text-muted);">${count}</td>
-        <td class="student-name">${student.name}</td>
-        <td style="color: var(--primary-light); direction: ltr; text-align: right;">${student.email}</td>
-        <td>${dateStr}</td>
-        <td><span class="status-badge active">نشط</span></td>
-      `;
-      tbody.appendChild(tr);
-      count++;
+      allStudents.push({ id: doc.id, ...doc.data() });
     });
+
+    allStudents.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    renderTable(currentFilter);
 
   } catch (error) {
     console.error("Error loading students:", error);
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: #ef4444; padding: 30px;">حدث خطأ أثناء تحميل البيانات.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: #ef4444;">حدث خطأ أثناء التحميل.</td></tr>`;
   }
 }
+
+function renderTable(gradeFilter) {
+  const tbody = document.getElementById("students-table-body");
+  tbody.innerHTML = "";
+
+  const filteredStudents = gradeFilter === "all" 
+    ? allStudents 
+    : allStudents.filter(s => s.gradeLevel === gradeFilter);
+
+  if (filteredStudents.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 20px;">لا يوجد طلاب في هذا الصف.</td></tr>`;
+    return;
+  }
+
+  const gradeNames = {
+    "1-prep": "أولى إعدادي", "2-prep": "تانية إعدادي", "3-prep": "تالتة إعدادي",
+    "1-sec": "أولى ثانوي", "2-sec": "تانية ثانوي"
+  };
+
+  filteredStudents.forEach((student, index) => {
+    let dateStr = "غير معروف";
+    if (student.createdAt) {
+      dateStr = new Date(student.createdAt).toLocaleDateString('ar-EG');
+    }
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td style="color: var(--text-muted);">${index + 1}</td>
+      <td class="student-name">${student.name}</td>
+      <td style="color: var(--accent); font-weight: 600; direction: ltr; text-align: right;">${student.phone || 'غير مسجل'}</td>
+      <td style="color: var(--primary-light); direction: ltr; text-align: right;">${student.email}</td>
+      <td><span class="subject-badge">${gradeNames[student.gradeLevel] || student.gradeLevel}</span></td>
+      <td>${dateStr}</td>
+      <!-- 🔥 زرار الإزالة هنا -->
+      <td><button class="btn-action" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" onclick="deleteStudent('${student.id}', '${student.name}')">إزالة</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// 🔥 دالة مسح الطالب
+window.deleteStudent = async (userId, userName) => {
+  Swal.fire({
+    title: 'هل أنت متأكد؟',
+    text: `إنت على وشك إزالة الطالب (${userName}) من المنصة نهائياً.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#2a2a3e',
+    confirmButtonText: 'نعم، إزالة',
+    cancelButtonText: 'إلغاء',
+    background: '#12121f', color: '#fff'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        await deleteDoc(doc(db, "users", userId));
+        Swal.fire({ icon: 'success', title: 'تمت الإزالة', text: 'تم حذف بيانات الطالب من المنصة.', background: '#12121f', color: '#fff' }).then(() => {
+          loadStudents(); 
+        });
+      } catch (error) {
+        console.error("Error deleting student:", error);
+        Swal.fire({ icon: 'error', title: 'خطأ', text: 'حدث خطأ أثناء محاولة إزالة الطالب.', background: '#12121f', color: '#fff' });
+      }
+    }
+  });
+};
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    currentFilter = e.target.dataset.grade;
+    renderTable(currentFilter);
+  });
+});
