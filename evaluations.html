@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>التقييمات — منصة MADAR</title>
+  
+  <link rel="stylesheet" href="base.css">
+  <link rel="stylesheet" href="css/evaluations.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+  <div class="bg-orbs"></div>
+
+  <nav class="navbar">
+    <div class="nav-right"><span class="logo">🎓 MADAR</span></div>
+    <div class="nav-center">
+      <a href="dashboard.html">الرئيسية</a>
+      <a href="books.html">الكتب PDF</a>
+      <a href="evaluations.html" class="active">التقييمات</a>
+      <a href="schedule.html">جدول الامتحانات</a>
+    </div>
+    <div class="nav-left">
+      <div class="user-menu">
+        <div class="user-profile" id="profile-btn">
+          <div class="avatar" id="user-avatar">M</div>
+          <span class="user-name" id="nav-name">جاري التحميل...</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="dropdown-menu" id="dropdown">
+          <a href="profile.html">الملف الشخصي</a>
+          <div class="divider"></div>
+          <a href="#" class="logout" id="logout-btn">تسجيل الخروج</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="page-header">
+      <h1>التقييمات الأسبوعية 📊</h1>
+      <p id="header-subtitle">تابع تقدمك من خلال التقييمات والواجبات الخاصة بصفك الدراسي.</p>
+    </div>
+    <div class="evaluations-grid" id="evaluations-container">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>جاري تحميل التقييمات...</p>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="js/evaluations.js"></script>
+</body>
+</html>

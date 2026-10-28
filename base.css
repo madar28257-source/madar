@@ -1,0 +1,107 @@
+/* ============================================
+   مدار — التصميم الأساسي (Cyber-EdTech Style)
+   ============================================ */
+
+/* استخدام خط Readex Pro زي ما جيميناي اقترح */
+@import url('https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* الألوان الأساسية */
+  --bg-color: #0B0C10;          /* أسود تقني أعمق */
+  --surface-color: rgba(25, 27, 38, 0.4); /* لون الكروت (زجاجي) */
+  
+  /* ألوان النيون واللمعان */
+  --primary: #7c3aed;           /* بنفسجي */
+  --primary-light: #a78bfa;     /* بنفسجي فاتح */
+  --accent: #22d3ee;            /* سماوي نيون */
+  
+  /* ألوان النصوص */
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  
+  /* إعدادات الزجاج */
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-blur: blur(16px);
+  
+  /* حواف وحركة */
+  --radius: 16px;
+  --radius-sm: 10px;
+  --font-main: 'Readex Pro', system-ui, sans-serif;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
+  direction: rtl;
+}
+
+/* الخلفية السينمائية المتحركة */
+.bg-orbs {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  z-index: -1;
+  overflow: hidden;
+  background: var(--bg-color);
+}
+
+.bg-orbs::before,
+.bg-orbs::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.5;
+}
+
+.bg-orbs::before {
+  width: 600px; height: 600px;
+  background: var(--primary);
+  top: -150px; right: -100px;
+  animation: floatOrb 20s infinite alternate ease-in-out;
+}
+
+.bg-orbs::after {
+  width: 500px; height: 500px;
+  background: var(--accent);
+  bottom: -100px; left: -100px;
+  animation: floatOrb2 25s infinite alternate ease-in-out;
+}
+
+@keyframes floatOrb {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-100px, 150px) scale(1.1); }
+}
+@keyframes floatOrb2 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(150px, -100px) scale(1.2); }
+}
+
+/* كلاسات الزجاج */
+.glass-panel {
+  background: var(--surface-color);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  transition: var(--transition);
+}
+
+h1, h2, h3, h4 { line-height: 1.2; font-weight: 700; color: #fff; }
+a { color: var(--primary-light); text-decoration: none; transition: var(--transition); }
+a:hover { color: var(--accent); }
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-color); }
+::-webkit-scrollbar-thumb { background: #2a2a3e; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+::selection { background: var(--primary); color: #fff; }
+.hidden { display: none !important; }

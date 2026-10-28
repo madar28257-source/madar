@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>جدول الامتحانات — منصة MADAR</title>
+  
+  <link rel="stylesheet" href="base.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    .navbar { background: rgba(11, 12, 16, 0.7); backdrop-filter: blur(16px); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100; }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .nav-right .logo { font-size: 1.5rem; font-weight: 700; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.2); }
+    .nav-center { display: flex; gap: 30px; }
+    .nav-center a { color: var(--text-muted); font-weight: 500; font-size: 0.95rem; position: relative; text-decoration: none; transition: var(--transition); }
+    .nav-center a:hover, .nav-center a.active { color: #fff; }
+    .nav-center a.active::after { content: ''; position: absolute; bottom: -5px; right: 0; width: 100%; height: 2px; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+    .nav-left { display: flex; align-items: center; gap: 20px; }
+    .user-menu { position: relative; }
+    .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px 10px; border-radius: var(--radius-sm); transition: var(--transition); }
+    .user-profile:hover { background: rgba(255,255,255,0.05); }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 1.2rem; }
+    .user-name { font-weight: 600; font-size: 0.95rem; color: #fff; }
+    .dropdown-menu { position: absolute; top: 120%; left: 0; width: 200px; background: rgba(25, 27, 38, 0.95); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 10px; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: var(--transition); z-index: 200; }
+    .dropdown-menu.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-menu a { display: block; padding: 10px 15px; color: var(--text-main); font-size: 0.9rem; border-radius: 6px; text-decoration: none; transition: var(--transition); }
+    .dropdown-menu a:hover { background: rgba(255,255,255,0.1); color: var(--accent); }
+    .dropdown-menu .divider { height: 1px; background: var(--glass-border); margin: 5px 0; }
+    .dropdown-menu .logout { color: #ef4444; }
+    .dropdown-menu .logout:hover { background: rgba(239, 68, 68, 0.1); }
+
+    .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; position: relative; z-index: 10; }
+    .page-header { text-align: center; margin-bottom: 50px; }
+    .page-header h1 { font-size: 2.5rem; color: #fff; margin-bottom: 10px; }
+    .page-header p { color: var(--text-muted); font-size: 1.1rem; }
+    
+    .schedule-list { display: flex; flex-direction: column; gap: 20px; position: relative; }
+    .schedule-list::before { content: ''; position: absolute; top: 0; bottom: 0; right: 30px; width: 2px; background: linear-gradient(to bottom, transparent, var(--primary), var(--accent), transparent); z-index: 0; }
+    .schedule-card { position: relative; z-index: 1; display: flex; align-items: center; gap: 20px; background: var(--surface-color); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: var(--radius); padding: 20px 30px 20px 20px; margin-right: 50px; transition: var(--transition); }
+    .schedule-card:hover { transform: translateX(-5px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(124, 58, 237, 0.2); }
+    .schedule-dot { position: absolute; right: -31px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; border-radius: 50%; background: var(--bg-color); border: 3px solid var(--primary); box-shadow: 0 0 10px var(--primary); }
+    .schedule-date { min-width: 100px; text-align: center; border-left: 1px solid var(--glass-border); padding-left: 20px; }
+    .schedule-date .day { font-size: 2rem; font-weight: 900; color: var(--accent); line-height: 1; }
+    .schedule-date .month { font-size: 0.9rem; color: var(--text-muted); margin-top: 5px; }
+    .schedule-info { flex: 1; }
+    .schedule-info h3 { font-size: 1.3rem; color: #fff; margin-bottom: 8px; font-weight: 700; }
+    .schedule-meta { display: flex; gap: 15px; font-size: 0.9rem; color: var(--text-muted); flex-wrap: wrap; }
+    .schedule-meta span { display: flex; align-items: center; gap: 6px; }
+    .subject-badge { background: rgba(34, 211, 238, 0.1); color: var(--accent); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; display: inline-block; margin-bottom: 10px; }
+    .btn-start-schedule { background: rgba(124, 58, 237, 0.1); color: var(--primary-light); border: 1px solid rgba(124, 58, 237, 0.3); padding: 10px 25px; border-radius: var(--radius-sm); text-decoration: none; font-weight: 700; transition: var(--transition); white-space: nowrap; }
+    .btn-start-schedule:hover { background: var(--primary); color: #fff; }
+    .btn-done { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); padding: 10px 25px; border-radius: var(--radius-sm); font-weight: 700; cursor: not-allowed; }
+    .loading-state { text-align: center; padding: 50px; color: var(--text-muted); }
+    .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 768px) { .nav-center { display: none; } .navbar { padding: 15px 20px; } .schedule-list::before { right: 20px; } .schedule-card { margin-right: 40px; padding: 20px; flex-direction: column; align-items: flex-start; gap: 15px; } .schedule-dot { right: -27px; } .schedule-date { border-left: none; border-bottom: 1px solid var(--glass-border); padding-left: 0; padding-bottom: 15px; display: flex; align-items: baseline; gap: 10px; width: 100%; text-align: right; } .schedule-date .day { font-size: 1.5rem; } .btn-start-schedule, .btn-done { width: 100%; text-align: center; } }
+  </style>
+</head>
+<body>
+
+  <div class="bg-orbs"></div>
+
+  <nav class="navbar">
+    <div class="nav-right"><span class="logo">🎓 MADAR</span></div>
+    <div class="nav-center">
+      <a href="dashboard.html">الرئيسية</a>
+      <a href="books.html">الكتب PDF</a>
+      <a href="evaluations.html" id="evaluations-tab">التقييمات</a>
+      <a href="schedule.html" class="active">جدول الامتحانات</a>
+    </div>
+    <div class="nav-left">
+      <div class="user-menu">
+        <div class="user-profile" id="profile-btn">
+          <div class="avatar" id="user-avatar">M</div>
+          <span class="user-name" id="nav-name">جاري التحميل...</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="dropdown-menu" id="dropdown">
+          <a href="profile.html">الملف الشخصي</a>
+          <div class="divider"></div>
+          <a href="#" class="logout" id="logout-btn">تسجيل الخروج</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="page-header">
+      <h1>جدول الامتحانات والتقييمات 📅</h1>
+      <p>تابع مواعيد اختباراتك القادمة ورتب وقتك للمذاكرة.</p>
+    </div>
+    <div class="schedule-list" id="schedule-container">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>جاري تحميل الجدول...</p>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+    import { collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+
+    const container = document.getElementById('schedule-container');
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        document.getElementById("nav-name").textContent = user.displayName || "طالب";
+        document.getElementById("user-avatar").textContent = (user.displayName || "M").charAt(0).toUpperCase();
+
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          
+          // 🔥 التعديل هنا: لو بيانات الطالب موجودة كمل، لو مش موجودة طلع رسالة
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            if (userData.gradeLevel === "3-prep") {
+              document.getElementById("evaluations-tab").style.display = "none";
+            }
+            loadSchedule(user.uid, userData);
+          } else {
+             container.innerHTML = `<div class="glass-panel" style="text-align: center; padding: 40px; color: #f59e0b;"><h3>لم نتمكن من العثور على بيانات حسابك.</h3><p>تواصل مع المعلم لتحديث بياناتك.</p></div>`;
+          }
+        } catch (error) { 
+          console.error("Error:", error); 
+          container.innerHTML = `<div class="glass-panel" style="text-align: center; padding: 40px; color: #ef4444;"><h3>حدث خطأ في الاتصال.</h3></div>`;
+        }
+      } else { window.location.href = "index.html"; }
+    });
+
+    async function loadSchedule(uid, userData) {
+      try {
+        let q = query(collection(db, "exams"), where("gradeLevel", "==", userData.gradeLevel));
+        const querySnapshot = await getDocs(q);
+        let examsArray = [];
+        querySnapshot.forEach((doc) => {
+          const exam = doc.data();
+          if (exam.gradeLevel === "2-sec") {
+            if (exam.system === "baccalaureate" && exam.track !== userData.track) return;
+            if (exam.system === "general" && userData.system !== "general") return;
+          }
+          examsArray.push({ id: doc.id, ...exam });
+        });
+        examsArray.sort((a, b) => {
+          const timeA = a.createdAt ? a.createdAt.toMillis() : 0;
+          const timeB = b.createdAt ? b.createdAt.toMillis() : 0;
+          return timeB - timeA;
+        });
+        const resultsQ = query(collection(db, "results"), where("studentId", "==", uid));
+        const resultsSnapshot = await getDocs(resultsQ);
+        const studentResults = {};
+        resultsSnapshot.forEach(doc => { studentResults[doc.data().examId] = true; });
+        container.innerHTML = '';
+        if (examsArray.length === 0) {
+          container.innerHTML = `<div class="glass-panel" style="text-align: center; padding: 40px;"><h3 style="color: var(--text-muted);">لا توجد امتحانات مجدولة حالياً 😅</h3></div>`;
+          return;
+        }
+        const monthNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+        examsArray.forEach((exam) => {
+          const isSolved = studentResults[exam.id];
+          let day = "??"; let month = "???";
+          if (exam.createdAt) { const dateObj = exam.createdAt.toDate(); day = dateObj.getDate(); month = monthNames[dateObj.getMonth()]; }
+          const card = document.createElement('div'); card.className = "schedule-card";
+          card.innerHTML = `
+            <div class="schedule-dot"></div>
+            <div class="schedule-date"><div class="day">${day}</div><div class="month">${month}</div></div>
+            <div class="schedule-info"><span class="subject-badge">${exam.subject}</span><h3>${exam.title}</h3><div class="schedule-meta"><span>⏱️ المدة: ${exam.duration} دقيقة</span><span>⭐ الدرجة: ${exam.totalMarks}</span><span>📝 الأسئلة: ${exam.questions.length}</span></div></div>
+            ${isSolved ? `<div class="btn-done">تم التسليم ✅</div>` : `<a href="exam.html?examId=${exam.id}&name=${encodeURIComponent(exam.subject)}" class="btn-start-schedule">دخول الاختبار</a>`}
+          `;
+          container.appendChild(card);
+        });
+      } catch (error) { console.error("Error loading schedule:", error); container.innerHTML = `<div class="glass-panel" style="text-align: center; padding: 40px; color: #ef4444;"><h3>حدث خطأ في تحميل الجدول.</h3></div>`; }
+    }
+
+    const profileBtn = document.getElementById("profile-btn"); const dropdown = document.getElementById("dropdown");
+    profileBtn.addEventListener("click", (e) => { e.stopPropagation(); dropdown.classList.toggle("show"); });
+    document.addEventListener("click", () => { dropdown.classList.remove("show"); });
+    document.getElementById("logout-btn").addEventListener("click", (e) => {
+      e.preventDefault(); Swal.fire({ title: 'تسجيل الخروج', text: "هل أنت متأكد من الخروج؟", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#2a2a3e', confirmButtonText: 'نعم، خروج', cancelButtonText: 'إلغاء', background: '#12121f', color: '#fff' }).then((result) => { if (result.isConfirmed) { signOut(auth).then(() => window.location.href = "index.html"); } });
+    });
+  </script>
+</body>
+</html>

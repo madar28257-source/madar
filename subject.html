@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المادة — منصة MADAR</title>
+  
+  <link rel="stylesheet" href="base.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    .navbar { background: rgba(11, 12, 16, 0.6); backdrop-filter: blur(12px); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100; }
+    .navbar .logo { font-size: 1.3rem; font-weight: 900; color: #fff; }
+    .btn-back { background: transparent; color: var(--text-muted); border: 1px solid var(--glass-border); padding: 8px 18px; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: var(--transition); }
+    .btn-back:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+    
+    .container { max-width: 900px; margin: 40px auto; padding: 0 20px; position: relative; z-index: 10; }
+    
+    .subject-header { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--glass-border); text-align: center; }
+    .subject-header h1 { font-size: 2.2rem; margin-bottom: 8px; color: #fff; }
+    .subject-header p { color: var(--text-muted); font-size: 1rem; margin-bottom: 15px; }
+    
+    /* ستايل زرار المعمل الـ 3D */
+    .btn-lab {
+      display: none; /* مخفي افتراضياً وهظهر بالجافاسكريبت */
+      margin: 0 auto;
+      padding: 12px 30px;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+    }
+    .btn-lab:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(34, 197, 94, 0.5); }
+    .btn-lab svg { vertical-align: middle; margin-left: 5px; }
+
+    .exams-list { display: flex; flex-direction: column; gap: 15px; }
+    
+    .exam-card { 
+      background: var(--surface-color); backdrop-filter: blur(16px); 
+      border: 1px solid var(--glass-border); border-radius: var(--radius); 
+      padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; 
+      transition: var(--transition); 
+    }
+    .exam-card:hover:not(.locked) { border-color: rgba(167, 139, 250, 0.4); background: rgba(255, 255, 255, 0.05); }
+    
+    /* ستايل الامتحان المقفول */
+    .exam-card.locked {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: rgba(15, 16, 22, 0.9);
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .exam-info { display: flex; align-items: center; gap: 20px; }
+    .exam-info h3 { font-size: 1.15rem; margin-bottom: 6px; color: #fff; font-weight: 700; }
+    .exam-meta { display: flex; gap: 15px; font-size: 0.85rem; color: var(--text-muted); }
+    
+    .btn-start { background: rgba(124, 58, 237, 0.1); color: var(--primary-light); padding: 10px 20px; border-radius: var(--radius-sm); text-decoration: none; font-weight: 700; transition: var(--transition); border: 1px solid rgba(124, 58, 237, 0.3); cursor: pointer; }
+    .btn-start:hover { background: var(--primary); color: #fff; }
+    
+    .score-box { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); padding: 10px 20px; border-radius: var(--radius-sm); display: flex; flex-direction: column; align-items: center; }
+    .score-title { font-size: 0.75rem; color: #a7f3d0; margin-bottom: 2px; }
+    .score-value { font-size: 1.2rem; font-weight: 900; color: #22c55e; }
+
+    .btn-locked { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); padding: 10px 20px; border-radius: var(--radius-sm); font-weight: 700; border: 1px solid var(--glass-border); display: flex; align-items: center; gap: 8px; }
+
+    .loading-text { text-align: center; color: var(--text-muted); font-size: 1.1rem; margin-top: 30px; }
+    
+    @media (max-width: 768px) { .exam-card { flex-direction: column; align-items: stretch; gap: 15px; } }
+  </style>
+</head>
+<body>
+
+  <div class="bg-orbs"></div>
+
+  <nav class="navbar">
+    <div class="logo">MADAR</div>
+    <a href="dashboard.html" class="btn-back">← رجوع للرئيسية</a>
+  </nav>
+
+  <main class="container">
+    
+    <!-- هيدر المادة -->
+    <div class="subject-header">
+      <h1 id="subject-name">جاري التحميل...</h1>
+      <p>يجب إكمال الاختبارات بالترتيب لفتح الاختبار التالي.</p>
+      
+      <!-- زرار المعمل الـ 3D (هيظهر لو المادة ليها معمل) -->
+      <button id="lab-btn" class="btn-lab">
+        🔬 ادخل المعمل الـ 3D
+      </button>
+    </div>
+
+    <!-- قائمة الامتحانات -->
+    <div class="exams-list" id="exams-list">
+      <div class="loading-text">جاري تحميل الاختبارات... ⏳</div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+    import { collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+
+    let currentUserData = null;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = "index.html"; return; }
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const subjectName = urlParams.get('name');
+      
+      if (subjectName) {
+        document.getElementById('subject-name').textContent = subjectName;
+        document.title = subjectName + " — منصة MADAR";
+        
+        // 1. إظهار زرار المعمل للمواد اللي ليها 3D (ضفنا الدراسات الاجتماعية)
+        const labSubjects = ["الرياضيات", "الفيزياء", "الكيمياء", "العلوم المتكاملة", "العلوم", "التاريخ", "الجغرافيا", "الدراسات الاجتماعية"];
+        if (labSubjects.includes(subjectName)) {
+          const labBtn = document.getElementById('lab-btn');
+          labBtn.style.display = 'inline-block'; // نظهر الزرار
+          
+          // لما يدوس عليه، ننقله لصفحة المعمل ونبعت اسم المادة في الرابط
+          labBtn.onclick = () => {
+            window.location.href = `lab.html?subject=${encodeURIComponent(subjectName)}`;
+          };
+        }
+
+        // 2. جلب بيانات الطالب عشان نعرف سنته
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          currentUserData = userDoc.data();
+          loadExams(subjectName, user.uid, currentUserData);
+        }
+      } else {
+        window.location.href = "dashboard.html";
+      }
+    });
+
+    async function loadExams(subject, uid, userData) {
+      const listContainer = document.getElementById('exams-list');
+      
+      try {
+        // 3. جلب الامتحانات الخاصة بالمادة والسنة
+        let q = query(
+          collection(db, "exams"), 
+          where("subject", "==", subject),
+          where("gradeLevel", "==", userData.gradeLevel)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        // تجهيز المصفوفة للترتيب
+        let examsArray = [];
+        querySnapshot.forEach((doc) => {
+          const exam = doc.data();
+          // فلترة المسارات (لو تانية ثانوي بكالوريا)
+          if (exam.gradeLevel === "2-sec") {
+            if (exam.system === "baccalaureate" && exam.track !== userData.track) return;
+            if (exam.system === "general" && userData.system !== "general") return;
+          }
+          examsArray.push({ id: doc.id, ...exam });
+        });
+
+        // ترتيب الامتحانات حسب تاريخ الإنشاء (الأقدم الأول)
+        examsArray.sort((a, b) => {
+          const timeA = a.createdAt ? a.createdAt.toMillis() : 0;
+          const timeB = b.createdAt ? b.createdAt.toMillis() : 0;
+          return timeA - timeB;
+        });
+
+        // 4. جلب نتائج الطالب
+        const resultsQ = query(collection(db, "results"), where("studentId", "==", uid));
+        const resultsSnapshot = await getDocs(resultsQ);
+        const studentResults = {};
+        resultsSnapshot.forEach(doc => {
+          studentResults[doc.data().examId] = { score: doc.data().score, totalMarks: doc.data().totalMarks };
+        });
+
+        listContainer.innerHTML = '';
+
+        if (examsArray.length === 0) {
+          listContainer.innerHTML = `<div class="glass-panel" style="text-align: center; padding: 40px;"><h3 style="color: var(--text-muted);">لا توجد اختبارات متاحة لك حالياً</h3></div>`;
+          return;
+        }
+
+        // 5. تطبيق نظام الفتح المتسلسل
+        let isPreviousSolved = true; // أول امتحان مفتوح دايماً
+
+        examsArray.forEach((exam) => {
+          const resultData = studentResults[exam.id];
+          const isSolved = !!resultData;
+
+          const card = document.createElement('div');
+          let actionHTML = "";
+
+          if (!isPreviousSolved) {
+            // لو اللي قبله لسه متحلش، يبقى ده مقفول
+            card.className = "exam-card locked";
+            actionHTML = `<div class="btn-locked">🔒 مغلق</div>`;
+          } else {
+            card.className = "exam-card";
+            if (isSolved) {
+              // لو هو متحل، نعرض الدرجة
+              actionHTML = `<div class="score-box"><span class="score-title">الدرجة</span><span class="score-value">${resultData.score} / ${resultData.totalMarks}</span></div>`;
+            } else {
+              // لو هو اللي عليه الدور، نعرض زرار البدء ونقفل اللي بعده
+              actionHTML = `<a href="exam.html?examId=${exam.id}&name=${encodeURIComponent(subject)}" class="btn-start">بدء الاختبار</a>`;
+              isPreviousSolved = false; // 🔥 قفلنا باقي الامتحانات
+            }
+          }
+
+          card.innerHTML = `
+            <div class="exam-info">
+              <div>
+                <h3>${exam.title}</h3>
+                <div class="exam-meta">
+                  <span>⏱️ ${exam.duration} دقيقة</span>
+                  <span>📝 ${exam.questions.length} أسئلة</span>
+                  <span>⭐ ${exam.totalMarks} درجة</span>
+                </div>
+              </div>
+            </div>
+            ${actionHTML}
+          `;
+          listContainer.appendChild(card);
+        });
+
+      } catch (error) {
+        console.error("Error fetching exams:", error);
+        listContainer.innerHTML = `<div class="glass-panel" style="text-align: center; padding: 40px; border-color: #ef4444;"><h3 style="color: #ef4444;">حدث خطأ في تحميل الاختبارات</h3></div>`;
+      }
+    }
+  </script>
+</body>
+</html>

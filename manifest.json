@@ -1,0 +1,24 @@
+{
+  "name": "MADAR - منصة مدار التعليمية",
+  "short_name": "MADAR",
+  "description": "منصة تعليمية متكاملة للطلاب من الإعدادي للثانوي والبكالوريا.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0a14",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}

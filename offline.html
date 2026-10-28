@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>غير متصل بالإنترنت — منصة MADAR</title>
+  <link rel="stylesheet" href="base.css">
+  <style>
+    body {
+      display: flex; align-items: center; justify-content: center; height: 100vh;
+      margin: 0; text-align: center; background: var(--bg-color);
+    }
+    .offline-card {
+      padding: 50px 30px; max-width: 400px;
+      background: var(--surface-color); border: 1px solid var(--glass-border);
+      border-radius: var(--radius); backdrop-filter: blur(16px);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      animation: fadeUp 0.5s ease-out;
+    }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    h1 { color: #ef4444; font-size: 2rem; margin-bottom: 15px; }
+    p { color: var(--text-muted); margin-bottom: 30px; line-height: 1.6; }
+    .btn-retry {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #fff; border: none; padding: 12px 30px;
+      border-radius: var(--radius-sm); font-family: inherit; font-size: 1.1rem;
+      font-weight: 700; cursor: pointer; transition: var(--transition);
+    }
+    .btn-retry:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4); }
+  </style>
+</head>
+<body>
+  <div class="offline-card">
+    <h1>📡 إنت مش متصل بالإنترنت</h1>
+    <p>يا بطل، يبدو إن النت فصل. اتأكد من اتصالك وحاول تاني عشان تكمل مذاكرتك.</p>
+    <button class="btn-retry" onclick="window.location.reload()">حاول مرة أخرى</button>
+  </div>
+</body>
+</html>

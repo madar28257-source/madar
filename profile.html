@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الملف الشخصي — منصة MADAR</title>
+  
+  <link rel="stylesheet" href="base.css">
+  <link rel="stylesheet" href="css/profile.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+  <div class="bg-orbs"></div>
+
+  <nav class="navbar">
+    <div class="nav-right"><span class="logo">🎓 MADAR</span></div>
+    <div class="nav-center">
+      <a href="dashboard.html">الرئيسية</a>
+      <a href="books.html">الكتب PDF</a>
+      <a href="evaluations.html" id="evaluations-tab">التقييمات</a>
+      <a href="schedule.html">جدول الامتحانات</a>
+    </div>
+    <div class="nav-left">
+      <div class="user-menu">
+        <div class="user-profile" id="profile-btn">
+          <div class="avatar" id="user-avatar">M</div>
+          <span class="user-name" id="nav-name">جاري التحميل...</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="dropdown-menu" id="dropdown">
+          <a href="profile.html" style="color: var(--accent);">الملف الشخصي</a>
+          <div class="divider"></div>
+          <a href="#" class="logout" id="logout-btn">تسجيل الخروج</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="profile-container">
+    <div class="page-header">
+      <h1>الملف الشخصي</h1>
+      <p>يمكنك إدارة بياناتك الشخصية وتأمين حسابك من هنا.</p>
+    </div>
+
+    <div class="profile-grid">
+      <div class="profile-card glass-panel">
+        <div class="card-header">
+          <h3>البيانات الشخصية</h3>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </div>
+        <div class="info-group"><label>الاسم بالكامل</label><input type="text" id="profile-name" disabled></div>
+        <div class="info-group"><label>البريد الإلكتروني</label><input type="email" id="profile-email" disabled></div>
+        <div class="info-group"><label>السنة الدراسية</label><input type="text" id="profile-grade" disabled></div>
+        <div class="info-group">
+          <label>رقم الهاتف (قابل للتعديل)</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="tel" id="profile-phone" placeholder="01xxxxxxxxx">
+            <button class="btn-update" id="update-phone-btn">تحديث</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-card glass-panel">
+        <div class="card-header">
+          <h3>الأمان</h3>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">ننصحك بتغيير كلمة المرور بشكل دوري للحفاظ على أمان حسابك.</p>
+        <div class="info-group"><label>كلمة المرور الجديدة</label><input type="password" id="new-password" placeholder="6 أحرف على الأقل"></div>
+        <div class="info-group"><label>تأكيد كلمة المرور</label><input type="password" id="confirm-password" placeholder="أعد كتابة كلمة المرور"></div>
+        <button class="btn-save-password" id="update-password-btn">تغيير كلمة المرور</button>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="js/profile.js"></script>
+</body>
+</html>

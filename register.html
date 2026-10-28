@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إنشاء حساب — منصة MADAR</title>
+  
+  <link rel="stylesheet" href="base.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    /* ==========================================
+       خلفية المجرة (Milky Way & Orbits)
+       ========================================== */
+    #starfield-canvas {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: -2; /* ورا كل حاجة */
+      background: radial-gradient(circle at center, #1a0b2e 0%, #05050A 100%);
+    }
+
+    /* نظام المدارات (الكواكب) */
+    .orbit-system {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 800px; height: 800px;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.6; /* شفافية عشان منشوش على الفورم */
+      perspective: 1000px;
+    }
+
+    .sun {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px; height: 100px;
+      background: radial-gradient(circle, #7c3aed, #22d3ee);
+      border-radius: 50%;
+      box-shadow: 0 0 60px rgba(124, 58, 237, 0.8), 0 0 100px rgba(34, 211, 238, 0.4);
+      animation: pulseSun 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseSun {
+      0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 60px rgba(124, 58, 237, 0.8); }
+      100% { transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 0 100px rgba(124, 58, 237, 1), 0 0 150px rgba(34, 211, 238, 0.6); }
+    }
+
+    .orbit {
+      position: absolute;
+      top: 50%; left: 50%;
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 50%;
+      transform-style: preserve-3d;
+      animation: rotateOrbit linear infinite;
+    }
+
+    .planet {
+      position: absolute;
+      top: 0; left: 50%;
+      border-radius: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 0 20px currentColor;
+    }
+
+    /* مدارات مختلفة بسرعات وأحجام مختلفة */
+    .orbit-1 { width: 300px; height: 300px; margin: -150px 0 0 -150px; animation-duration: 15s; transform: rotateX(70deg) rotateY(20deg); }
+    .orbit-1 .planet { width: 20px; height: 20px; background: #00d2ff; color: #00d2ff; top: -10px; }
+
+    .orbit-2 { width: 500px; height: 500px; margin: -250px 0 0 -250px; animation-duration: 25s; transform: rotateX(60deg) rotateY(-30deg); }
+    .orbit-2 .planet { width: 30px; height: 30px; background: #f59e0b; color: #f59e0b; top: -15px; }
+
+    .orbit-3 { width: 700px; height: 700px; margin: -350px 0 0 -350px; animation-duration: 40s; transform: rotateX(75deg) rotateY(10deg); }
+    .orbit-3 .planet { width: 15px; height: 15px; background: #d946ef; color: #d946ef; top: -7px; }
+
+    @keyframes rotateOrbit {
+      from { transform: rotateZ(0deg); }
+      to { transform: rotateZ(360deg); }
+    }
+
+    /* ==========================================
+       تصميم الصفحة الأساسي
+       ========================================== */
+    .split-screen { display: flex; min-height: 100vh; position: relative; z-index: 10; }
+    .brand-section { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
+    
+    .logo-container {
+      position: relative; width: 100%; max-width: 450px; margin-bottom: 30px; padding: 20px 30px;
+      background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(124, 58, 237, 0.3);
+      display: flex; align-items: center; justify-content: center; overflow: hidden; animation: floatCard 5s ease-in-out infinite;
+    }
+    .logo-container::before {
+      content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transform: skewX(-20deg); animation: shine 6s infinite;
+    }
+    @keyframes floatCard { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
+    
+    .brand-logo { width: 100%; height: auto; object-fit: contain; display: block; position: relative; z-index: 1; border-radius: 10px; }
+    .brand-tagline { font-size: 1.2rem; color: #fff; max-width: 400px; line-height: 1.6; margin-top: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+
+    .form-section { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; }
+    .auth-card {
+      width: 100%; max-width: 440px; padding: 40px 30px; text-align: center;
+      background: rgba(15, 16, 22, 0.8); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--glass-border); border-radius: var(--radius);
+      transition: transform 0.1s ease; transform-style: preserve-3d;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+    .auth-card h2 { font-size: 1.8rem; margin-bottom: 8px; color: #fff; }
+    .auth-card p.subtitle { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 25px; }
+
+    .input-group { position: relative; margin-bottom: 15px; text-align: right; transform: translateZ(30px); }
+    .input-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+    .input-icon { position: absolute; right: 15px; color: var(--text-muted); font-size: 1.2rem; pointer-events: none; transition: var(--transition); }
+
+    .input-group input, .input-group select {
+      width: 100%; padding: 14px 45px 14px 15px; background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+      color: #fff; font-family: inherit; font-size: 1rem; outline: none; transition: var(--transition);
+    }
+    .input-group select { padding-right: 15px; cursor: pointer; appearance: none; }
+    .input-group select option { background: #12121f; color: #fff; }
+    .input-group input:focus, .input-group select:focus { border-color: var(--primary); background: rgba(124, 58, 237, 0.1); box-shadow: 0 0 15px rgba(124, 58, 237, 0.3); }
+    
+    .toggle-password { position: absolute; left: 15px; cursor: pointer; color: var(--text-muted); transition: var(--transition); font-size: 1.1rem; }
+    .toggle-password:hover { color: #fff; }
+
+    .btn-submit {
+      width: 100%; padding: 15px; background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #fff; border: none; border-radius: var(--radius-sm); font-family: inherit;
+      font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: var(--transition);
+      margin-top: 15px; display: flex; justify-content: center; align-items: center; gap: 10px;
+      position: relative; overflow: hidden; transform: translateZ(40px);
+    }
+    .btn-submit:hover { transform: translateY(-2px) translateZ(40px); box-shadow: 0 8px 25px rgba(124, 58, 237, 0.6); }
+    .btn-submit:disabled { opacity: 0.8; cursor: not-allowed; }
+
+    .spinner { display: none; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .auth-footer { margin-top: 20px; font-size: 0.9rem; color: var(--text-muted); transform: translateZ(20px); }
+    .auth-footer a { font-weight: 700; margin-right: 5px; }
+
+    .hidden-field { display: none; animation: fadeInDown 0.3s ease forwards; }
+    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 900px) {
+      .split-screen { flex-direction: column; }
+      .brand-section { padding: 40px 20px 20px; }
+      .logo-container { max-width: 320px; padding: 15px; }
+      .form-section { padding: 20px; }
+      .auth-card { transform: none !important; }
+      .orbit-system { width: 400px; height: 400px; opacity: 0.3; } /* تصغير المجرة في الموبايل */
+    }
+  </style>
+</head>
+<body>
+
+  <!-- خلفية النجوم والمجرة -->
+  <canvas id="starfield-canvas"></canvas>
+  
+  <!-- الكواكب اللي بتلف -->
+  <div class="orbit-system">
+    <div class="sun"></div>
+    <div class="orbit orbit-1"><div class="planet"></div></div>
+    <div class="orbit orbit-2"><div class="planet"></div></div>
+    <div class="orbit orbit-3"><div class="planet"></div></div>
+  </div>
+
+  <main class="split-screen">
+    
+    <div class="brand-section">
+      <div class="logo-container">
+        <img src="logo.jpg" alt="شعار منصة مدار" class="brand-logo">
+      </div>
+      <p class="brand-tagline">سجل حسابك دلوقتي وابدأ رحلة التفوق مع أقوى منصة تعليمية.</p>
+    </div>
+
+    <div class="form-section">
+      <div class="auth-card" id="tilt-card">
+        <h2>إنشاء حساب جديد</h2>
+        <p class="subtitle">املا بياناتك للانضمام إلينا</p>
+
+        <form id="register-form">
+          <div class="input-group">
+            <label for="name">الاسم بالكامل</label>
+            <div class="input-wrapper">
+              <input type="text" id="name" required placeholder="اكتب اسمك هنا">
+              <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="phone">رقم الهاتف</label>
+            <div class="input-wrapper">
+              <input type="tel" id="phone" required placeholder="01xxxxxxxxx">
+              <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="grade">السنة الدراسية</label>
+            <select id="grade" required>
+              <option value="" disabled selected>اختر سنتك الدراسية...</option>
+              <option value="1-prep">الصف الأول الإعدادي</option>
+              <option value="2-prep">الصف الثاني الإعدادي</option>
+              <option value="3-prep">الصف الثالث الإعدادي</option>
+              <option value="1-sec">الصف الأول الثانوي</option>
+              <option value="2-sec">الصف الثاني الثانوي</option>
+            </select>
+          </div>
+
+          <div class="input-group hidden-field" id="system-group">
+            <label for="system">النظام الدراسي</label>
+            <select id="system">
+              <option value="" disabled selected>اختر النظام...</option>
+              <option value="general">عام (نظامي)</option>
+              <option value="baccalaureate">بكالوريا</option>
+            </select>
+          </div>
+
+          <div class="input-group hidden-field" id="track-group">
+            <label for="track">المسار الدراسي</label>
+            <select id="track">
+              <option value="" disabled selected>اختر مسارك...</option>
+              <option value="medicine">مسار الطب وعلوم الحياة</option>
+              <option value="engineering">مسار الهندسة وعلوم الحاسب</option>
+              <option value="business">مسار الأعمال</option>
+              <option value="arts">مسار الآداب والفنون</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label for="email">البريد الإلكتروني</label>
+            <div class="input-wrapper">
+              <input type="email" id="email" required placeholder="you@example.com">
+              <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            </div>
+          </div>
+          
+          <div class="input-group">
+            <label for="password">كلمة المرور</label>
+            <div class="input-wrapper">
+              <input type="password" id="password" required placeholder="6 أحرف على الأقل">
+              <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <span class="toggle-password" id="toggle-pass1">👁️</span>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="confirm-password">تأكيد كلمة المرور</label>
+            <div class="input-wrapper">
+              <input type="password" id="confirm-password" required placeholder="أعد كتابة كلمة المرور">
+              <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <span class="toggle-password" id="toggle-pass2">👁️</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit" id="register-btn">
+            <span id="btn-text">تسجيل الحساب</span>
+            <div class="spinner" id="btn-spinner"></div>
+          </button>
+        </form>
+
+        <div class="auth-footer">عندك حساب بالفعل؟ <a href="index.html">سجل دخولك</a></div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+    import { doc, setDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+
+    // ==========================================
+    // 1. سحر الخلفية (النجوم اللي بتطير في الفضاء)
+    // ==========================================
+    const canvas = document.getElementById('starfield-canvas');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    let w, h;
+
+    function resizeCanvas() {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Star {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * w;
+        this.y = Math.random() * h;
+        this.z = Math.random() * w; // العمق
+        this.size = Math.random() * 1.5;
+      }
+      update() {
+        this.z -= 2; // سرعة النجوم
+        if (this.z <= 0) this.reset();
+      }
+      draw() {
+        let x = (this.x - w / 2) * (w / this.z) + w / 2;
+        let y = (this.y - h / 2) * (w / this.z) + h / 2;
+        let s = this.size * (w / this.z);
+        
+        ctx.beginPath();
+        ctx.arc(x, y, s, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${1 - this.z / w})`;
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < 400; i++) stars.push(new Star());
+
+    function animateSpace() {
+      ctx.fillStyle = 'rgba(5, 5, 10, 0.3)'; // أثر خفيف للنجوم
+      ctx.fillRect(0, 0, w, h);
+      stars.forEach(star => {
+        star.update();
+        star.draw();
+      });
+      requestAnimationFrame(animateSpace);
+    }
+    animateSpace();
+
+
+    // ==========================================
+    // 2. حركة الكارت مع الماوس (3D Tilt)
+    // ==========================================
+    const card = document.getElementById('tilt-card');
+    document.addEventListener('mousemove', (e) => {
+      if(window.innerWidth < 900) return; 
+      let xAxis = (window.innerWidth / 2 - e.pageX) / 30;
+      let yAxis = (window.innerHeight / 2 - e.pageY) / 30;
+      card.style.transform = `perspective(1000px) rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+    });
+    document.addEventListener('mouseleave', () => {
+      if(window.innerWidth < 900) return;
+      card.style.transform = `perspective(1000px) rotateY(0deg) rotateX(0deg)`;
+      card.style.transition = "transform 0.5s ease";
+    });
+    document.addEventListener('mouseenter', () => { card.style.transition = "transform 0.1s ease"; });
+
+
+    // ==========================================
+    // 3. باقي كود التسجيل (زي ما هو)
+    // ==========================================
+    const gradeSelect = document.getElementById('grade');
+    const systemGroup = document.getElementById('system-group');
+    const systemSelect = document.getElementById('system');
+    const trackGroup = document.getElementById('track-group');
+    const trackSelect = document.getElementById('track');
+
+    gradeSelect.addEventListener('change', (e) => {
+      const val = e.target.value;
+      if (val === '2-sec') {
+        systemGroup.classList.remove('hidden-field');
+        trackGroup.classList.add('hidden-field');
+        systemSelect.required = true;
+        trackSelect.required = false;
+        trackSelect.value = "";
+      } else {
+        systemGroup.classList.add('hidden-field');
+        trackGroup.classList.add('hidden-field');
+        systemSelect.value = "";
+        systemSelect.required = false;
+        trackSelect.value = "";
+        trackSelect.required = false;
+      }
+    });
+
+    systemSelect.addEventListener('change', (e) => {
+      const val = e.target.value;
+      if (val === 'baccalaureate') {
+        trackGroup.classList.remove('hidden-field');
+        trackSelect.required = true;
+      } else {
+        trackGroup.classList.add('hidden-field');
+        trackSelect.value = "";
+        trackSelect.required = false;
+      }
+    });
+
+    const setupToggle = (inputId, toggleId) => {
+      const input = document.getElementById(inputId);
+      const toggle = document.getElementById(toggleId);
+      toggle.addEventListener('click', () => {
+        const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+        input.setAttribute('type', type);
+        toggle.textContent = type === 'password' ? '👁️' : '🙈';
+      });
+    };
+    setupToggle('password', 'toggle-pass1');
+    setupToggle('confirm-password', 'toggle-pass2');
+
+    const form = document.getElementById('register-form');
+    const btn = document.getElementById('register-btn');
+    const btnText = document.getElementById('btn-text');
+    const spinner = document.getElementById('btn-spinner');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const grade = gradeSelect.value;
+      const system = systemSelect.value;
+      const track = trackSelect.value;
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (password !== document.getElementById('confirm-password').value) {
+        Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'كلمتا المرور غير متطابقتين!', background: '#12121f', color: '#fff', confirmButtonColor: '#7c3aed' });
+        return;
+      }
+
+      btn.disabled = true; btnText.style.display = 'none'; spinner.style.display = 'block';
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        await updateProfile(user, { displayName: name });
+
+        const studentData = {
+          name: name, phone: phone, email: email, role: "student", 
+          gradeLevel: grade, createdAt: new Date()
+        };
+
+        if (grade === '2-sec') {
+          studentData.system = system;
+         if (system === 'baccalaureate') { studentData.track = track; }
+        }
+
+        await setDoc(doc(db, "users", user.uid), studentData);
+
+        Swal.fire({
+          icon: 'success', title: 'أهلاً بك!', text: 'تم إنشاء حسابك بنجاح',
+          timer: 2000, showConfirmButton: false, background: '#12121f', color: '#fff'
+        }).then(() => { window.location.href = "index.html"; });
+        
+      } catch (error) {
+        let errorMsg = "حدث خطأ!";
+        if (error.code === 'auth/email-already-in-use') errorMsg = "الإيميل ده متسجل قبل كده!";
+        if (error.code === 'auth/weak-password') errorMsg = "كلمة المرور ضعيفة (6 حروف على الأقل).";
+        
+        Swal.fire({ icon: 'error', title: 'عفواً!', text: errorMsg, background: '#12121f', color: '#fff', confirmButtonColor: '#7c3aed' });
+        btn.disabled = false; btnText.style.display = 'block'; spinner.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

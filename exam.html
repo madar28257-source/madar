@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الاختبار — منصة MADAR</title>
+  
+  <link rel="stylesheet" href="base.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    .navbar { background: rgba(11, 12, 16, 0.8); backdrop-filter: blur(12px); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); position: fixed; top: 0; width: 100%; z-index: 100; }
+    .navbar .logo { font-size: 1.2rem; font-weight: 900; color: #fff; }
+    
+    .timer-box { display: flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.05); padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); font-weight: 700; font-size: 1.1rem; color: var(--accent); transition: var(--transition); }
+    .timer-box.warning { color: #f59e0b; border-color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
+    .timer-box.danger { color: #ef4444; border-color: #ef4444; background: rgba(239, 68, 68, 0.1); animation: pulse 1s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+    .loading-screen { position: fixed; inset: 0; background: var(--bg-color); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s; }
+    .spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .exam-container { max-width: 800px; margin: 100px auto 40px; padding: 0 20px; position: relative; z-index: 10; }
+    .progress-bar-container { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; margin-bottom: 30px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); width: 0%; transition: width 0.3s ease; }
+    
+    .question-card { padding: 40px; margin-bottom: 20px; animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; }
+    .question-number { color: var(--primary-light); font-weight: 700; font-size: 1.1rem; }
+    .question-text { font-size: 1.3rem; font-weight: 700; line-height: 1.6; color: #fff; margin-bottom: 30px; }
+
+    .options-list { display: flex; flex-direction: column; gap: 15px; }
+    .option-item { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); padding: 18px 20px; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; gap: 15px; transition: var(--transition); font-size: 1.1rem; }
+    .option-item:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(124, 58, 237, 0.4); }
+    .option-item.selected { background: rgba(124, 58, 237, 0.15); border-color: var(--primary); box-shadow: 0 0 15px rgba(124, 58, 237, 0.2); }
+    
+    .option-radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--text-muted); display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+    .option-item.selected .option-radio { border-color: var(--primary-light); }
+    .option-item.selected .option-radio::after { content: ''; width: 10px; height: 10px; background: var(--primary-light); border-radius: 50%; }
+
+    .controls { display: flex; justify-content: space-between; gap: 15px; margin-top: 30px; }
+    .btn { padding: 12px 25px; border-radius: var(--radius-sm); font-family: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; transition: var(--transition); border: none; display: flex; align-items: center; gap: 8px; }
+    .btn-prev { background: transparent; color: var(--text-muted); border: 1px solid var(--glass-border); }
+    .btn-prev:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    .btn-next { background: rgba(124, 58, 237, 0.2); color: var(--primary-light); border: 1px solid var(--primary); }
+    .btn-next:hover { background: var(--primary); color: #fff; }
+    .btn-submit { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; display: none; margin-right: auto; }
+    .btn-submit:hover { box-shadow: 0 0 20px rgba(34, 197, 94, 0.4); }
+
+    .result-score { font-size: 4.5rem; font-weight: 900; color: var(--primary-light); text-align: center; margin: 20px 0; text-shadow: 0 0 20px rgba(124, 58, 237, 0.3); line-height: 1; }
+    .result-text { text-align: center; font-size: 1.1rem; color: #fff; margin-top: 15px; }
+  </style>
+</head>
+<body>
+
+  <div class="loading-screen" id="loading-screen">
+    <div class="spinner"></div>
+    <p style="margin-top: 20px; color: var(--text-muted); font-weight: 600;">جاري تحميل أسئلة الامتحان...</p>
+  </div>
+
+  <div class="bg-orbs"></div>
+
+  <nav class="navbar">
+    <div class="logo" id="nav-subject-name">جاري التحميل...</div>
+    <div class="timer-box" id="timer-box" style="display:none;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      <span id="timer-text">00:00</span>
+    </div>
+  </nav>
+
+  <main class="exam-container" id="exam-container" style="display:none;">
+    <div class="progress-bar-container"><div class="progress-bar-fill" id="progress-fill"></div></div>
+
+    <div class="question-card glass-panel" id="question-card">
+      <div class="question-header"><span class="question-number" id="question-number">السؤال 1</span></div>
+      <div class="question-text" id="question-text">جاري التحميل...</div>
+      <div class="options-list" id="options-list"></div>
+      <div class="controls">
+        <button class="btn btn-prev" id="btn-prev" onclick="prevQuestion()" style="visibility: hidden;">السابق</button>
+        <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">التالي</button>
+        <button class="btn btn-submit" id="btn-submit" onclick="confirmSubmit()">إنهاء وتسليم الاختبار</button>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+    import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+
+    let examData = null;
+    let currentQuestionIndex = 0;
+    let userAnswers = [];
+    let timeLeft = 0;
+    let timerInterval;
+    let totalExamMarks = 0;
+    let currentExamId = null;
+    let currentSubjectName = null;
+
+    const qNumberEl = document.getElementById('question-number');
+    const qTextEl = document.getElementById('question-text');
+    const optionsListEl = document.getElementById('options-list');
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+    const btnSubmit = document.getElementById('btn-submit');
+    const progressFill = document.getElementById('progress-fill');
+    const timerText = document.getElementById('timer-text');
+    const timerBox = document.getElementById('timer-box');
+    const loadingScreen = document.getElementById('loading-screen');
+    const examContainer = document.getElementById('exam-container');
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      const urlParams = new URLSearchParams(window.location.search);
+      currentExamId = urlParams.get('examId');
+      currentSubjectName = urlParams.get('name') || 'اختبار عام';
+      document.getElementById('nav-subject-name').textContent = currentSubjectName;
+
+      if (!currentExamId) {
+        Swal.fire({ icon: 'error', title: 'خطأ', text: 'لم يتم العثور على الامتحان', background: '#12121f', color: '#fff' })
+        .then(() => window.location.href = "dashboard.html");
+        return;
+      }
+
+      try {
+        const resultsQuery = query(
+          collection(db, "results"), 
+          where("studentId", "==", user.uid),
+          where("examId", "==", currentExamId)
+        );
+        const resultsSnapshot = await getDocs(resultsQuery);
+
+        if (!resultsSnapshot.empty) {
+          Swal.fire({ 
+            icon: 'info', title: 'لقد قمت بأداء هذا الامتحان', 
+            text: 'لا يمكنك إعادة الامتحان مرة أخرى.', 
+            background: '#12121f', color: '#fff', confirmButtonColor: '#7c3aed' 
+          }).then(() => {
+            window.location.href = `subject.html?name=${encodeURIComponent(currentSubjectName)}`;
+          });
+          return;
+        }
+
+        const docRef = doc(db, "exams", currentExamId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          examData = docSnap.data();
+          
+          if (!examData.questions || examData.questions.length === 0) throw new Error("الامتحان لا يحتوي على أسئلة");
+
+          userAnswers = new Array(examData.questions.length).fill(null);
+          totalExamMarks = examData.questions.reduce((sum, q) => sum + q.points, 0);
+          timeLeft = examData.duration * 60;
+
+          loadingScreen.style.opacity = '0';
+          setTimeout(() => {
+            loadingScreen.style.display = 'none';
+            examContainer.style.display = 'block';
+            timerBox.style.display = 'flex';
+          }, 500);
+
+          renderQuestion();
+          startTimer();
+
+        } else {
+          throw new Error("هذا الامتحان غير موجود");
+        }
+      } catch (error) {
+        console.error(error);
+        Swal.fire({ icon: 'error', title: 'عذراً', text: error.message, background: '#12121f', color: '#fff' })
+        .then(() => window.location.href = `subject.html?name=${encodeURIComponent(currentSubjectName)}`);
+      }
+    });
+
+    function renderQuestion() {
+      const q = examData.questions[currentQuestionIndex];
+      qNumberEl.textContent = `السؤال ${currentQuestionIndex + 1} من ${examData.questions.length} (الدرجة: ${q.points})`;
+      qTextEl.textContent = q.text;
+      
+      const progress = ((currentQuestionIndex + 1) / examData.questions.length) * 100;
+      progressFill.style.width = progress + '%';
+
+      optionsListEl.innerHTML = '';
+      q.options.forEach((opt, index) => {
+        const div = document.createElement('div');
+        div.className = `option-item ${userAnswers[currentQuestionIndex] === index ? 'selected' : ''}`;
+        div.innerHTML = `<div class="option-radio"></div><span>${opt}</span>`;
+        div.onclick = () => selectOption(index);
+        optionsListEl.appendChild(div);
+      });
+
+      btnPrev.style.visibility = currentQuestionIndex === 0 ? 'hidden' : 'visible';
+      if (currentQuestionIndex === examData.questions.length - 1) {
+        btnNext.style.display = 'none';
+        btnSubmit.style.display = 'block';
+      } else {
+        btnNext.style.display = 'block';
+        btnSubmit.style.display = 'none';
+      }
+    }
+
+    window.selectOption = (index) => { userAnswers[currentQuestionIndex] = index; renderQuestion(); };
+    window.nextQuestion = () => { if (currentQuestionIndex < examData.questions.length - 1) { currentQuestionIndex++; renderQuestion(); } };
+    window.prevQuestion = () => { if (currentQuestionIndex > 0) { currentQuestionIndex--; renderQuestion(); } };
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerText.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        if (timeLeft <= 60) timerBox.className = 'timer-box danger';
+        else if (timeLeft <= 300) timerBox.className = 'timer-box warning';
+
+        if (timeLeft <= 0) { clearInterval(timerInterval); autoSubmit(); }
+      }, 1000);
+    }
+
+    window.confirmSubmit = () => {
+      const unanswered = userAnswers.filter(ans => ans === null).length;
+      let textMsg = "هل أنت متأكد من إنهاء الاختبار وتسليم إجاباتك؟";
+      if (unanswered > 0) textMsg = `لديك ${unanswered} أسئلة لم يتم الإجابة عليها. هل تريد التسليم؟`;
+
+      Swal.fire({
+        title: 'تأكيد التسليم', text: textMsg, icon: 'warning',
+        showCancelButton: true, confirmButtonColor: '#22c55e', cancelButtonColor: '#ef4444',
+        confirmButtonText: 'نعم، سلم الاختبار', cancelButtonText: 'لا، أكمل المراجعة',
+        background: '#12121f', color: '#fff'
+      }).then((result) => { if (result.isConfirmed) finishExam(); });
+    };
+
+    function autoSubmit() {
+      Swal.fire({
+        title: 'انتهى الوقت!', text: 'تم تسليم الاختبار تلقائياً.', icon: 'info',
+        confirmButtonColor: '#7c3aed', confirmButtonText: 'عرض النتيجة',
+        background: '#12121f', color: '#fff', allowOutsideClick: false
+      }).then(() => finishExam());
+    }
+
+    async function finishExam() {
+      clearInterval(timerInterval);
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = "جاري الحفظ...";
+
+      let studentScore = 0;
+      const studentAnswersDetails = [];
+
+      examData.questions.forEach((q, index) => {
+        const studentAnsIndex = userAnswers[index];
+        const isCorrect = studentAnsIndex === q.correct;
+        const pointsEarned = isCorrect ? q.points : 0;
+
+        if (isCorrect) studentScore += q.points;
+
+        const studentAnsText = studentAnsIndex !== null ? q.options[studentAnsIndex] : "لم يجب على السؤال";
+        const correctAnsText = q.options[q.correct];
+
+        studentAnswersDetails.push({
+          questionText: q.text,
+          studentAnswer: studentAnsText,
+          correctAnswer: correctAnsText,
+          pointsEarned: pointsEarned,
+          maxPoints: q.points
+        });
+      });
+
+      const percentage = Math.round((studentScore / totalExamMarks) * 100);
+      
+      try {
+        // 🔥 جلب بيانات الطالب لمعرفة السنة الدراسية
+        const userDocRef = doc(db, "users", auth.currentUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        const studentGrade = userDocSnap.exists() ? userDocSnap.data().gradeLevel : "unknown";
+
+        await addDoc(collection(db, "results"), {
+          studentId: auth.currentUser.uid,
+          studentName: auth.currentUser.displayName || "طالب",
+          studentGrade: studentGrade, // 🔥 حفظ السنة
+          examId: currentExamId,
+          examTitle: examData.title,
+          subject: currentSubjectName,
+          score: studentScore,
+          totalMarks: totalExamMarks,
+          percentage: percentage,
+          submittedAt: serverTimestamp(),
+          studentAnswers: studentAnswersDetails
+        });
+
+        let resultColor = percentage >= 50 ? '#22c55e' : '#ef4444';
+        let resultMsg = percentage >= 50 ? 'لقد اجتزت الاختبار بنجاح.' : 'تحتاج لمزيد من المراجعة والمذاكرة.';
+
+        Swal.fire({
+          title: 'نتيجة الاختبار',
+          html: `
+            <div class="result-score" style="color: ${resultColor}">${studentScore} / ${totalExamMarks}</div>
+            <div class="result-text">${resultMsg}</div>
+          `,
+          icon: percentage >= 50 ? 'success' : 'error',
+          confirmButtonColor: '#7c3aed', confirmButtonText: 'العودة للمواد',
+          background: '#12121f', color: '#fff', allowOutsideClick: false
+        }).then(() => {
+          window.location.href = `subject.html?name=${encodeURIComponent(currentSubjectName)}`;
+        });
+
+      } catch (error) {
+        console.error("Error saving result:", error);
+        Swal.fire({ icon: 'error', title: 'خطأ', text: 'حدث خطأ أثناء حفظ النتيجة. تواصل مع المعلم.', background: '#12121f', color: '#fff' });
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "إنهاء وتسليم الاختبار";
+      }
+    }
+  </script>
+</body>
+</html>
