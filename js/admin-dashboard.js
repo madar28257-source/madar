@@ -1,18 +1,21 @@
 import { auth, db } from "../firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import { collection, getDocs, query, orderBy, limit, where } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
-
-// ⚠️ مهم جداً: غير الإيميل ده لإيميلك الحقيقي
-const ADMIN_EMAIL = "admin@madar.com";
+import { collection, getDocs, query, orderBy, limit, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
 let recentResultsData = [];
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (user) {
-    if (user.email === ADMIN_EMAIL) {
+    // 🔥 بنشوف الإيميل موجود في كولكشن الأدمن ولا لأ
+    const adminQ = query(collection(db, "admins"), where("email", "==", user.email));
+    const adminSnap = await getDocs(adminQ);
+
+    if (!adminSnap.empty) {
+      // لو أدمن، نكمل ونعرض البيانات
       document.getElementById("admin-name").textContent = user.displayName || "الأدمن";
       loadDashboardData();
     } else {
+      // لو مش أدمن، نطرده
       window.location.href = "../dashboard.html";
     }
   } else {
