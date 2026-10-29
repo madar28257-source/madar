@@ -2,90 +2,80 @@
    تصميم المعمل الافتراضي 3D
    ========================================== */
 
-body {
-  margin: 0;
-  overflow: hidden; /* عشان نمنع السكرول */
-  background-color: var(--bg-color);
-}
+body { margin: 0; overflow: hidden; background-color: var(--bg-color); }
 
 .lab-navbar {
-  position: fixed;
-  top: 0; left: 0; width: 100%;
-  padding: 20px 40px;
+  position: fixed; top: 0; left: 0; width: 100%; padding: 20px 40px;
   display: flex; justify-content: space-between; align-items: center;
-  z-index: 10; pointer-events: none; /* عشان الماوس يعدي للمجسم */
+  z-index: 10; pointer-events: none; 
 }
-
-.lab-navbar .logo {
-  font-size: 1.5rem; font-weight: 900; color: #fff;
-  text-shadow: 0 0 15px rgba(124, 58, 237, 0.6);
-}
-
+.lab-navbar .logo { font-size: 1.5rem; font-weight: 900; color: #fff; text-shadow: 0 0 15px rgba(124, 58, 237, 0.6); }
 .btn-back {
-  pointer-events: auto;
-  background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
-  color: #fff; border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 10px 20px; border-radius: var(--radius-sm);
-  text-decoration: none; font-weight: 700;
-  transition: var(--transition);
+  pointer-events: auto; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
+  color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); padding: 10px 20px;
+  border-radius: var(--radius-sm); text-decoration: none; font-weight: 700; transition: var(--transition);
 }
 .btn-back:hover { background: var(--primary); box-shadow: 0 0 15px var(--primary); }
 
-#canvas-container {
-  width: 100vw; height: 100vh;
-  position: absolute; top: 0; left: 0;
-  z-index: 1;
-}
+#canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
 
 /* لوحة المعلومات */
 .info-panel {
-  position: fixed;
-  bottom: 30px; right: 30px;
-  width: 350px;
-  padding: 25px;
-  z-index: 10;
-  background: rgba(20, 20, 35, 0.7) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius);
-  backdrop-filter: blur(16px);
-  color: #fff;
-  animation: slideIn 0.8s ease-out;
+  position: fixed; bottom: 30px; right: 30px; width: 350px;
+  background: rgba(20, 20, 35, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius);
+  backdrop-filter: blur(16px); color: #fff; z-index: 10;
+  animation: slideIn 0.8s ease-out; display: flex; flex-direction: column;
+  transition: all 0.3s ease;
 }
 
 @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-.info-panel h3 { margin-bottom: 10px; color: var(--accent); font-size: 1.3rem; }
-.info-panel p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 15px; }
-.info-panel ul { list-style: none; padding: 0; margin-bottom: 20px; }
-.info-panel li { font-size: 0.9rem; margin-bottom: 8px; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 8px; }
+.info-header {
+  padding: 20px; display: flex; justify-content: space-between; align-items: center;
+  cursor: pointer; border-bottom: 1px solid transparent;
+}
+.info-header h3 { margin: 0; color: var(--accent); font-size: 1.2rem; }
+.toggle-icon { font-size: 1.2rem; color: var(--text-muted); transition: transform 0.3s; }
+
+.info-content {
+  padding: 0 20px 20px 20px; display: block; overflow: hidden;
+}
+.info-content p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 15px; }
+.info-content ul { list-style: none; padding: 0; margin-bottom: 20px; }
+.info-content li { font-size: 0.9rem; margin-bottom: 8px; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 8px; }
 
 .btn-toggle {
-  width: 100%; padding: 10px;
-  background: rgba(124, 58, 237, 0.2); color: var(--primary-light);
-  border: 1px solid var(--primary); border-radius: var(--radius-sm);
-  font-family: inherit; font-weight: 700; cursor: pointer;
-  transition: var(--transition);
+  width: 100%; padding: 10px; background: rgba(124, 58, 237, 0.2); color: var(--primary-light);
+  border: 1px solid var(--primary); border-radius: var(--radius-sm); font-family: inherit;
+  font-weight: 700; cursor: pointer; transition: var(--transition);
 }
 .btn-toggle:hover { background: var(--primary); color: #fff; }
 
 /* شاشة التحميل */
 .loading-screen {
-  position: fixed; inset: 0; z-index: 9999;
-  background: var(--bg-color); color: #fff;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  transition: opacity 0.5s;
+  position: fixed; inset: 0; z-index: 9999; background: var(--bg-color); color: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s;
 }
 .loading-screen h2 { margin-top: 20px; font-size: 1.5rem; }
 .loading-screen p { color: var(--text-muted); margin-top: 10px; font-size: 0.9rem; }
-
-.spinner {
-  width: 60px; height: 60px;
-  border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--primary);
-  border-radius: 50%; animation: spin 1s linear infinite;
-}
+.spinner { width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ==========================================
+   📱 تصميم الموبايل (الطي والفتح)
+   ========================================== */
 @media (max-width: 768px) {
-  .info-panel { width: 90%; right: 5%; bottom: 20px; padding: 15px; }
   .lab-navbar { padding: 15px 20px; }
+  .info-panel { 
+    width: 90%; right: 5%; bottom: 20px; padding: 0; 
+    max-height: 70vh; /* عشان لو التفاصيل طويلة */
+  }
+  .info-header { padding: 15px; }
+  .info-content { padding: 0 15px 15px 15px; }
+  
+  /* كلاس بيشتغل بالجافاسكريبت عشان يطوي المحتوى */
+  .info-panel.collapsed .info-content { display: none; }
+  .info-panel.collapsed .toggle-icon { transform: rotate(-90deg); }
+  .info-panel.collapsed { background: rgba(20, 20, 35, 0.95) !important; }
 }
