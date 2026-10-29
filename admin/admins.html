@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة الأدمن — لوحة تحكم مدار</title>
+  
+  <link rel="stylesheet" href="../base.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+  <div class="bg-orbs"></div>
+
+  <aside class="sidebar">
+    <div class="logo">MADAR</div>
+    <nav class="nav-links">
+      <a href="admin.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg><span>لوحة التحكم</span></a>
+      <a href="admin-exams.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg><span>الامتحانات</span></a>
+      <a href="admin-evaluations.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"></path></svg><span>التقييمات</span></a>
+      <a href="admin-books.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path></svg><span>المكتبة</span></a>
+      <a href="admin-students.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg><span>الطلاب</span></a>
+      <!-- الزرار الجديد -->
+      <a href="admins.html" class="active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg><span>إدارة الأدمن</span></a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <div class="top-bar">
+      <h2>إدارة حسابات الأدمن</h2>
+      <div class="admin-info">
+        <span style="font-weight:600; font-size:0.9rem;" id="admin-name">جاري التحميل...</span>
+        <div class="admin-avatar">A</div>
+      </div>
+    </div>
+
+    <!-- فورم إضافة أدمن -->
+    <div class="form-panel glass-panel" style="margin-bottom: 30px;">
+      <h3 style="margin-bottom: 20px; color: #fff;">إضافة أدمن جديد</h3>
+      <div class="form-grid">
+        <div class="input-group">
+          <label>البريد الإلكتروني</label>
+          <input type="email" id="new-admin-email" placeholder="user@example.com">
+        </div>
+        
+        <div class="input-group">
+          <label>الصلاحيات</label>
+          <select id="new-admin-role">
+            <option value="sub_admin">مدرس (Sub Admin)</option>
+            <option value="super_admin">مدير عام (Super Admin)</option>
+          </select>
+        </div>
+
+        <div class="input-group" id="grade-selection">
+          <label>السنة الدراسية المسؤول عنها</label>
+          <select id="new-admin-grade">
+            <option value="1-prep">أولى إعدادي</option>
+            <option value="2-prep">تانية إعدادي</option>
+            <option value="3-prep">تالتة إعدادي</option>
+            <option value="1-sec">أولى ثانوي</option>
+            <option value="2-sec">تانية ثانوي</option>
+            <option value="all">الكل (للمدير العام فقط)</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-save" id="add-admin-btn" style="margin-top: 15px;">إضافة الحساب</button>
+    </div>
+
+    <!-- جدول الأدمن -->
+    <div class="table-container glass-panel">
+      <h3 style="margin-bottom: 20px; color: #fff;">الحسابات الحالية</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>البريد الإلكتروني</th>
+            <th>الصلاحية</th>
+            <th>السنة</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="admins-table-body"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script type="module" src="../js/admins.js"></script>
+</body>
+</html>
