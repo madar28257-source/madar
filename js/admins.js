@@ -1,17 +1,27 @@
 import { auth, db } from "../firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import { collection, getDocs, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import { collection, getDocs, addDoc, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (user) {
     document.getElementById("admin-name").textContent = user.displayName || "الأدمن";
-    loadAdmins();
+    
+    // فحص الأمان: التأكد إن اللي داخل هو Super Admin
+    const adminQ = query(collection(db, "admins"), where("email", "==", user.email));
+    const adminSnap = await getDocs(adminQ);
+    
+    if (!adminSnap.empty && adminSnap.docs[0].data().role === 'super_admin') {
+      document.getElementById("admins-tab").style.display = "flex"; 
+      loadAdmins();
+    } else {
+      Swal.fire({ icon: 'error', title: 'ممنوع الدخول', text: 'هذه الصفحة مخصصة للمدير العام فقط.', background: '#12121f', color: '#fff' })
+      .then(() => window.location.href = "admin.html");
+    }
   } else {
     window.location.href = "../index.html";
   }
 });
 
-// تحميل جدول الأدمن
 async function loadAdmins() {
   const tbody = document.getElementById("admins-table-body");
   try {
@@ -39,7 +49,6 @@ async function loadAdmins() {
   }
 }
 
-// إضافة أدمن
 document.getElementById("add-admin-btn").addEventListener("click", async () => {
   const email = document.getElementById("new-admin-email").value.trim();
   const role = document.getElementById("new-admin-role").value;
@@ -54,7 +63,6 @@ document.getElementById("add-admin-btn").addEventListener("click", async () => {
   btn.disabled = true; btn.textContent = "جاري الإضافة...";
 
   try {
-    // بنحفظ كـ Array عشان لو مسؤول عن أكتر من سنة
     await addDoc(collection(db, "admins"), {
       email: email,
       role: role,
@@ -73,11 +81,10 @@ document.getElementById("add-admin-btn").addEventListener("click", async () => {
   }
 });
 
-// مسح أدمن
 window.deleteAdmin = (id, email) => {
   Swal.fire({
     title: 'تأكيد المسح',
-    text: `هل تريد إزالة صلاحيات الأدمن من (${email})؟ (ملاحظة: الحساب سيبقى موجود في Authentication لكنه لن يستطيع دخول لوحة التحكم).`,
+    text: `هل تريد إزالة صلاحيات الأدمن من (${email})؟`,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#ef4444',
