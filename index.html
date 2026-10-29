@@ -143,7 +143,6 @@
   </main>
 
   <script type="module">
-    // 🔥 ضفنا db عشان نقدر نقرأ من قاعدة البيانات
     import { auth, db } from "./firebase.js";
     import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
     import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
@@ -189,22 +188,25 @@
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         
-        // 2. البحث في كولكشن الأدمن عشان نعرف هو أدمن ولا طالب
-        const adminQ = query(collection(db, "admins"), where("email", "==", user.email));
+        // 🔥 تنظيف الإيميل من أي مسافات زيادة وتحويله لحروف صغيرة
+        const cleanEmail = user.email.trim().toLowerCase();
+
+        // 2. البحث في كولكشن الأدمن
+        const adminQ = query(collection(db, "admins"), where("email", "==", cleanEmail));
         const adminSnap = await getDocs(adminQ);
 
-        Swal.fire({
-          icon: 'success', title: 'أهلاً بك في MADAR!', text: 'تم تسجيل الدخول بنجاح',
-          timer: 1500, showConfirmButton: false, background: '#12121f', color: '#fff'
-        }).then(() => { 
-          if (!adminSnap.empty) {
-            // لو الإيميل ده موجود في كولكشن الأدمن يبقى ده أدمن
-            window.location.href = "admin/admin.html"; 
-          } else {
-            // لو مش موجود يبقى طالب عادي
-            window.location.href = "dashboard.html"; 
-          }
-        });
+        if (!adminSnap.empty) {
+            // لو لقيناه في كولكشن الأدمن يبقى ده أدمن
+            Swal.fire({ icon: 'success', title: 'أهلاً بك!', text: 'تم تسجيل الدخول كأدمن', timer: 1500, showConfirmButton: false, background: '#12121f', color: '#fff' })
+            .then(() => { window.location.href = "admin/admin.html"; });
+        } else {
+            // لو مش موجود، نطبع الإيميل في الكونسول عشان نتأكد
+            console.log("الإيميل اللي بندور عليه:", cleanEmail);
+            console.log("النتيجة:", adminSnap.size, "مستندات.");
+            
+            Swal.fire({ icon: 'info', title: 'طالب', text: 'تم تسجيل الدخول كطالب', timer: 1500, showConfirmButton: false, background: '#12121f', color: '#fff' })
+            .then(() => { window.location.href = "dashboard.html"; });
+        }
 
       } catch (error) {
         let errorMsg = "إيميل أو كلمة مرور غلط!";
@@ -222,7 +224,6 @@
     });
   </script>
 
-  <!-- كود تفعيل الـ PWA -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
