@@ -1,22 +1,36 @@
 import { auth, db } from "../firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import { collection, getDocs, query, orderBy, limit, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import { collection, getDocs, query, orderBy, limit, where } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
 let recentResultsData = [];
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    // 🔥 بنشوف الإيميل موجود في كولكشن الأدمن ولا لأ
-    const adminQ = query(collection(db, "admins"), where("email", "==", user.email));
-    const adminSnap = await getDocs(adminQ);
+    try {
+        // 🔥 السر هنا: بنجيب كل الأدمن ونقارن في المتصفح عشان نتفادى المسافات السرية
+        const cleanEmail = user.email.trim().toLowerCase();
+        const adminSnap = await getDocs(collection(db, "admins"));
+        
+        let isAdmin = false;
+        adminSnap.forEach((doc) => {
+            const adminData = doc.data();
+            if (adminData.email && adminData.email.trim().toLowerCase() === cleanEmail) {
+                isAdmin = true;
+            }
+        });
 
-    if (!adminSnap.empty) {
-      // لو أدمن، نكمل ونعرض البيانات
-      document.getElementById("admin-name").textContent = user.displayName || "الأدمن";
-      loadDashboardData();
-    } else {
-      // لو مش أدمن، نطرده
-      window.location.href = "../dashboard.html";
+        if (isAdmin) {
+            document.getElementById("admin-name").textContent = user.displayName || "الأدمن";
+            loadDashboardData();
+        } else {
+            Swal.fire({
+                icon: 'error', title: 'ممنوع الدخول', text: 'هذه الصفحة مخصصة للمعلم فقط.',
+                background: '#12121f', color: '#fff', allowOutsideClick: false
+            }).then(() => { window.location.href = "../dashboard.html"; });
+        }
+    } catch (error) {
+        console.error(error);
+        window.location.href = "../dashboard.html";
     }
   } else {
     window.location.href = "../index.html";
