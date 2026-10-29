@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="base.css">
   <link rel="stylesheet" href="css/lab.css">
 
-  <!-- خريطة استيراد مكتبات الـ 3D -->
   <script type="importmap">
     {
       "imports": {
@@ -35,13 +34,21 @@
 
   <div id="canvas-container"></div>
 
+  <!-- لوحة المعلومات (تتفتح وتتقفل) -->
   <div class="info-panel glass-panel" id="info-panel">
-    <h3 id="lab-title">جاري التحميل...</h3>
-    <p id="lab-desc">جاري تحميل الوصف...</p>
-    <ul id="lab-features">
-      <!-- المميزات هتظهر هنا بالجافاسكريبت -->
-    </ul>
-    <button id="toggle-rotation" class="btn-toggle">إيقاف الدوران التلقائي</button>
+    
+    <!-- الهيدر (ثابت) -->
+    <div class="info-header" id="info-header">
+      <h3 id="lab-title">جاري التحميل...</h3>
+      <span class="toggle-icon" id="toggle-icon">▼</span>
+    </div>
+
+    <!-- المحتوى (بيظهر ويختفي) -->
+    <div class="info-content" id="info-content">
+      <p id="lab-desc">جاري تحميل الوصف...</p>
+      <ul id="lab-features"></ul>
+      <button id="toggle-rotation" class="btn-toggle">إيقاف الدوران التلقائي</button>
+    </div>
   </div>
 
   <script type="module" src="js/lab.js"></script>
