@@ -11,12 +11,7 @@
 
   <style>
     .split-screen { display: flex; min-height: 100vh; position: relative; z-index: 10; }
-
-    .brand-section {
-      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 40px; text-align: center;
-    }
-
+    .brand-section { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
     .logo-container {
       position: relative; width: 100%; max-width: 450px; margin-bottom: 30px; padding: 20px 30px;
       background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -24,13 +19,11 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.3), 0 0 20px rgba(124, 58, 237, 0.15);
       display: flex; align-items: center; justify-content: center; overflow: hidden; animation: floatCard 5s ease-in-out infinite;
     }
-
     .logo-container::before {
       content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
       transform: skewX(-20deg); animation: shine 6s infinite;
     }
-
     @keyframes floatCard { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
 
@@ -38,14 +31,12 @@
     .brand-tagline { font-size: 1.2rem; color: var(--text-muted); max-width: 400px; line-height: 1.6; margin-top: 10px; }
 
     .form-section { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; }
-    
     .auth-card {
       width: 100%; max-width: 420px; padding: 40px 30px; text-align: center;
       background: var(--surface-color); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--glass-border); border-radius: var(--radius);
       transition: transform 0.1s ease; transform-style: preserve-3d;
     }
-
     .auth-card h2 { font-size: 1.8rem; margin-bottom: 8px; color: #fff; }
     .auth-card p.subtitle { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 30px; }
 
@@ -59,7 +50,6 @@
       border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
       color: #fff; font-family: inherit; font-size: 1rem; outline: none; transition: var(--transition);
     }
-
     .input-group input:focus { border-color: var(--primary); background: rgba(124, 58, 237, 0.05); box-shadow: 0 0 15px rgba(124, 58, 237, 0.2); }
     .input-group input:focus ~ .input-icon { color: var(--primary-light); }
 
@@ -73,7 +63,6 @@
       margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 10px;
       position: relative; overflow: hidden; transform: translateZ(40px);
     }
-
     .btn-submit:hover { transform: translateY(-2px) translateZ(40px); box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4); }
     .btn-submit:disabled { opacity: 0.8; cursor: not-allowed; }
 
@@ -184,22 +173,24 @@
       spinner.style.display = 'block';
 
       try {
-        // 1. تسجيل الدخول
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-        
-        // 2. تنظيف الإيميل
         const cleanEmail = user.email.trim().toLowerCase();
+        
+        console.log("1. المستخدم سجل دخول بإيميل:", cleanEmail);
 
-        // 3. البحث الذكي في كولكشن الأدمن (بيجيب الكل ويقارن في المتصفح)
         const adminSnap = await getDocs(collection(db, "admins"));
+        console.log("2. عدد الحسابات اللي لقيناها في كولكشن admins:", adminSnap.size);
+
         let isAdmin = false;
 
         adminSnap.forEach((doc) => {
             const adminData = doc.data();
-            // بنقارن الإيميل بعد تنظيفه من المسافات والحروف الكبيرة
+            console.log("3. بنشوف الإيميل ده:", adminData.email);
+            
             if (adminData.email && adminData.email.trim().toLowerCase() === cleanEmail) {
                 isAdmin = true;
+                console.log("4. ✅ الإيميل ده متطابق! ده أدمن.");
             }
         });
 
@@ -207,11 +198,13 @@
             Swal.fire({ icon: 'success', title: 'أهلاً بك!', text: 'تم تسجيل الدخول كأدمن', timer: 1500, showConfirmButton: false, background: '#12121f', color: '#fff' })
             .then(() => { window.location.href = "admin/admin.html"; });
         } else {
+            console.log("5. ❌ الإيميل ده مش متطابق مع أي أدمن. هنروح للداشبورد.");
             Swal.fire({ icon: 'info', title: 'طالب', text: 'تم تسجيل الدخول كطالب', timer: 1500, showConfirmButton: false, background: '#12121f', color: '#fff' })
             .then(() => { window.location.href = "dashboard.html"; });
         }
 
       } catch (error) {
+        console.error("Error:", error);
         let errorMsg = "إيميل أو كلمة مرور غلط!";
         if (error.code === 'auth/user-not-found') errorMsg = "الحساب ده مش موجود!";
         if (error.code === 'auth/wrong-password') errorMsg = "كلمة المرور غلط!";
