@@ -145,7 +145,7 @@
   <script type="module">
     import { auth, db } from "./firebase.js";
     import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
     const card = document.getElementById('tilt-card');
     document.addEventListener('mousemove', (e) => {
@@ -188,22 +188,25 @@
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         
-        // 🔥 تنظيف الإيميل من أي مسافات زيادة وتحويله لحروف صغيرة
+        // 2. تنظيف الإيميل
         const cleanEmail = user.email.trim().toLowerCase();
 
-        // 2. البحث في كولكشن الأدمن
-        const adminQ = query(collection(db, "admins"), where("email", "==", cleanEmail));
-        const adminSnap = await getDocs(adminQ);
+        // 3. البحث الذكي في كولكشن الأدمن (بيجيب الكل ويقارن في المتصفح)
+        const adminSnap = await getDocs(collection(db, "admins"));
+        let isAdmin = false;
 
-        if (!adminSnap.empty) {
-            // لو لقيناه في كولكشن الأدمن يبقى ده أدمن
+        adminSnap.forEach((doc) => {
+            const adminData = doc.data();
+            // بنقارن الإيميل بعد تنظيفه من المسافات والحروف الكبيرة
+            if (adminData.email && adminData.email.trim().toLowerCase() === cleanEmail) {
+                isAdmin = true;
+            }
+        });
+
+        if (isAdmin) {
             Swal.fire({ icon: 'success', title: 'أهلاً بك!', text: 'تم تسجيل الدخول كأدمن', timer: 1500, showConfirmButton: false, background: '#12121f', color: '#fff' })
             .then(() => { window.location.href = "admin/admin.html"; });
         } else {
-            // لو مش موجود، نطبع الإيميل في الكونسول عشان نتأكد
-            console.log("الإيميل اللي بندور عليه:", cleanEmail);
-            console.log("النتيجة:", adminSnap.size, "مستندات.");
-            
             Swal.fire({ icon: 'info', title: 'طالب', text: 'تم تسجيل الدخول كطالب', timer: 1500, showConfirmButton: false, background: '#12121f', color: '#fff' })
             .then(() => { window.location.href = "dashboard.html"; });
         }
