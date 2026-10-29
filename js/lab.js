@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-// 1. إعداد المشهد الأساسي
+// إعداد المشهد الأساسي
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x0a0a14, 0.02);
@@ -14,7 +14,6 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 container.appendChild(renderer.domElement);
 
-// الإضاءة
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
 scene.add(ambientLight);
 const pointLight = new THREE.PointLight(0x7c3aed, 2, 50);
@@ -33,27 +32,21 @@ controls.enablePan = false;
 controls.minDistance = 10;
 controls.maxDistance = 50;
 
-// 2. قراءة اسم المادة من الرابط
 const urlParams = new URLSearchParams(window.location.search);
-const subject = urlParams.get('subject') || 'science'; // الافتراضي هو العلوم
+const subject = urlParams.get('subject') || 'science'; 
 
 const labTitle = document.getElementById('lab-title');
 const labDesc = document.getElementById('lab-desc');
 const labFeatures = document.getElementById('lab-features');
 
-// 3. بناء المجسمات المختلفة
 let sceneObject = new THREE.Group();
-let animationFunction = () => {}; // الدالة اللي هتتحرك في الأنيميشن
+let animationFunction = () => {}; 
 
 function buildScienceLab() {
   labTitle.textContent = "الذرة (Atom) ⚛️";
   labDesc.textContent = "مجسم تفاعلي للنواة والإلكترونات.";
-  labFeatures.innerHTML = `
-    <li><span style="color: #ff4d4d;">🔴 بروتونات ونيوترونات:</span> توجد في النواة.</li>
-    <li><span style="color: #00d2ff;">🔵 الإلكترونات:</span> تدور حول النواة.</li>
-  `;
+  labFeatures.innerHTML = `<li><span style="color: #ff4d4d;">🔴 بروتونات ونيوترونات:</span> توجد في النواة.</li><li><span style="color: #00d2ff;">🔵 الإلكترونات:</span> تدور حول النواة.</li>`;
   
-  // النواة
   const nucleusGroup = new THREE.Group();
   for (let i = 0; i < 12; i++) {
     const geo = new THREE.SphereGeometry(0.6, 16, 16);
@@ -64,7 +57,6 @@ function buildScienceLab() {
   }
   sceneObject.add(nucleusGroup);
 
-  // الإلكترونات والمدارات
   const electrons = [];
   const colors = [0x00d2ff, 0x22c55e, 0xd946ef];
   for (let i = 0; i < 3; i++) {
@@ -97,10 +89,7 @@ function buildScienceLab() {
 function buildMathLab() {
   labTitle.textContent = "المجسم الهندسي (Geometry) 📐";
   labDesc.textContent = "مجسم ثلاثي الأبعاد متشابك يمثل النسب الرياضية.";
-  labFeatures.innerHTML = `
-    <li><span style="color: #f59e0b;">✨ نقاط التقاء:</span> تمثل الزوايا الهندسية.</li>
-    <li><span style="color: #00d2ff;">🔷 الخطوط:</span> تمثل المستقيمات في الفضاء.</li>
-  `;
+  labFeatures.innerHTML = `<li><span style="color: #f59e0b;">✨ نقاط التقاء:</span> تمثل الزوايا الهندسية.</li><li><span style="color: #00d2ff;">🔷 الخطوط:</span> تمثل المستقيمات في الفضاء.</li>`;
   
   const geo = new THREE.TorusKnotGeometry(5, 1, 128, 16, 3, 4);
   const mat = new THREE.MeshStandardMaterial({ color: 0x7c3aed, wireframe: true, emissive: 0x22d3ee, emissiveIntensity: 0.5 });
@@ -124,14 +113,10 @@ function buildMathLab() {
 function buildPhysicsLab() {
   labTitle.textContent = "البندول (Pendulum) ⏱️";
   labDesc.textContent = "محاكاة لحركة البندول وقوانين الجذب.";
-  labFeatures.innerHTML = `
-    <li><span style="color: #22c55e;">⚖️ نقطة التعليق:</span> النقطة الثابتة.</li>
-    <li><span style="color: #f59e0b;">⚡ كتلة البندول:</span> تتحرك بفعل الجاذبية.</li>
-  `;
+  labFeatures.innerHTML = `<li><span style="color: #22c55e;">⚖️ نقطة التعليق:</span> النقطة الثابتة.</li><li><span style="color: #f59e0b;">⚡ كتلة البندول:</span> تتحرك بفعل الجاذبية.</li>`;
 
   const pivot = new THREE.Group();
   sceneObject.add(pivot);
-
   const rodGeo = new THREE.CylinderGeometry(0.1, 0.1, 10);
   rodGeo.translate(0, -5, 0);
   const rodMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.8 });
@@ -144,18 +129,13 @@ function buildPhysicsLab() {
   bob.position.y = -10;
   pivot.add(bob);
 
-  animationFunction = (time) => {
-    pivot.rotation.z = Math.sin(time * 2) * 0.8;
-  };
+  animationFunction = (time) => { pivot.rotation.z = Math.sin(time * 2) * 0.8; };
 }
 
 function buildGeographyLab() {
   labTitle.textContent = "الكرة الأرضية (Globe) 🌍";
   labDesc.textContent = "مجسم الكوكب وخطوط الطول والعرض.";
-  labFeatures.innerHTML = `
-    <li><span style="color: #22c55e;">🟢 خطوط العرض:</span> دوائر موازية لخط الاستواء.</li>
-    <li><span style="color: #00d2ff;">🔵 خطوط الطول:</span> دوائر تمر بالقطبين.</li>
-  `;
+  labFeatures.innerHTML = `<li><span style="color: #22c55e;">🟢 خطوط العرض:</span> دوائر موازية لخط الاستواء.</li><li><span style="color: #00d2ff;">🔵 خطوط الطول:</span> دوائر تمر بالقطبين.</li>`;
 
   const geo = new THREE.SphereGeometry(7, 36, 18);
   const mat = new THREE.MeshBasicMaterial({ color: 0x00d2ff, wireframe: true, transparent: true, opacity: 0.6 });
@@ -167,18 +147,13 @@ function buildGeographyLab() {
   const core = new THREE.Mesh(coreGeo, coreMat);
   sceneObject.add(core);
 
-  animationFunction = (time) => {
-    globe.rotation.y = time * 0.1;
-  };
+  animationFunction = (time) => { globe.rotation.y = time * 0.1; };
 }
 
 function buildHistoryLab() {
   labTitle.textContent = "الهرم (Pyramid) 🏛️";
   labDesc.textContent = "مجسم هندسي يحاكي عظمة الحضارة المصرية القديمة.";
-  labFeatures.innerHTML = `
-    <li><span style="color: #f59e0b;">🔶 القاعدة:</span> مربعة الشكل.</li>
-    <li><span style="color: #22c55e;">🔺 الأوجه:</span> 4 مثلثات تلتقي في القمة.</li>
-  `;
+  labFeatures.innerHTML = `<li><span style="color: #f59e0b;">🔶 القاعدة:</span> مربعة الشكل.</li><li><span style="color: #22c55e;">🔺 الأوجه:</span> 4 مثلثات تلتقي في القمة.</li>`;
 
   const geo = new THREE.ConeGeometry(6, 8, 4);
   geo.rotateY(Math.PI / 4);
@@ -188,45 +163,49 @@ function buildHistoryLab() {
   const edges = new THREE.EdgesGeometry(geo);
   const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 }));
   pyramid.add(line);
-
   sceneObject.add(pyramid);
 
-  animationFunction = (time) => {
-    pyramid.position.y = Math.sin(time * 2) * 0.5;
-  };
+  animationFunction = (time) => { pyramid.position.y = Math.sin(time * 2) * 0.5; };
 }
 
-// اختيار المعمل بناءً على المادة (ضفنا الدراسات الاجتماعية)
 switch (subject) {
   case 'الرياضيات': buildMathLab(); break;
   case 'الفيزياء': buildPhysicsLab(); break;
   case 'الجغرافيا': 
-  case 'الدراسات الاجتماعية': // 🔥 ضفنا دي عشان الإعدادي
-    buildGeographyLab(); 
-    break;
+  case 'الدراسات الاجتماعية': buildGeographyLab(); break;
   case 'التاريخ': buildHistoryLab(); break;
-  default: buildScienceLab(); break; // العلوم، الكيمياء، أو أي مادة تانية
+  default: buildScienceLab(); break;
 }
 
 scene.add(sceneObject);
 
-// أنيميشن وتشغيل
 const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   const time = clock.getElapsedTime();
-  
   animationFunction(time);
   controls.update();
   renderer.render(scene, camera);
 }
 
-// زرار إيقاف الدوران
 let isAutoRotating = true;
 document.getElementById('toggle-rotation').addEventListener('click', (e) => {
   isAutoRotating = !isAutoRotating;
   controls.autoRotate = isAutoRotating;
   e.target.textContent = isAutoRotating ? 'إيقاف الدوران التلقائي' : 'تشغيل الدوران التلقائي';
+});
+
+// 🔥 السحر الجديد: فتح وقفل لوحة المعلومات
+const infoPanel = document.getElementById('info-panel');
+const infoHeader = document.getElementById('info-header');
+
+// بنخليها مقفولة افتراضياً على الموبايل
+if (window.innerWidth < 768) {
+  infoPanel.classList.add('collapsed');
+}
+
+infoHeader.addEventListener('click', () => {
+  infoPanel.classList.toggle('collapsed');
 });
 
 window.addEventListener('resize', () => {
