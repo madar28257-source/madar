@@ -6,8 +6,7 @@
   <title>لوحة تحكم الأدمن — منصة MADAR</title>
   
   <link rel="stylesheet" href="../base.css">
-  <!-- 🔥 ضفنا ?v=3 عشان نكسر الكاش -->
-  <link rel="stylesheet" href="../css/admin.css?v=3">
+  <link rel="stylesheet" href="../css/admin.css?v=6">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
@@ -82,7 +81,7 @@
         <thead>
           <tr>
             <th>اسم الطالب</th>
-            <th>السنة الدراسية</th>
+            <th>السنة</th>
             <th>المادة</th>
             <th>الاختبار</th>
             <th>الدرجة</th>
@@ -103,17 +102,12 @@
     const overlay = document.getElementById('sidebar-overlay');
     const menuBtn = document.getElementById('mobile-menu-btn');
     const closeBtn = document.getElementById('close-sidebar-btn');
-
-    function toggleMenu() {
-      sidebar.classList.toggle('open');
-      overlay.classList.toggle('active');
-    }
-
+    function toggleMenu() { sidebar.classList.toggle('open'); overlay.classList.toggle('active'); }
     if(menuBtn) menuBtn.addEventListener('click', toggleMenu);
     if(closeBtn) closeBtn.addEventListener('click', toggleMenu);
     if(overlay) overlay.addEventListener('click', toggleMenu);
   </script>
 
-  <script type="module" src="../js/admin-dashboard.js"></script>
+  <script type="module" src="../js/admin-dashboard.js?v=6"></script>
 </body>
 </html>
