@@ -136,6 +136,20 @@
     import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
     import { collection, getDocs } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
+    const card = document.getElementById('tilt-card');
+    document.addEventListener('mousemove', (e) => {
+      if(window.innerWidth < 900) return; 
+      let xAxis = (window.innerWidth / 2 - e.pageX) / 30;
+      let yAxis = (window.innerHeight / 2 - e.pageY) / 30;
+      card.style.transform = `perspective(1000px) rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+    });
+    document.addEventListener('mouseleave', () => {
+      if(window.innerWidth < 900) return;
+      card.style.transform = `perspective(1000px) rotateY(0deg) rotateX(0deg)`;
+      card.style.transition = "transform 0.5s ease";
+    });
+    document.addEventListener('mouseenter', () => { card.style.transition = "transform 0.1s ease"; });
+
     const passwordInput = document.getElementById('password');
     const togglePassword = document.getElementById('toggle-password');
     togglePassword.addEventListener('click', () => {
@@ -161,38 +175,40 @@
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
+        
+        // نضف الإيميل عشان نقارن صح
         const cleanEmail = user.email.trim().toLowerCase();
 
-        // جلب كل الأدمن
+        // البحث في كولكشن الأدمن
         const adminSnap = await getDocs(collection(db, "admins"));
         let isAdmin = false;
-        let allAdminEmails = [];
 
         adminSnap.forEach((doc) => {
             const adminData = doc.data();
-            if(adminData.email) {
-                allAdminEmails.push(adminData.email);
-                if (adminData.email.trim().toLowerCase() === cleanEmail) {
-                    isAdmin = true;
-                }
+            if (adminData.email && adminData.email.trim().toLowerCase() === cleanEmail) {
+                isAdmin = true;
             }
         });
 
-        // 🔥 رسالة مؤقتة عشان نشوف الكود شايف إيه بالظبط
-        if (!isAdmin) {
+        if (isAdmin) {
+            // ✨ لو أدمن: رسالة ترحيب وتوجيه للوحة التحكم
             Swal.fire({ 
-                icon: 'warning', 
-                title: 'تشخيص المشكلة', 
-                html: `إنت مسجل دخول بالإيميل: <b>${cleanEmail}</b><br><br>
-                       الإيميلات اللي الكود لقاها في الأدمن هي:<br> <b>${allAdminEmails.join('<br>') || 'مفيش أيميلات خالص'}</b><br><br>
-                       لو إنت شايف إن إيميلك مش موجود فوق، يبقى المشكلة في مكان الحفظ في الفايربيز.`, 
-                background: '#12121f', color: '#fff' 
-            }).then(() => {
-                window.location.href = "dashboard.html";
-            });
+                icon: 'success', 
+                title: 'أهلاً بك!', 
+                text: 'تم تسجيل الدخول كأدمن', 
+                timer: 1500, showConfirmButton: false, background: '#12121f', color: '#fff' 
+            }).then(() => { window.location.href = "admin/admin.html"; });
         } else {
-            Swal.fire({ icon: 'success', title: 'أهلاً بك!', text: 'تم تسجيل الدخول كأدمن', timer: 1500, showConfirmButton: false, background: '#12121f', color: '#fff' })
-            .then(() => { window.location.href = "admin/admin.html"; });
+            // ✨ لو طالب: رسالة ترحيب بالاسم
+            const studentName = user.displayName || "طالب"; // جلب الاسم اللي سجله
+            Swal.fire({ 
+                icon: 'success', 
+                title: `أهلاً بك يا ${studentName} في منصة مدار!`, 
+                timer: 2000, 
+                showConfirmButton: false, 
+                background: '#12121f', 
+                color: '#fff' 
+            }).then(() => { window.location.href = "dashboard.html"; });
         }
 
       } catch (error) {
@@ -209,6 +225,16 @@
         spinner.style.display = 'none';
       }
     });
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('✅ PWA شغال بنجاح', reg.scope))
+          .catch((err) => console.log('❌ فشل تفعيل PWA', err));
+      });
+    }
   </script>
 </body>
 </html>
