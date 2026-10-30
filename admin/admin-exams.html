@@ -6,26 +6,19 @@
   <title>إضافة امتحان — لوحة تحكم مدار</title>
   
   <link rel="stylesheet" href="../base.css">
-  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/admin.css?v=4">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
   <style>
     .hidden-field { display: none; }
-    .question-block { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 20px; margin-bottom: 20px; position: relative; animation: fadeIn 0.3s ease-out; }
-    .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
-    .q-header h4 { color: var(--primary-light); font-size: 1.1rem; }
-    .btn-delete-q { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 5px 12px; border-radius: 6px; cursor: pointer; transition: var(--transition); }
-    .btn-delete-q:hover { background: #ef4444; color: #fff; }
-    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
-    .btn-add-q { width: 100%; padding: 15px; background: rgba(124, 58, 237, 0.1); border: 1px dashed var(--primary); color: var(--primary-light); border-radius: var(--radius-sm); font-family: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; transition: var(--transition); margin-bottom: 30px; }
-    .btn-add-q:hover { background: rgba(124, 58, 237, 0.2); }
   </style>
 </head>
 <body>
 
   <div class="bg-orbs"></div>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
+    <button class="close-sidebar-btn" id="close-sidebar-btn">✖</button>
     <div class="logo">MADAR</div>
     <nav class="nav-links">
       <a href="admin.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg><span>لوحة التحكم</span></a>
@@ -33,11 +26,13 @@
       <a href="admin-evaluations.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"></path></svg><span>التقييمات</span></a>
       <a href="admin-books.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path></svg><span>المكتبة</span></a>
       <a href="admin-students.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg><span>الطلاب</span></a>
+      <a href="admins.html" id="admins-tab" style="display: none;"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg><span>إدارة الأدمن</span></a>
     </nav>
   </aside>
 
   <main class="main-content">
     <div class="top-bar">
+      <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
       <h2>إنشاء امتحان جديد</h2>
       <div class="admin-info">
         <span style="font-weight:600; font-size:0.9rem;" id="admin-name">جاري التحميل...</span>
@@ -45,6 +40,7 @@
       </div>
     </div>
 
+    <!-- فورم إضافة الامتحان -->
     <div class="form-panel glass-panel">
       <h3 style="margin-bottom: 20px; color: #fff;">بيانات الامتحان</h3>
       <div class="form-grid">
@@ -81,7 +77,7 @@
 
         <div class="input-group">
           <label>المادة الدراسية</label>
-          <input type="text" id="exam-subject" placeholder="مثال: الرياضيات، الفيزياء...">
+          <input type="text" id="exam-subject" placeholder="مثال: الرياضيات...">
         </div>
 
         <div class="input-group">
@@ -95,13 +91,46 @@
       </div>
     </div>
 
+    <!-- فورم إضافة الأسئلة -->
     <div class="form-panel glass-panel">
       <h3 style="margin-bottom: 20px; color: #fff;">أسئلة الامتحان</h3>
       <div id="questions-container"></div>
-      <button class="btn-add-q" id="add-question-btn">+ إضافة سؤال جديد</button>
+      <button class="btn-save" style="background: rgba(124, 58, 237, 0.1); color: var(--primary-light); border: 1px dashed var(--primary); margin-bottom: 20px;" id="add-question-btn">+ إضافة سؤال جديد</button>
+      
       <button class="btn-save" id="save-exam-btn">حفظ الامتحان في قاعدة البيانات</button>
     </div>
+
+    <!-- 🔥 جدول مسح الامتحانات -->
+    <div class="table-container glass-panel">
+      <h3 style="margin-bottom: 20px; color: #fff;">الامتحانات المضافة حالياً</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>العنوان</th>
+            <th>المادة</th>
+            <th>السنة</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="exams-table-body">
+          <tr><td colspan="4" style="text-align:center;">جاري التحميل...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
   </main>
+
+  <script>
+    // كود فتح وقفل القائمة
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const menuBtn = document.getElementById('mobile-menu-btn');
+    const closeBtn = document.getElementById('close-sidebar-btn');
+    function toggleMenu() { sidebar.classList.toggle('open'); overlay.classList.toggle('active'); }
+    if(menuBtn) menuBtn.addEventListener('click', toggleMenu);
+    if(closeBtn) closeBtn.addEventListener('click', toggleMenu);
+    if(overlay) overlay.addEventListener('click', toggleMenu);
+  </script>
 
   <script type="module" src="../js/admin-exams.js"></script>
 </body>
