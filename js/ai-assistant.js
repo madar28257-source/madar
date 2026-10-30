@@ -1,10 +1,11 @@
 // ==========================================
-// 🤖 كود المساعد الذكي (Gemini API)
+// 🤖 كود المساعد الذكي (باستخدام مكتبة Google الرسمية)
 // ==========================================
 
-// ⚠️ حط الـ API Key بتاعك هنا بين علامات التنصيص
-const GEMINI_API_KEY = "AQ.Ab8RN6IYCsd6ZHhDgROYE0QSSXFtvNXtzQD-9KSAJnoCt0ZjwQ"; 
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai";
+
+// حط المفتاح بتاعك هنا (سواء AIza أو AQ)
+const GEMINI_API_KEY = "ضع_المفتاح_بتاعك_هنا"; 
 
 const aiToggleBtn = document.getElementById('ai-toggle-btn');
 const aiChatBox = document.getElementById('ai-chat-box');
@@ -14,8 +15,8 @@ const aiInput = document.getElementById('ai-input');
 const aiMessages = document.getElementById('ai-messages');
 
 // فتح وقفل الشات
-aiToggleBtn.addEventListener('click', () => { aiChatBox.classList.add('active'); });
-aiCloseBtn.addEventListener('click', () => { aiChatBox.classList.remove('active'); });
+if(aiToggleBtn) aiToggleBtn.addEventListener('click', () => { aiChatBox.classList.add('active'); });
+if(aiCloseBtn) aiCloseBtn.addEventListener('click', () => { aiChatBox.classList.remove('active'); });
 
 // إرسال الرسالة
 async function sendMessage() {
@@ -31,32 +32,34 @@ async function sendMessage() {
   addMessage('جاري التفكير... ⏳', 'ai', loadingMsgId);
 
   try {
-    const response = await fetch(GEMINI_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: `أنت مساعد تعليمي ذكي لمنصة "مدار" التعليمية في مصر. أجب على السؤال التالي باللغة العربية بأسلوب مبسط ومشجع للطالب: ${text}` }]
-        }]
-      })
-    });
+    // تهيئة المكتبة بالمفتاح
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const data = await response.json();
+    // إرسال الطلب
+    const result = await model.generateContent(`أنت مساعد تعليمي ذكي لمنصة "مدار" التعليمية في مصر. أجب على السؤال التالي باللغة العربية بأسلوب مبسط ومشجع للطالب: ${text}`);
+    const response = await result.response;
+    const aiReply = response.text();
     
     // إزالة رسالة التحميل
     document.getElementById(loadingMsgId).remove();
 
-    if (data.candidates && data.candidates.length > 0) {
-      const aiReply = data.candidates[0].content.parts[0].text;
+    if (aiReply) {
       addMessage(aiReply, 'ai');
     } else {
-      addMessage('عذراً يا بطل، حدث خطأ في الاتصال بالذكاء الاصطناعي.', 'ai');
+      addMessage('عذراً يا بطل، لم أفهم إجابتك. حاول مرة أخرى.', 'ai');
     }
 
   } catch (error) {
     console.error("AI Error:", error);
     document.getElementById(loadingMsgId).remove();
-    addMessage('عذراً، تأكد من اتصالك بالإنترنت وحاول مرة أخرى.', 'ai');
+    
+    // عرض رسالة الخطأ الحقيقية عشان نعرف المشكلة
+    let errorMsg = "حدث خطأ في الاتصال بالذكاء الاصطناعي.";
+    if(error.message.includes("API_KEY_INVALID")) errorMsg = "مفتاح الـ API غير صحيح.";
+    if(error.message.includes("PERMISSION_DENIED")) errorMsg = "المفتاح لا يملك صلاحية لاستخدام الخدمة، تأكد من تفعيلها في Google Cloud.";
+    
+    addMessage(`عذراً: ${errorMsg}`, 'ai');
   }
 }
 
@@ -65,16 +68,13 @@ function addMessage(text, sender, id = null) {
   const msgDiv = document.createElement('div');
   msgDiv.className = `msg ${sender}`;
   if (id) msgDiv.id = id;
-  
-  // تنسيق النص (لو فيه أكواد أو نقاط)
   msgDiv.innerText = text; 
-  
   aiMessages.appendChild(msgDiv);
   aiMessages.scrollTop = aiMessages.scrollHeight;
 }
 
 // ربط الزرار بزر Enter
-aiSendBtn.addEventListener('click', sendMessage);
-aiInput.addEventListener('keypress', (e) => {
+if(aiSendBtn) aiSendBtn.addEventListener('click', sendMessage);
+if(aiInput) aiInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') sendMessage();
 });
