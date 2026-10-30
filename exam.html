@@ -3,29 +3,97 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>الاختبار — منصة MADAR</title>
+  <title>معركة الزعيم — منصة MADAR</title>
   
   <link rel="stylesheet" href="base.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
-    .navbar { background: rgba(11, 12, 16, 0.8); backdrop-filter: blur(12px); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); position: fixed; top: 0; width: 100%; z-index: 100; }
+    body { background-color: #0b0c10; overflow: hidden; }
+    
+    .navbar { background: rgba(11, 12, 16, 0.8); backdrop-filter: blur(12px); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); position: fixed; top: 0; width: 100%; z-index: 100; }
     .navbar .logo { font-size: 1.2rem; font-weight: 900; color: #fff; }
     
-    .timer-box { display: flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.05); padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); font-weight: 700; font-size: 1.1rem; color: var(--accent); transition: var(--transition); }
-    .timer-box.warning { color: #f59e0b; border-color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
-    .timer-box.danger { color: #ef4444; border-color: #ef4444; background: rgba(239, 68, 68, 0.1); animation: pulse 1s infinite; }
+    .timer-box { display: flex; align-items: center; gap: 8px; background: rgba(239, 68, 68, 0.1); padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid #ef4444; font-weight: 900; font-size: 1.2rem; color: #ef4444; animation: pulse 1s infinite; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
     .loading-screen { position: fixed; inset: 0; background: var(--bg-color); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s; }
     .spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .exam-container { max-width: 800px; margin: 100px auto 40px; padding: 0 20px; position: relative; z-index: 10; }
-    .progress-bar-container { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; margin-bottom: 30px; overflow: hidden; }
-    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); width: 0%; transition: width 0.3s ease; }
+    /* 🔥 تصميم ساحة المعركة */
+    .battle-arena {
+      max-width: 800px;
+      margin: 90px auto 20px;
+      padding: 0 20px;
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* الزعيم */
+    .boss-container {
+      text-align: center;
+      margin-bottom: 30px;
+      position: relative;
+    }
+    .boss-avatar {
+      font-size: 5rem;
+      animation: bossFloat 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.6));
+    }
+    @keyframes bossFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
     
-    .question-card { padding: 40px; margin-bottom: 20px; animation: fadeIn 0.4s ease-out; }
+    .boss-name { color: #ef4444; font-weight: 900; font-size: 1.2rem; margin-bottom: 10px; text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+
+    /* شريط صحة الزعيم */
+    .boss-health-bar-container {
+      width: 300px;
+      height: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 2px solid #ef4444;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      margin: 0 auto;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+    }
+    .boss-health-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #991b1b, #ef4444);
+      width: 100%;
+      transition: width 0.5s ease-out;
+    }
+    .boss-hp-text {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 0.7rem; font-weight: 900; text-shadow: 1px 1px 2px #000;
+    }
+
+    /* تأثير الاهتزاز عند الضرب */
+    .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-1px, 0, 0); }
+      20%, 80% { transform: translate3d(2px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+      40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+
+    /* أرقام الضرر الطايرة */
+    .damage-number {
+      position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
+      font-size: 2rem; font-weight: 900; color: #ef4444;
+      text-shadow: 0 0 10px #fff; pointer-events: none;
+      animation: floatUp 1s forwards;
+    }
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -100px) scale(1.5); }
+    }
+
+    /* كارت السؤال */
+    .question-card { padding: 30px; margin-bottom: 20px; width: 100%; animation: fadeIn 0.4s ease-out; border: 1px solid var(--primary); box-shadow: 0 0 20px rgba(124, 58, 237, 0.2); }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
     .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; }
@@ -33,25 +101,26 @@
     .question-text { font-size: 1.3rem; font-weight: 700; line-height: 1.6; color: #fff; margin-bottom: 20px; }
     .question-image { max-width: 100%; border-radius: 10px; margin-bottom: 20px; display: none; }
 
-    .options-list { display: flex; flex-direction: column; gap: 15px; }
-    .option-item { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); padding: 18px 20px; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; gap: 15px; transition: var(--transition); font-size: 1.1rem; }
-    .option-item:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(124, 58, 237, 0.4); }
-    .option-item.selected { background: rgba(124, 58, 237, 0.15); border-color: var(--primary); box-shadow: 0 0 15px rgba(124, 58, 237, 0.2); }
+    .options-list { display: flex; flex-direction: column; gap: 12px; }
+    .option-item { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); padding: 15px 20px; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; gap: 15px; transition: var(--transition); font-size: 1.1rem; }
+    .option-item:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(124, 58, 237, 0.6); transform: translateX(-5px); }
+    .option-item.selected { background: rgba(124, 58, 237, 0.2); border-color: var(--primary); box-shadow: 0 0 15px rgba(124, 58, 237, 0.4); }
     
-    .option-radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--text-muted); display: flex; align-items: center; justify-content: center; transition: var(--transition); }
-    .option-item.selected .option-radio { border-color: var(--primary-light); }
-    .option-item.selected .option-radio::after { content: ''; width: 10px; height: 10px; background: var(--primary-light); border-radius: 50%; }
+    .option-radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--text-muted); display: flex; align-items: center; justify-content: center; transition: var(--transition); flex-shrink: 0; }
+    .option-item.selected .option-radio { border-color: #fff; background: var(--primary); }
+    .option-item.selected .option-radio::after { content: '✓'; font-size: 12px; color: #fff; font-weight: bold; }
 
-    .essay-area { display: none; width: 100%; min-height: 150px; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: #fff; font-family: inherit; font-size: 1.1rem; outline: none; resize: vertical; }
-    .essay-area:focus { border-color: var(--primary); }
+    .essay-area { display: none; width: 100%; min-height: 120px; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: #fff; font-family: inherit; font-size: 1.1rem; outline: none; resize: vertical; }
+    .essay-area:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(124, 58, 237, 0.3); }
 
     .controls { display: flex; justify-content: space-between; gap: 15px; margin-top: 30px; }
-    .btn { padding: 12px 25px; border-radius: var(--radius-sm); font-family: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; transition: var(--transition); border: none; display: flex; align-items: center; gap: 8px; }
+    .btn { padding: 12px 25px; border-radius: var(--radius-sm); font-family: inherit; font-size: 1rem; font-weight: 900; cursor: pointer; transition: var(--transition); border: none; display: flex; align-items: center; gap: 8px; }
     .btn-prev { background: transparent; color: var(--text-muted); border: 1px solid var(--glass-border); }
     .btn-prev:hover { background: rgba(255,255,255,0.05); color: #fff; }
-    .btn-next { background: rgba(124, 58, 237, 0.2); color: var(--primary-light); border: 1px solid var(--primary); }
-    .btn-next:hover { background: var(--primary); color: #fff; }
-    .btn-submit { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; display: none; margin-right: auto; }
+    .btn-next { background: linear-gradient(135deg, #7c3aed, #22d3ee); color: #fff; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4); }
+    .btn-next:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(124, 58, 237, 0.6); }
+    .btn-submit { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; display: none; margin-right: auto; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4); }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(34, 197, 94, 0.6); }
 
     .result-score { font-size: 4.5rem; font-weight: 900; color: var(--primary-light); text-align: center; margin: 20px 0; text-shadow: 0 0 20px rgba(124, 58, 237, 0.3); line-height: 1; }
     .result-text { text-align: center; font-size: 1.1rem; color: #fff; margin-top: 15px; }
@@ -61,34 +130,43 @@
 
   <div class="loading-screen" id="loading-screen">
     <div class="spinner"></div>
-    <p style="margin-top: 20px; color: var(--text-muted); font-weight: 600;">جاري تحميل أسئلة الامتحان...</p>
+    <p style="margin-top: 20px; color: var(--text-muted); font-weight: 600;">جاري استدعاء الزعيم...</p>
   </div>
 
   <div class="bg-orbs"></div>
 
   <nav class="navbar">
-    <div class="logo" id="nav-subject-name">جاري التحميل...</div>
+    <div class="logo" id="nav-subject-name">معركة الزعيم</div>
     <div class="timer-box" id="timer-box" style="display:none;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
       <span id="timer-text">00:00</span>
     </div>
   </nav>
 
-  <main class="exam-container" id="exam-container" style="display:none;">
-    <div class="progress-bar-container"><div class="progress-bar-fill" id="progress-fill"></div></div>
+  <main class="battle-arena" id="exam-container" style="display:none;">
+    
+    <!-- 👹 الزعيم -->
+    <div class="boss-container" id="boss-container">
+      <div class="boss-avatar">👹</div>
+      <div class="boss-name">حارس المعرفة</div>
+      <div class="boss-health-bar-container">
+        <div class="boss-health-fill" id="boss-health-fill"></div>
+        <div class="boss-hp-text" id="boss-hp-text">100%</div>
+      </div>
+    </div>
 
+    <!-- 📝 كارت السؤال -->
     <div class="question-card glass-panel" id="question-card">
       <div class="question-header"><span class="question-number" id="question-number">السؤال 1</span></div>
       <div class="question-text" id="question-text">جاري التحميل...</div>
       <img id="question-image" class="question-image" src="" alt="صورة السؤال">
       
       <div class="options-list" id="options-list"></div>
-      <textarea id="essay-input" class="essay-area" placeholder="اكتب إجابتك المقالية هنا..."></textarea>
+      <textarea id="essay-input" class="essay-area" placeholder="اكتب إجابتك هنا..."></textarea>
 
       <div class="controls">
         <button class="btn btn-prev" id="btn-prev" onclick="prevQuestion()" style="visibility: hidden;">السابق</button>
         <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">التالي</button>
-        <button class="btn btn-submit" id="btn-submit" onclick="confirmSubmit()">إنهاء وتسليم الاختبار</button>
+        <button class="btn btn-submit" id="btn-submit" onclick="confirmSubmit()">إنهاء المعركة!</button>
       </div>
     </div>
   </main>
@@ -107,6 +185,7 @@
     let currentExamId = null;
     let currentSubjectName = null;
     let startTime = null; 
+    let currentBossHP = 100;
 
     const qNumberEl = document.getElementById('question-number');
     const qTextEl = document.getElementById('question-text');
@@ -116,11 +195,13 @@
     const btnPrev = document.getElementById('btn-prev');
     const btnNext = document.getElementById('btn-next');
     const btnSubmit = document.getElementById('btn-submit');
-    const progressFill = document.getElementById('progress-fill');
     const timerText = document.getElementById('timer-text');
     const timerBox = document.getElementById('timer-box');
     const loadingScreen = document.getElementById('loading-screen');
     const examContainer = document.getElementById('exam-container');
+    const bossContainer = document.getElementById('boss-container');
+    const bossHealthFill = document.getElementById('boss-health-fill');
+    const bossHpText = document.getElementById('boss-hp-text');
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) { window.location.href = "index.html"; return; }
@@ -128,7 +209,7 @@
       const urlParams = new URLSearchParams(window.location.search);
       currentExamId = urlParams.get('examId');
       currentSubjectName = urlParams.get('name') || 'اختبار عام';
-      document.getElementById('nav-subject-name').textContent = currentSubjectName;
+      document.getElementById('nav-subject-name').textContent = `معركة: ${currentSubjectName}`;
 
       if (!currentExamId) {
         Swal.fire({ icon: 'error', title: 'خطأ', text: 'لم يتم العثور على الامتحان', background: '#12121f', color: '#fff' }).then(() => window.location.href = "dashboard.html");
@@ -140,7 +221,7 @@
         const resultsSnapshot = await getDocs(resultsQuery);
 
         if (!resultsSnapshot.empty) {
-          Swal.fire({ icon: 'info', title: 'لقد قمت بأداء هذا الامتحان', text: 'لا يمكنك إعادة الامتحان مرة أخرى.', background: '#12121f', color: '#fff' })
+          Swal.fire({ icon: 'info', title: 'لقد قاتلت هذا الزعيم من قبل!', text: 'لا يمكنك إعادة الامتحان مرة أخرى.', background: '#12121f', color: '#fff' })
           .then(() => window.location.href = `subject.html?name=${encodeURIComponent(currentSubjectName)}`);
           return;
         }
@@ -156,6 +237,9 @@
           totalExamMarks = examData.questions.reduce((sum, q) => sum + q.points, 0);
           timeLeft = examData.duration * 60;
           startTime = Date.now(); 
+          
+          // حساب الضرر لكل سؤال (عشان شريط صحة الزعيم)
+          calculateDamagePerQuestion();
 
           loadingScreen.style.opacity = '0';
           setTimeout(() => {
@@ -176,6 +260,12 @@
       }
     });
 
+    // حساب نسبة الضرر اللي السؤال بيعمله للزعيم
+    let damagePerQuestion = [];
+    function calculateDamagePerQuestion() {
+        damagePerQuestion = examData.questions.map(q => (q.points / totalExamMarks) * 100);
+    }
+
     function renderQuestion() {
       const q = examData.questions[currentQuestionIndex];
       qNumberEl.textContent = `السؤال ${currentQuestionIndex + 1} من ${examData.questions.length} (الدرجة: ${q.points})`;
@@ -187,9 +277,6 @@
       } else {
           qImageEl.style.display = 'none';
       }
-      
-      const progress = ((currentQuestionIndex + 1) / examData.questions.length) * 100;
-      progressFill.style.width = progress + '%';
 
       if (q.type === 'essay') {
           optionsListEl.style.display = 'none';
@@ -205,7 +292,7 @@
             const div = document.createElement('div');
             div.className = `option-item ${userAnswers[currentQuestionIndex] === index ? 'selected' : ''}`;
             div.innerHTML = `<div class="option-radio"></div><span>${opt}</span>`;
-            div.onclick = () => selectOption(index);
+            div.onclick = () => selectOption(index, q.correct, q.points);
             optionsListEl.appendChild(div);
           });
       }
@@ -220,7 +307,50 @@
       }
     }
 
-    window.selectOption = (index) => { userAnswers[currentQuestionIndex] = index; renderQuestion(); };
+    // 🔥 السحر هنا: لما الطالب يجاوب صح، الزعيم بيتضرب
+    window.selectOption = (index, correctIndex, points) => {
+        userAnswers[currentQuestionIndex] = index; 
+        
+        // هنرسم الاختيار
+        const options = document.querySelectorAll('.option-item');
+        options.forEach((opt, i) => {
+            if (i === index) opt.classList.add('selected');
+            else opt.classList.remove('selected');
+        });
+
+        // لو الإجابة صح، هنعمل ضربة للزعيم
+        if (index === correctIndex) {
+            attackBoss(currentQuestionIndex, points);
+        }
+    };
+
+    function attackBoss(qIndex, points) {
+        // لو الزعيم اتضرب خلاص في السؤال ده، منضربوش تاني
+        if (bossHealthFill.style.width !== "" && parseFloat(bossHealthFill.style.width) < 0) return;
+
+        // حساب الضرر
+        let damage = damagePerQuestion[qIndex];
+        
+        // نخصم من صحة الزعيم
+        currentBossHP -= damage;
+        if (currentBossHP < 0) currentBossHP = 0;
+
+        // تحديث الشريط
+        bossHealthFill.style.width = `${currentBossHP}%`;
+        bossHpText.textContent = `${Math.round(currentBossHP)}%`;
+
+        // تأثير اهتزاز الزعيم
+        bossContainer.classList.add('shake');
+        setTimeout(() => bossContainer.classList.remove('shake'), 500);
+
+        // ظهور رقم الضرر
+        const damageEl = document.createElement('div');
+        damageEl.className = 'damage-number';
+        damageEl.textContent = `-${Math.round(damage)} HP`;
+        bossContainer.appendChild(damageEl);
+        setTimeout(() => damageEl.remove(), 1000);
+    }
+
     window.nextQuestion = () => { if (currentQuestionIndex < examData.questions.length - 1) { currentQuestionIndex++; renderQuestion(); } };
     window.prevQuestion = () => { if (currentQuestionIndex > 0) { currentQuestionIndex--; renderQuestion(); } };
 
@@ -232,27 +362,25 @@
         timerText.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
         if (timeLeft <= 60) timerBox.className = 'timer-box danger';
-        else if (timeLeft <= 300) timerBox.className = 'timer-box warning';
-
         if (timeLeft <= 0) { clearInterval(timerInterval); autoSubmit(); }
       }, 1000);
     }
 
     window.confirmSubmit = () => {
       const unanswered = userAnswers.filter(ans => ans === null || ans === "").length;
-      let textMsg = "هل أنت متأكد من إنهاء الاختبار وتسليم إجاباتك؟";
-      if (unanswered > 0) textMsg = `لديك ${unanswered} أسئلة لم يتم الإجابة عليها. هل تريد التسليم؟`;
+      let textMsg = "هل أنت متأكد من إنهاء المعركة وتسليم إجاباتك؟";
+      if (unanswered > 0) textMsg = `لديك ${unanswered} أسئلة لم تجب عليها. هل تريد التسليم؟`;
 
       Swal.fire({
         title: 'تأكيد التسليم', text: textMsg, icon: 'warning',
         showCancelButton: true, confirmButtonColor: '#22c55e', cancelButtonColor: '#ef4444',
-        confirmButtonText: 'نعم، سلم الاختبار', cancelButtonText: 'لا، أكمل المراجعة', background: '#12121f', color: '#fff'
+        confirmButtonText: 'نعم، سلم المعركة', cancelButtonText: 'لا، أكمل القتال', background: '#12121f', color: '#fff'
       }).then((result) => { if (result.isConfirmed) finishExam(); });
     };
 
     function autoSubmit() {
       Swal.fire({
-        title: 'انتهى الوقت!', text: 'تم تسليم الاختبار تلقائياً.', icon: 'info',
+        title: 'انتهى الوقت!', text: 'تم تسليم إجاباتك تلقائياً.', icon: 'info',
         confirmButtonColor: '#7c3aed', confirmButtonText: 'عرض النتيجة', background: '#12121f', color: '#fff', allowOutsideClick: false
       }).then(() => finishExam());
     }
@@ -260,7 +388,7 @@
     async function finishExam() {
       clearInterval(timerInterval);
       btnSubmit.disabled = true;
-      btnSubmit.textContent = "جاري الحفظ...";
+      btnSubmit.textContent = "جاري حساب النتيجة...";
 
       const timeTaken = Math.floor((Date.now() - startTime) / 1000);
 
@@ -302,7 +430,6 @@
         const userDocSnap = await getDoc(userDocRef);
         const studentGrade = userDocSnap.exists() ? userDocSnap.data().gradeLevel : "unknown";
 
-        // 1. حفظ النتيجة في الداتابيز
         await addDoc(collection(db, "results"), {
           studentId: auth.currentUser.uid,
           studentName: auth.currentUser.displayName || "طالب",
@@ -318,27 +445,18 @@
           studentAnswers: studentAnswersDetails
         });
 
-        // 2. 🔥 حساب الخبرة (XP) والمستوى (Level)
         const currentXP = userDocSnap.data().xp || 0;
         const currentLevel = userDocSnap.data().level || 1;
-        
-        // كل درجة = 10 خبرة
         const earnedXP = studentScore * 10; 
         const newXP = currentXP + earnedXP;
-        
-        // كل 100 خبرة = مستوى جديد
         const newLevel = Math.floor(newXP / 100) + 1;
         const leveledUp = newLevel > currentLevel;
 
-        // تحديث بيانات الطالب
-        await updateDoc(userDocRef, {
-            xp: newXP,
-            level: newLevel
-        });
+        await updateDoc(userDocRef, { xp: newXP, level: newLevel });
 
-        // 3. عرض النتيجة مع الخبرة
+        // 🏆 إعلان النصر أو الهزيمة
         let resultColor = percentage >= 50 ? '#22c55e' : '#ef4444';
-        let resultMsg = percentage >= 50 ? 'لقد اجتزت الاختبار بنجاح.' : 'تحتاج لمزيد من المراجعة والمذاكرة.';
+        let resultMsg = percentage >= 50 ? '🎉 لقد هزمت الزعيم بنجاح! 🎉' : '💀 لقد هُزمت.. تحتاج لمزيد من التدريب.';
         
         let xpHTML = `<div style="margin-top: 15px; color: #f59e0b; font-weight: bold; font-size: 1.1rem;">+${earnedXP} XP 🌟</div>`;
         if (leveledUp) {
@@ -346,13 +464,14 @@
         }
 
         Swal.fire({
-          title: 'نتيجة الاختبار',
+          title: percentage >= 50 ? 'انتصار!' : 'هزيمة!',
           html: `
             <div class="result-score" style="color: ${resultColor}">${studentScore} / ${totalExamMarks}</div>
-            <div class="result-text">${resultMsg}</div>
+            <div class="result-text" style="color: ${resultColor}; font-weight:bold; font-size:1.2rem;">${resultMsg}</div>
             ${xpHTML}
           `,
-          icon: percentage >= 50 ? 'success' : 'error',
+          imageUrl: percentage >= 50 ? 'https://cdn-icons-png.flaticon.com/512/3112/3112946.png' : 'https://cdn-icons-png.flaticon.com/512/564/564619.png',
+          imageWidth: 100, imageHeight: 100, imageAlt: 'Result',
           confirmButtonColor: '#7c3aed', confirmButtonText: 'العودة للمواد', background: '#12121f', color: '#fff', allowOutsideClick: false
         }).then(() => { window.location.href = `subject.html?name=${encodeURIComponent(currentSubjectName)}`; });
 
