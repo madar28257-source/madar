@@ -30,7 +30,8 @@
 
     .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; }
     .question-number { color: var(--primary-light); font-weight: 700; font-size: 1.1rem; }
-    .question-text { font-size: 1.3rem; font-weight: 700; line-height: 1.6; color: #fff; margin-bottom: 30px; }
+    .question-text { font-size: 1.3rem; font-weight: 700; line-height: 1.6; color: #fff; margin-bottom: 20px; }
+    .question-image { max-width: 100%; border-radius: 10px; margin-bottom: 20px; display: none; }
 
     .options-list { display: flex; flex-direction: column; gap: 15px; }
     .option-item { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); padding: 18px 20px; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; gap: 15px; transition: var(--transition); font-size: 1.1rem; }
@@ -41,6 +42,10 @@
     .option-item.selected .option-radio { border-color: var(--primary-light); }
     .option-item.selected .option-radio::after { content: ''; width: 10px; height: 10px; background: var(--primary-light); border-radius: 50%; }
 
+    /* تنسيق السؤال المقالي */
+    .essay-area { display: none; width: 100%; min-height: 150px; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: #fff; font-family: inherit; font-size: 1.1rem; outline: none; resize: vertical; }
+    .essay-area:focus { border-color: var(--primary); }
+
     .controls { display: flex; justify-content: space-between; gap: 15px; margin-top: 30px; }
     .btn { padding: 12px 25px; border-radius: var(--radius-sm); font-family: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; transition: var(--transition); border: none; display: flex; align-items: center; gap: 8px; }
     .btn-prev { background: transparent; color: var(--text-muted); border: 1px solid var(--glass-border); }
@@ -48,7 +53,6 @@
     .btn-next { background: rgba(124, 58, 237, 0.2); color: var(--primary-light); border: 1px solid var(--primary); }
     .btn-next:hover { background: var(--primary); color: #fff; }
     .btn-submit { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; display: none; margin-right: auto; }
-    .btn-submit:hover { box-shadow: 0 0 20px rgba(34, 197, 94, 0.4); }
 
     .result-score { font-size: 4.5rem; font-weight: 900; color: var(--primary-light); text-align: center; margin: 20px 0; text-shadow: 0 0 20px rgba(124, 58, 237, 0.3); line-height: 1; }
     .result-text { text-align: center; font-size: 1.1rem; color: #fff; margin-top: 15px; }
@@ -77,7 +81,13 @@
     <div class="question-card glass-panel" id="question-card">
       <div class="question-header"><span class="question-number" id="question-number">السؤال 1</span></div>
       <div class="question-text" id="question-text">جاري التحميل...</div>
+      <img id="question-image" class="question-image" src="" alt="صورة السؤال">
+      
+      <!-- الاختيارات (للمقالي) -->
       <div class="options-list" id="options-list"></div>
+      <!-- المقالي (للكتابة) -->
+      <textarea id="essay-input" class="essay-area" placeholder="اكتب إجابتك المقالية هنا..."></textarea>
+
       <div class="controls">
         <button class="btn btn-prev" id="btn-prev" onclick="prevQuestion()" style="visibility: hidden;">السابق</button>
         <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">التالي</button>
@@ -99,10 +109,13 @@
     let totalExamMarks = 0;
     let currentExamId = null;
     let currentSubjectName = null;
+    let startTime = null; // 🔥 عشان نحسب وقت الحل
 
     const qNumberEl = document.getElementById('question-number');
     const qTextEl = document.getElementById('question-text');
+    const qImageEl = document.getElementById('question-image');
     const optionsListEl = document.getElementById('options-list');
+    const essayInput = document.getElementById('essay-input');
     const btnPrev = document.getElementById('btn-prev');
     const btnNext = document.getElementById('btn-next');
     const btnSubmit = document.getElementById('btn-submit');
@@ -113,10 +126,7 @@
     const examContainer = document.getElementById('exam-container');
 
     onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = "index.html";
-        return;
-      }
+      if (!user) { window.location.href = "index.html"; return; }
 
       const urlParams = new URLSearchParams(window.location.search);
       currentExamId = urlParams.get('examId');
@@ -124,27 +134,17 @@
       document.getElementById('nav-subject-name').textContent = currentSubjectName;
 
       if (!currentExamId) {
-        Swal.fire({ icon: 'error', title: 'خطأ', text: 'لم يتم العثور على الامتحان', background: '#12121f', color: '#fff' })
-        .then(() => window.location.href = "dashboard.html");
+        Swal.fire({ icon: 'error', title: 'خطأ', text: 'لم يتم العثور على الامتحان', background: '#12121f', color: '#fff' }).then(() => window.location.href = "dashboard.html");
         return;
       }
 
       try {
-        const resultsQuery = query(
-          collection(db, "results"), 
-          where("studentId", "==", user.uid),
-          where("examId", "==", currentExamId)
-        );
+        const resultsQuery = query(collection(db, "results"), where("studentId", "==", user.uid), where("examId", "==", currentExamId));
         const resultsSnapshot = await getDocs(resultsQuery);
 
         if (!resultsSnapshot.empty) {
-          Swal.fire({ 
-            icon: 'info', title: 'لقد قمت بأداء هذا الامتحان', 
-            text: 'لا يمكنك إعادة الامتحان مرة أخرى.', 
-            background: '#12121f', color: '#fff', confirmButtonColor: '#7c3aed' 
-          }).then(() => {
-            window.location.href = `subject.html?name=${encodeURIComponent(currentSubjectName)}`;
-          });
+          Swal.fire({ icon: 'info', title: 'لقد قمت بأداء هذا الامتحان', text: 'لا يمكنك إعادة الامتحان مرة أخرى.', background: '#12121f', color: '#fff' })
+          .then(() => window.location.href = `subject.html?name=${encodeURIComponent(currentSubjectName)}`);
           return;
         }
 
@@ -153,12 +153,14 @@
 
         if (docSnap.exists()) {
           examData = docSnap.data();
-          
           if (!examData.questions || examData.questions.length === 0) throw new Error("الامتحان لا يحتوي على أسئلة");
 
           userAnswers = new Array(examData.questions.length).fill(null);
           totalExamMarks = examData.questions.reduce((sum, q) => sum + q.points, 0);
           timeLeft = examData.duration * 60;
+          
+          // 🔥 تسجيل وقت بداية الامتحان
+          startTime = Date.now(); 
 
           loadingScreen.style.opacity = '0';
           setTimeout(() => {
@@ -169,7 +171,6 @@
 
           renderQuestion();
           startTimer();
-
         } else {
           throw new Error("هذا الامتحان غير موجود");
         }
@@ -185,17 +186,37 @@
       qNumberEl.textContent = `السؤال ${currentQuestionIndex + 1} من ${examData.questions.length} (الدرجة: ${q.points})`;
       qTextEl.textContent = q.text;
       
+      // عرض الصورة لو موجودة
+      if (q.imageUrl) {
+          qImageEl.src = q.imageUrl;
+          qImageEl.style.display = 'block';
+      } else {
+          qImageEl.style.display = 'none';
+      }
+      
       const progress = ((currentQuestionIndex + 1) / examData.questions.length) * 100;
       progressFill.style.width = progress + '%';
 
-      optionsListEl.innerHTML = '';
-      q.options.forEach((opt, index) => {
-        const div = document.createElement('div');
-        div.className = `option-item ${userAnswers[currentQuestionIndex] === index ? 'selected' : ''}`;
-        div.innerHTML = `<div class="option-radio"></div><span>${opt}</span>`;
-        div.onclick = () => selectOption(index);
-        optionsListEl.appendChild(div);
-      });
+      // لو السؤال مقالي
+      if (q.type === 'essay') {
+          optionsListEl.style.display = 'none';
+          essayInput.style.display = 'block';
+          essayInput.value = userAnswers[currentQuestionIndex] || "";
+          essayInput.oninput = () => { userAnswers[currentQuestionIndex] = essayInput.value; };
+      } else {
+          // لو اختيار من متعدد
+          optionsListEl.style.display = 'flex';
+          essayInput.style.display = 'none';
+          
+          optionsListEl.innerHTML = '';
+          q.options.forEach((opt, index) => {
+            const div = document.createElement('div');
+            div.className = `option-item ${userAnswers[currentQuestionIndex] === index ? 'selected' : ''}`;
+            div.innerHTML = `<div class="option-radio"></div><span>${opt}</span>`;
+            div.onclick = () => selectOption(index);
+            optionsListEl.appendChild(div);
+          });
+      }
 
       btnPrev.style.visibility = currentQuestionIndex === 0 ? 'hidden' : 'visible';
       if (currentQuestionIndex === examData.questions.length - 1) {
@@ -226,23 +247,21 @@
     }
 
     window.confirmSubmit = () => {
-      const unanswered = userAnswers.filter(ans => ans === null).length;
+      const unanswered = userAnswers.filter(ans => ans === null || ans === "").length;
       let textMsg = "هل أنت متأكد من إنهاء الاختبار وتسليم إجاباتك؟";
       if (unanswered > 0) textMsg = `لديك ${unanswered} أسئلة لم يتم الإجابة عليها. هل تريد التسليم؟`;
 
       Swal.fire({
         title: 'تأكيد التسليم', text: textMsg, icon: 'warning',
         showCancelButton: true, confirmButtonColor: '#22c55e', cancelButtonColor: '#ef4444',
-        confirmButtonText: 'نعم، سلم الاختبار', cancelButtonText: 'لا، أكمل المراجعة',
-        background: '#12121f', color: '#fff'
+        confirmButtonText: 'نعم، سلم الاختبار', cancelButtonText: 'لا، أكمل المراجعة', background: '#12121f', color: '#fff'
       }).then((result) => { if (result.isConfirmed) finishExam(); });
     };
 
     function autoSubmit() {
       Swal.fire({
         title: 'انتهى الوقت!', text: 'تم تسليم الاختبار تلقائياً.', icon: 'info',
-        confirmButtonColor: '#7c3aed', confirmButtonText: 'عرض النتيجة',
-        background: '#12121f', color: '#fff', allowOutsideClick: false
+        confirmButtonColor: '#7c3aed', confirmButtonText: 'عرض النتيجة', background: '#12121f', color: '#fff', allowOutsideClick: false
       }).then(() => finishExam());
     }
 
@@ -251,32 +270,44 @@
       btnSubmit.disabled = true;
       btnSubmit.textContent = "جاري الحفظ...";
 
+      // 🔥 حساب الوقت اللي الطالب أخده بالثواني
+      const timeTaken = Math.floor((Date.now() - startTime) / 1000);
+
       let studentScore = 0;
       const studentAnswersDetails = [];
 
       examData.questions.forEach((q, index) => {
-        const studentAnsIndex = userAnswers[index];
-        const isCorrect = studentAnsIndex === q.correct;
-        const pointsEarned = isCorrect ? q.points : 0;
+        let isCorrect = false;
+        let pointsEarned = 0;
+        let studentAnsText = userAnswers[index];
+
+        if (q.type === 'mcq') {
+            isCorrect = userAnswers[index] === q.correct;
+            pointsEarned = isCorrect ? q.points : 0;
+            studentAnsText = userAnswers[index] !== null ? q.options[userAnswers[index]] : "لم يجب على السؤال";
+        } else {
+            // 🔥 هنا بيتم تصحيح المقالي (مبدئياً 0 لحد ما نربط الـ AI)
+            pointsEarned = 0; // سيتم تعديلها بالـ AI
+            if (!studentAnsText) studentAnsText = "لم يجب على السؤال";
+        }
 
         if (isCorrect) studentScore += q.points;
 
-        const studentAnsText = studentAnsIndex !== null ? q.options[studentAnsIndex] : "لم يجب على السؤال";
-        const correctAnsText = q.options[q.correct];
+        const correctAnsText = q.type === 'mcq' ? q.options[q.correct] : "تصحيح بالذكاء الاصطناعي";
 
         studentAnswersDetails.push({
           questionText: q.text,
           studentAnswer: studentAnsText,
           correctAnswer: correctAnsText,
           pointsEarned: pointsEarned,
-          maxPoints: q.points
+          maxPoints: q.points,
+          type: q.type
         });
       });
 
       const percentage = Math.round((studentScore / totalExamMarks) * 100);
       
       try {
-        // 🔥 جلب بيانات الطالب لمعرفة السنة الدراسية
         const userDocRef = doc(db, "users", auth.currentUser.uid);
         const userDocSnap = await getDoc(userDocRef);
         const studentGrade = userDocSnap.exists() ? userDocSnap.data().gradeLevel : "unknown";
@@ -284,13 +315,14 @@
         await addDoc(collection(db, "results"), {
           studentId: auth.currentUser.uid,
           studentName: auth.currentUser.displayName || "طالب",
-          studentGrade: studentGrade, // 🔥 حفظ السنة
+          studentGrade: studentGrade, 
           examId: currentExamId,
           examTitle: examData.title,
           subject: currentSubjectName,
           score: studentScore,
           totalMarks: totalExamMarks,
           percentage: percentage,
+          timeTaken: timeTaken, // 🔥 حفظنا وقت الحل هنا
           submittedAt: serverTimestamp(),
           studentAnswers: studentAnswersDetails
         });
@@ -300,22 +332,15 @@
 
         Swal.fire({
           title: 'نتيجة الاختبار',
-          html: `
-            <div class="result-score" style="color: ${resultColor}">${studentScore} / ${totalExamMarks}</div>
-            <div class="result-text">${resultMsg}</div>
-          `,
+          html: `<div class="result-score" style="color: ${resultColor}">${studentScore} / ${totalExamMarks}</div><div class="result-text">${resultMsg}</div>`,
           icon: percentage >= 50 ? 'success' : 'error',
-          confirmButtonColor: '#7c3aed', confirmButtonText: 'العودة للمواد',
-          background: '#12121f', color: '#fff', allowOutsideClick: false
-        }).then(() => {
-          window.location.href = `subject.html?name=${encodeURIComponent(currentSubjectName)}`;
-        });
+          confirmButtonColor: '#7c3aed', confirmButtonText: 'العودة للمواد', background: '#12121f', color: '#fff', allowOutsideClick: false
+        }).then(() => { window.location.href = `subject.html?name=${encodeURIComponent(currentSubjectName)}`; });
 
       } catch (error) {
         console.error("Error saving result:", error);
         Swal.fire({ icon: 'error', title: 'خطأ', text: 'حدث خطأ أثناء حفظ النتيجة. تواصل مع المعلم.', background: '#12121f', color: '#fff' });
-        btnSubmit.disabled = false;
-        btnSubmit.textContent = "إنهاء وتسليم الاختبار";
+        btnSubmit.disabled = false; btnSubmit.textContent = "إنهاء وتسليم الاختبار";
       }
     }
   </script>
