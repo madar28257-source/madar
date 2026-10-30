@@ -5,6 +5,7 @@
 body {
   background-color: #05050A;
   overflow-x: hidden;
+  transition: background 0.5s ease;
 }
 
 /* الحاوية الرئيسية للبرج */
@@ -17,6 +18,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: all 0.5s ease;
 }
 
 /* خلفية البرج (خط مضيء في النص) */
@@ -31,6 +33,7 @@ body {
   background: linear-gradient(to bottom, transparent, var(--primary), var(--accent), transparent);
   z-index: 0;
   opacity: 0.3;
+  transition: background 0.5s ease;
 }
 
 /* الطوابق */
@@ -85,6 +88,16 @@ body {
 }
 .tower-level.locked .level-node svg { color: var(--text-muted); }
 
+/* 👹 طوابق الزعماء (كل 5 ليفلات) */
+.tower-level.boss-level .level-node {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.6);
+  transform: scale(1.1);
+}
+.tower-level.boss-level .level-node .boss-icon { font-size: 2rem; }
+.tower-level.boss-level .level-node .level-number { display: none; }
+
 /* رقم الطابق */
 .level-number {
   font-size: 1.2rem;
@@ -106,27 +119,21 @@ body {
   top: 50%;
   transform: translateY(-50%);
   width: 200px;
-  background: rgba(18, 18, 31, 0.9);
+  background: rgba(18, 18, 31, 0.95);
   border: 1px solid var(--glass-border);
   padding: 10px 15px;
   border-radius: 12px;
   backdrop-filter: blur(10px);
   display: none;
+  z-index: 10;
 }
 
 .tower-level:hover .level-details {
   display: block;
 }
 
-/* ترتيب التفاصيل يمين وشمال عشان ميبقاش ممل */
-.tower-level:nth-child(odd) .level-details {
-  right: calc(50% + 60px);
-  text-align: right;
-}
-.tower-level:nth-child(even) .level-details {
-  left: calc(50% + 60px);
-  text-align: left;
-}
+.tower-level:nth-child(odd) .level-details { right: calc(50% + 60px); text-align: right; }
+.tower-level:nth-child(even) .level-details { left: calc(50% + 60px); text-align: left; }
 
 .level-details h4 { color: #fff; font-size: 0.9rem; margin-bottom: 5px; }
 .level-details p { color: var(--text-muted); font-size: 0.8rem; }
@@ -155,12 +162,33 @@ body {
   background-size: 200px 200px;
   animation: moveStars 60s linear infinite;
   opacity: 0.4;
+  transition: opacity 0.5s ease;
 }
 @keyframes moveStars { from { background-position: 0 0; } to { background-position: 0 -1000px; } }
 
+/* ==========================================
+   🎨 الثيمات (Themes) - بتتغير حسب ليفل الطالب
+   ========================================== */
+
+/* ثيم 1: الطوابق 1-5 (بنفسجي وسماوي - البداية) */
+.theme-stone .tower-container::before { background: linear-gradient(to bottom, transparent, #7c3aed, #22d3ee, transparent); }
+
+/* ثيم 2: الطوابق 6-10 (أخضر وغامق - الغابة) */
+.theme-neon .tower-container::before { background: linear-gradient(to bottom, transparent, #22c55e, #14b8a6, transparent); }
+.theme-neon .level-node { border-color: #22c55e; }
+
+/* ثيم 3: الطوابق 11-15 (ذهبي وناري - القمة) */
+.theme-gold .tower-container::before { background: linear-gradient(to bottom, transparent, #f59e0b, #ef4444, transparent); }
+.theme-gold .level-node { border-color: #f59e0b; }
+
+/* ثيم 4: الطوابق 16+ (أحمر شيطاني - منطقة الزعماء) */
+.theme-demon .tower-container::before { background: linear-gradient(to bottom, transparent, #991b1b, #ef4444, transparent); }
+.theme-demon .level-node { border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+.theme-demon .stars-bg { opacity: 0.7; background-image: radial-gradient(2px 2px at 20px 30px, #ef4444, rgba(0,0,0,0)), radial-gradient(2px 2px at 40px 70px, #ef4444, rgba(0,0,0,0)); }
+
 /* الموبايل */
 @media (max-width: 768px) {
-  .level-details { display: none !important; } /* نخفي التفاصيل في الموبايل عشان تبقى نضيفة */
+  .level-details { display: none !important; } 
   .level-node { width: 70px; height: 70px; }
   .tower-level { margin-bottom: 40px; }
 }
