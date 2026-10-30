@@ -21,26 +21,29 @@
         <span>لوحة التحكم</span>
       </a>
       <a href="admin-exams.html">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
         <span>الامتحانات</span>
       </a>
       <a href="admin-evaluations.html">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"></path></svg>
         <span>التقييمات</span>
       </a>
       <a href="admin-books.html">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path></svg>
         <span>المكتبة</span>
       </a>
       <a href="admin-students.html">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
         <span>الطلاب</span>
+      </a>
+      <a href="admins.html" id="admins-tab" style="display: flex;">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        <span>إدارة الأدمن</span>
       </a>
     </nav>
   </aside>
 
   <main class="main-content">
-    
     <div class="top-bar">
       <h2>لوحة تحكم المعلم</h2>
       <div class="admin-info">
@@ -91,30 +94,20 @@
   </main>
 
   <script type="module">
-    import { auth, db } from "../firebase.js";
+    import { auth } from "../firebase.js";
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-    import { collection, getDocs, query, orderBy, limit, where } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
-
-    // ⚠️ مهم جداً: غير الإيميل ده لإيميلك اللي سجلت بيه كأدمن
-    const ADMIN_EMAIL = "admin@madar.com";
-
-    let recentResultsData = [];
 
     onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // التحقق من إن ده حساب الأدمن
-        if (user.email === ADMIN_EMAIL) {
-          document.getElementById("admin-name").textContent = user.displayName || "الأدمن";
-          loadDashboardData();
-        } else {
-          // لو طالب حاول يدخل
-          Swal.fire({
-            icon: 'error', title: 'ممنوع الدخول', text: 'هذه الصفحة مخصصة للمعلم فقط.',
-            background: '#12121f', color: '#fff', allowOutsideClick: false
-          }).then(() => {
-            window.location.href = "../dashboard.html";
-          });
+      // 🔥 حل الطوارئ: إنت بس اللي هتقدر تدخل لوحة التحكم
+      if (user && user.email.trim().toLowerCase() === "mohamed7@gmail.com") {
+        document.getElementById("admin-name").textContent = user.displayName || "الأدمن";
+        // الكود ده موجود في js/admin-dashboard.js بس عشان نضمن إنه شغال
+        if (typeof loadDashboardData === 'function') {
+            loadDashboardData();
         }
+      } else if (user) {
+        // لو حد تاني حاول يدخل، نطرده
+        window.location.href = "../dashboard.html"; 
       } else {
         window.location.href = "../index.html";
       }
@@ -129,98 +122,8 @@
         if (result.isConfirmed) { signOut(auth).then(() => window.location.href = "../index.html"); }
       });
     });
-
-    async function loadDashboardData() {
-      const tbody = document.getElementById("results-table-body");
-      
-      try {
-        const usersQ = query(collection(db, "users"), where("role", "==", "student"));
-        const usersSnap = await getDocs(usersQ);
-        document.getElementById("stat-students").textContent = usersSnap.size;
-
-        const examsSnap = await getDocs(collection(db, "exams"));
-        document.getElementById("stat-exams").textContent = examsSnap.size;
-
-        const evalsSnap = await getDocs(collection(db, "evaluations"));
-        document.getElementById("stat-evals").textContent = evalsSnap.size;
-
-        const resultsQ = query(collection(db, "results"), orderBy("submittedAt", "desc"), limit(5));
-        const resultsSnap = await getDocs(resultsQ);
-
-        tbody.innerHTML = '';
-        recentResultsData = [];
-
-        if (resultsSnap.empty) {
-          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 30px;">لا توجد نتائج مسجلة حتى الآن.</td></tr>`;
-          return;
-        }
-
-        const gradeNames = {
-          "1-prep": "أولى إعدادي", "2-prep": "تانية إعدادي", "3-prep": "تالتة إعدادي",
-          "1-sec": "أولى ثانوي", "2-sec": "تانية ثانوي", "unknown": "غير محدد"
-        };
-
-        resultsSnap.forEach((doc, index) => {
-          const res = doc.data();
-          res.id = doc.id;
-          recentResultsData.push(res);
-
-          let dateStr = "غير معروف";
-          if (res.submittedAt) { dateStr = res.submittedAt.toDate().toLocaleDateString('ar-EG'); }
-
-          const isPass = res.percentage >= 50;
-          const gradeText = gradeNames[res.studentGrade] || res.studentGrade || "غير محدد";
-          
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td class="student-name">${res.studentName}</td>
-            <td><span class="subject-badge" style="background: rgba(34, 211, 238, 0.1); color: var(--accent);">${gradeText}</span></td>
-            <td><span class="subject-badge">${res.subject}</span></td>
-            <td>${res.examTitle}</td>
-            <td>
-              <span class="score-badge ${isPass ? 'pass' : 'fail'}">${res.score} / ${res.totalMarks}</span>
-              <span class="score-percent">(${res.percentage}%)</span>
-            </td>
-            <td style="color: var(--text-muted); font-size: 0.85rem;">${dateStr}</td>
-            <td><button class="btn-action" onclick="showAnswers(${index})">عرض الإجابات</button></td>
-          `;
-          tbody.appendChild(tr);
-        });
-
-      } catch (error) {
-        console.error("Error loading dashboard:", error);
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: #ef4444; padding: 30px;">حدث خطأ في تحميل البيانات.</td></tr>`;
-      }
-    }
-
-    window.showAnswers = (index) => {
-      const student = recentResultsData[index];
-      let htmlContent = `
-        <div style="margin-bottom: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
-          <h3 style="color: #fff; margin-bottom: 5px;">${student.studentName}</h3>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">الدرجة النهائية: <b style="color: #22c55e; font-size:1.2rem;">${student.score} / ${student.totalMarks}</b></p>
-        </div>
-      `;
-      if (!student.studentAnswers || student.studentAnswers.length === 0) {
-        htmlContent += `<div style="text-align: center; padding: 20px; color: var(--text-muted);"><p>لم يتم تسجيل تفاصيل الإجابات لهذا الامتحان.</p></div>`;
-      } else {
-        htmlContent += `<div style="max-height: 400px; overflow-y: auto; padding-left: 10px;">`;
-        student.studentAnswers.forEach((ans, i) => {
-          const isCorrect = ans.pointsEarned === ans.maxPoints;
-          htmlContent += `
-            <div class="answer-row">
-              <div style="flex: 1;">
-                <div class="q-text">${i + 1}. ${ans.questionText}</div>
-                <div class="a-text">إجابة الطالب: <span class="${isCorrect ? 'correct' : 'wrong'}">${ans.studentAnswer}</span>${!isCorrect ? `<br>الإجابة الصحيحة: <span class="correct">${ans.correctAnswer}</span>` : ''}</div>
-              </div>
-              <div class="q-score" style="color: ${isCorrect ? '#22c55e' : '#ef4444'};">${ans.pointsEarned} / ${ans.maxPoints}</div>
-            </div>
-          `;
-        });
-        htmlContent += `</div>`;
-      }
-      Swal.fire({ html: htmlContent, width: 600, background: '#12121f', showCloseButton: true, confirmButtonText: 'إغلاق', confirmButtonColor: '#7c3aed' });
-    };
   </script>
+
+  <script type="module" src="../js/admin-dashboard.js"></script>
 </body>
 </html>
