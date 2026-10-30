@@ -48,13 +48,45 @@
 
     .hero-info { display: flex; align-items: center; gap: 20px; z-index: 1; }
     .hero-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #ef4444); border: 3px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; box-shadow: 0 0 20px rgba(245, 158, 11, 0.5); }
-    .hero-details h2 { color: #fff; font-size: 1.8rem; margin-bottom: 5px; }
+    .hero-details h2 { color: #fff; font-size: 1.5rem; margin-bottom: 5px; }
     .hero-details .level-badge { background: #f59e0b; color: #000; padding: 4px 12px; border-radius: 20px; font-weight: 900; font-size: 0.9rem; display: inline-block; }
     
     .hero-progress { flex: 1; max-width: 400px; z-index: 1; }
     .xp-text { display: flex; justify-content: space-between; color: #fff; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
     .xp-bar-bg { width: 100%; height: 15px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
     .xp-bar-fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #ef4444); width: 0%; border-radius: 10px; transition: width 1s ease-out; box-shadow: 0 0 10px #f59e0b; }
+
+    /* 🔥 زرار برج المعرفة الضخم */
+    .tower-btn-wrapper {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .tower-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      padding: 20px 50px;
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      color: #fff;
+      font-size: 1.5rem;
+      font-weight: 900;
+      text-decoration: none;
+      border-radius: 50px;
+      box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+      transition: all 0.3s ease;
+      border: 2px solid rgba(255,255,255,0.2);
+      animation: pulseTower 2s infinite;
+    }
+    .tower-btn:hover {
+      transform: translateY(-5px) scale(1.05);
+      box-shadow: 0 15px 40px rgba(245, 158, 11, 0.6);
+    }
+    @keyframes pulseTower {
+      0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+      70% { box-shadow: 0 0 0 20px rgba(245, 158, 11, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    }
 
     /* الإحصائيات */
     .hero-stats { padding: 25px; margin-bottom: 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 25px; }
@@ -108,6 +140,7 @@
       .whatsapp-float { width: 50px; height: 50px; bottom: 20px; left: 20px; }
       .ai-fab { width: 55px; height: 55px; bottom: 20px; right: 20px; font-size: 24px; }
       .ai-chat-container { width: calc(100% - 40px); right: 20px; bottom: 85px; height: 400px; }
+      .tower-btn { font-size: 1.2rem; padding: 15px 30px; width: 100%; }
     }
   </style>
 </head>
@@ -154,12 +187,19 @@
       <div class="hero-progress">
         <div class="xp-text">
           <span>طاقة الاستيعاب (XP)</span>
-          <span id="hero-xp-text">0 / 100</span>
+          <span id="hero-xp-text" dir="ltr">0 / 100 XP</span>
         </div>
         <div class="xp-bar-bg">
           <div class="xp-bar-fill" id="hero-xp-bar"></div>
         </div>
       </div>
+    </div>
+
+    <!-- 🔥 زرار برج المعرفة الضخم (وسط الصفحة) -->
+    <div class="tower-btn-wrapper">
+      <a href="tower.html" class="tower-btn">
+        🏰 ادخل برج المعرفة 🏰
+      </a>
     </div>
 
     <!-- إحصائيات عامة (شلنا منها نسبة الإنجاز العام) -->
@@ -235,8 +275,7 @@
           if (userDoc.exists()) {
             const userData = userDoc.data();
             
-            // 🔥 تحديث بيانات البطل
-            document.getElementById("hero-name").textContent = userData.name;
+        document.getElementById("hero-name").textContent = userData.name;
             const userXP = userData.xp || 0;
             const userLevel = userData.level || 1;
             
@@ -255,46 +294,33 @@
       } else { window.location.href = "index.html"; }
     });
 
-    // 🔥 اللوجيك الجديد بتاع الاستريك (بيعتمد على التاريخ)
     async function updateStreak(userId, userData) {
       const now = new Date();
-      // بنجيب تاريخ النهاردة بصيغة (سنة-شهر-يوم) عشان نتجنب مشاكل التوقيت
       const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       
-     let currentStreak = userData.currentStreak || 0;
+      let currentStreak = userData.currentStreak || 0;
       let lastLoginStr = userData.lastLoginDate;
       let needsUpdate = false;
 
       if (!lastLoginStr) {
-        // أول مرة يدخل
-        currentStreak = 1;
-        needsUpdate = true;
+        currentStreak = 1; needsUpdate = true;
       } else {
-        // بنجيب تاريخ إمبارح
         const yesterday = new Date(now);
         yesterday.setDate(now.getDate() - 1);
         const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
 
         if (lastLoginStr === todayStr) {
-           // لو داخل النهاردة قبل كده، منعملش حاجة
+           // منعملش حاجة
         } else if (lastLoginStr === yesterdayStr) {
-           // لو داخل إمبارح والنهاردة، نزود اليوم
-           currentStreak += 1;
-           needsUpdate = true;
+           currentStreak += 1; needsUpdate = true;
         } else {
-           // لو غاب يوم أو أكتر، نرجع لـ 1
-           currentStreak = 1;
-           needsUpdate = true;
+           currentStreak = 1; needsUpdate = true;
         }
       }
 
       if (needsUpdate) {
-        await updateDoc(doc(db, "users", userId), {
-          currentStreak: currentStreak,
-          lastLoginDate: todayStr
-        });
+        await updateDoc(doc(db, "users", userId), { currentStreak: currentStreak, lastLoginDate: todayStr });
       }
-      
       displayStreakUI(currentStreak);
     }
 
