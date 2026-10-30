@@ -9,7 +9,8 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
-    body { background-color: #0b0c10; overflow: hidden; }
+    /* 🔥 صلحنا السكرول هنا */
+    body { background-color: #0b0c10; overflow-x: hidden; }
     
     .navbar { background: rgba(11, 12, 16, 0.8); backdrop-filter: blur(12px); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); position: fixed; top: 0; width: 100%; z-index: 100; }
     .navbar .logo { font-size: 1.2rem; font-weight: 900; color: #fff; }
@@ -25,7 +26,7 @@
     .battle-arena {
       max-width: 800px;
       margin: 90px auto 20px;
-      padding: 0 20px;
+      padding: 0 20px 50px; /* ضفنا مساحة تحت عشان السكرول */
       position: relative;
       z-index: 10;
       display: flex;
@@ -238,7 +239,6 @@
           timeLeft = examData.duration * 60;
           startTime = Date.now(); 
           
-          // حساب الضرر لكل سؤال (عشان شريط صحة الزعيم)
           calculateDamagePerQuestion();
 
           loadingScreen.style.opacity = '0';
@@ -260,7 +260,6 @@
       }
     });
 
-    // حساب نسبة الضرر اللي السؤال بيعمله للزعيم
     let damagePerQuestion = [];
     function calculateDamagePerQuestion() {
         damagePerQuestion = examData.questions.map(q => (q.points / totalExamMarks) * 100);
@@ -307,43 +306,33 @@
       }
     }
 
-    // 🔥 السحر هنا: لما الطالب يجاوب صح، الزعيم بيتضرب
     window.selectOption = (index, correctIndex, points) => {
         userAnswers[currentQuestionIndex] = index; 
         
-        // هنرسم الاختيار
         const options = document.querySelectorAll('.option-item');
         options.forEach((opt, i) => {
             if (i === index) opt.classList.add('selected');
             else opt.classList.remove('selected');
         });
 
-        // لو الإجابة صح، هنعمل ضربة للزعيم
         if (index === correctIndex) {
             attackBoss(currentQuestionIndex, points);
         }
     };
 
     function attackBoss(qIndex, points) {
-        // لو الزعيم اتضرب خلاص في السؤال ده، منضربوش تاني
         if (bossHealthFill.style.width !== "" && parseFloat(bossHealthFill.style.width) < 0) return;
 
-        // حساب الضرر
         let damage = damagePerQuestion[qIndex];
-        
-        // نخصم من صحة الزعيم
         currentBossHP -= damage;
         if (currentBossHP < 0) currentBossHP = 0;
 
-        // تحديث الشريط
         bossHealthFill.style.width = `${currentBossHP}%`;
         bossHpText.textContent = `${Math.round(currentBossHP)}%`;
 
-        // تأثير اهتزاز الزعيم
         bossContainer.classList.add('shake');
         setTimeout(() => bossContainer.classList.remove('shake'), 500);
 
-        // ظهور رقم الضرر
         const damageEl = document.createElement('div');
         damageEl.className = 'damage-number';
         damageEl.textContent = `-${Math.round(damage)} HP`;
@@ -431,7 +420,8 @@
         const studentGrade = userDocSnap.exists() ? userDocSnap.data().gradeLevel : "unknown";
 
         await addDoc(collection(db, "results"), {
-          studentId: auth.currentUser.uid,
+          studentId: 
+          auth.currentUser.uid,
           studentName: auth.currentUser.displayName || "طالب",
           studentGrade: studentGrade, 
           examId: currentExamId,
@@ -454,7 +444,6 @@
 
         await updateDoc(userDocRef, { xp: newXP, level: newLevel });
 
-        // 🏆 إعلان النصر أو الهزيمة
         let resultColor = percentage >= 50 ? '#22c55e' : '#ef4444';
         let resultMsg = percentage >= 50 ? '🎉 لقد هزمت الزعيم بنجاح! 🎉' : '💀 لقد هُزمت.. تحتاج لمزيد من التدريب.';
         
