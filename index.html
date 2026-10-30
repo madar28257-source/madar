@@ -3,238 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تسجيل الدخول — منصة MADAR</title>
-  
+  <title>دخول الطلاب — منصة MADAR</title>
   <link rel="stylesheet" href="base.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <link rel="manifest" href="manifest.json">
-
   <style>
-    .split-screen { display: flex; min-height: 100vh; position: relative; z-index: 10; }
+    .split-screen { display: flex; min-height: 100vh; }
     .brand-section { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
-    .logo-container {
-      position: relative; width: 100%; max-width: 450px; margin-bottom: 30px; padding: 20px 30px;
-      background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3), 0 0 20px rgba(124, 58, 237, 0.15);
-      display: flex; align-items: center; justify-content: center; overflow: hidden; animation: floatCard 5s ease-in-out infinite;
-    }
-    .logo-container::before {
-      content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-      transform: skewX(-20deg); animation: shine 6s infinite;
-    }
-    @keyframes floatCard { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-    @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
-
-    .brand-logo { width: 100%; height: auto; object-fit: contain; display: block; position: relative; z-index: 1; border-radius: 10px; }
-    .brand-tagline { font-size: 1.2rem; color: var(--text-muted); max-width: 400px; line-height: 1.6; margin-top: 10px; }
-
+    .brand-logo { width: 100%; max-width: 400px; border-radius: 20px; box-shadow: 0 0 30px rgba(124, 58, 237, 0.3); }
     .form-section { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; }
-    .auth-card {
-      width: 100%; max-width: 420px; padding: 40px 30px; text-align: center;
-      background: var(--surface-color); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--glass-border); border-radius: var(--radius);
-      transition: transform 0.1s ease; transform-style: preserve-3d;
-    }
-    .auth-card h2 { font-size: 1.8rem; margin-bottom: 8px; color: #fff; }
-    .auth-card p.subtitle { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 30px; }
-
-    .input-group { position: relative; margin-bottom: 20px; text-align: right; transform: translateZ(30px); }
-    .input-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
-    .input-wrapper { position: relative; display: flex; align-items: center; }
-    .input-icon { position: absolute; right: 15px; color: var(--text-muted); font-size: 1.2rem; pointer-events: none; transition: var(--transition); }
-
-    .input-group input {
-      width: 100%; padding: 14px 45px 14px 15px; background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
-      color: #fff; font-family: inherit; font-size: 1rem; outline: none; transition: var(--transition);
-    }
-    .input-group input:focus { border-color: var(--primary); background: rgba(124, 58, 237, 0.05); box-shadow: 0 0 15px rgba(124, 58, 237, 0.2); }
-    .input-group input:focus ~ .input-icon { color: var(--primary-light); }
-
-    .toggle-password { position: absolute; left: 15px; cursor: pointer; color: var(--text-muted); transition: var(--transition); font-size: 1.1rem; }
-    .toggle-password:hover { color: #fff; }
-
-    .btn-submit {
-      width: 100%; padding: 15px; background: linear-gradient(135deg, var(--primary), var(--accent));
-      color: #fff; border: none; border-radius: var(--radius-sm); font-family: inherit;
-      font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: var(--transition);
-      margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 10px;
-      position: relative; overflow: hidden; transform: translateZ(40px);
-    }
-    .btn-submit:hover { transform: translateY(-2px) translateZ(40px); box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4); }
-    .btn-submit:disabled { opacity: 0.8; cursor: not-allowed; }
-
-    .spinner { display: none; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .auth-footer { margin-top: 25px; font-size: 0.9rem; color: var(--text-muted); transform: translateZ(20px); }
-    .auth-footer a { font-weight: 700; margin-right: 5px; }
-
-    @media (max-width: 900px) {
-      .split-screen { flex-direction: column; }
-      .brand-section { padding: 40px 20px 20px; }
-      .logo-container { max-width: 320px; padding: 15px; }
-      .form-section { padding: 20px; }
-      .auth-card { transform: none !important; }
-    }
+    .auth-card { width: 100%; max-width: 400px; padding: 40px 30px; background: var(--surface-color); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: var(--radius); text-align: center; }
+    .auth-card h2 { color: #fff; margin-bottom: 20px; }
+    .input-group { text-align: right; margin-bottom: 15px; }
+    .input-group label { display: block; color: var(--text-muted); margin-bottom: 5px; font-size: 0.9rem; }
+    .input-group input { width: 100%; padding: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: #fff; outline: none; }
+    .btn-submit { width: 100%; padding: 15px; background: linear-gradient(135deg, #7c3aed, #22d3ee); color: #fff; border: none; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; margin-top: 10px; }
+    .auth-footer { margin-top: 20px; font-size: 0.9rem; color: var(--text-muted); }
+    .auth-footer a { color: var(--accent); font-weight: 700; }
+    .admin-link { display: block; margin-top: 30px; font-size: 0.8rem; color: #555; text-decoration: none; }
+    .admin-link:hover { color: var(--primary-light); }
+    @media (max-width: 900px) { .split-screen { flex-direction: column; } .brand-section { display: none; } }
   </style>
 </head>
 <body>
-
   <div class="bg-orbs"></div>
-
   <main class="split-screen">
-    
     <div class="brand-section">
-      <div class="logo-container">
-        <img src="logo.jpg" alt="شعار منصة مدار" class="brand-logo">
-      </div>
-      <p class="brand-tagline">بوابتك الأولى للتفوق في البكالوريا. ابدأ رحلتك التعليمية بأحدث التقنيات.</p>
+      <img src="logo.jpg" alt="MADAR" class="brand-logo">
     </div>
-
     <div class="form-section">
-      <div class="auth-card" id="tilt-card">
-        <h2>تسجيل الدخول</h2>
-        <p class="subtitle">أهلاً بعودتك، سجل دخولك للمتابعة</p>
-
+      <div class="auth-card">
+        <h2>تسجيل دخول الطلاب</h2>
         <form id="login-form">
           <div class="input-group">
-            <label for="email">البريد الإلكتروني</label>
-            <div class="input-wrapper">
-              <input type="email" id="email" required placeholder="you@example.com">
-              <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-            </div>
+            <label>البريد الإلكتروني</label>
+            <input type="email" id="email" required placeholder="you@example.com">
           </div>
-          
           <div class="input-group">
-            <label for="password">كلمة المرور</label>
-            <div class="input-wrapper">
-              <input type="password" id="password" required placeholder="••••••••">
-              <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-              <span class="toggle-password" id="toggle-password">👁️</span>
-            </div>
+            <label>كلمة المرور</label>
+            <input type="password" id="password" required placeholder="••••••••">
           </div>
-
-          <button type="submit" class="btn-submit" id="login-btn">
-            <span id="btn-text">دخول</span>
-            <div class="spinner" id="btn-spinner"></div>
-          </button>
+          <button type="submit" class="btn-submit" id="login-btn">دخول</button>
         </form>
-
-        <div class="auth-footer">
-          مش عندك حساب؟ <a href="register.html">سجل دلوقتي</a>
-        </div>
+        <div class="auth-footer">مش عندك حساب؟ <a href="register.html">سجل دلوقتي</a></div>
+        <!-- لينك خفي للمعلمين -->
+        <a href="admin-login.html" class="admin-link">دخول المعلمين</a>
       </div>
     </div>
-
   </main>
 
   <script type="module">
-    import { auth, db } from "./firebase.js";
+    import { auth } from "./firebase.js";
     import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
-    const card = document.getElementById('tilt-card');
-    document.addEventListener('mousemove', (e) => {
-      if(window.innerWidth < 900) return; 
-      let xAxis = (window.innerWidth / 2 - e.pageX) / 30;
-      let yAxis = (window.innerHeight / 2 - e.pageY) / 30;
-      card.style.transform = `perspective(1000px) rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
-    });
-    document.addEventListener('mouseleave', () => {
-      if(window.innerWidth < 900) return;
-      card.style.transform = `perspective(1000px) rotateY(0deg) rotateX(0deg)`;
-      card.style.transition = "transform 0.5s ease";
-    });
-    document.addEventListener('mouseenter', () => { card.style.transition = "transform 0.1s ease"; });
-
-    const passwordInput = document.getElementById('password');
-    const togglePassword = document.getElementById('toggle-password');
-    togglePassword.addEventListener('click', () => {
-      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-      passwordInput.setAttribute('type', type);
-      togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
-    });
-
-    const form = document.getElementById('login-form');
-    const btn = document.getElementById('login-btn');
-    const btnText = document.getElementById('btn-text');
-    const spinner = document.getElementById('btn-spinner');
-
-    form.addEventListener('submit', async (e) => {
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
-      const password = passwordInput.value;
-
-      btn.disabled = true;
-      btnText.style.display = 'none';
-      spinner.style.display = 'block';
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('login-btn');
+      
+      btn.disabled = true; btn.textContent = "جاري الدخول...";
 
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+        const studentName = userCredential.user.displayName || "طالب";
         
-        // نضف الإيميل عشان نقارن صح
-        const cleanEmail = user.email.trim().toLowerCase();
-
-        // البحث في كولكشن الأدمن
-        const adminSnap = await getDocs(collection(db, "admins"));
-        let isAdmin = false;
-
-        adminSnap.forEach((doc) => {
-            const adminData = doc.data();
-            if (adminData.email && adminData.email.trim().toLowerCase() === cleanEmail) {
-                isAdmin = true;
-            }
-        });
-
-        if (isAdmin) {
-            // ✨ لو أدمن: رسالة ترحيب وتوجيه للوحة التحكم
-            Swal.fire({ 
-                icon: 'success', 
-                title: 'أهلاً بك!', 
-                text: 'تم تسجيل الدخول كأدمن', 
-                timer: 1500, showConfirmButton: false, background: '#12121f', color: '#fff' 
-            }).then(() => { window.location.href = "admin/admin.html"; });
-        } else {
-            // ✨ لو طالب: رسالة ترحيب بالاسم
-            const studentName = user.displayName || "طالب"; // جلب الاسم اللي سجله
-            Swal.fire({ 
-                icon: 'success', 
-                title: `أهلاً بك يا ${studentName} في منصة مدار!`, 
-                timer: 2000, 
-                showConfirmButton: false, 
-                background: '#12121f', 
-                color: '#fff' 
-            }).then(() => { window.location.href = "dashboard.html"; });
-        }
+        // رسالة الترحيب بالاسم
+        Swal.fire({ 
+            icon: 'success', 
+            title: `أهلاً بك يا ${studentName} في منصة مدار!`, 
+            timer: 2000, 
+            showConfirmButton: false, 
+            background: '#12121f', color: '#fff' 
+        }).then(() => { window.location.href = "dashboard.html"; });
 
       } catch (error) {
-        let errorMsg = "إيميل أو كلمة مرور غلط!";
-        if (error.code === 'auth/user-not-found') errorMsg = "الحساب ده مش موجود!";
-        if (error.code === 'auth/wrong-password') errorMsg = "كلمة المرور غلط!";
-        
-        Swal.fire({
-          icon: 'error', title: 'عفواً!', text: errorMsg,
-          background: '#12121f', color: '#fff', confirmButtonColor: '#7c3aed'
-        });
-        btn.disabled = false;
-        btnText.style.display = 'block';
-        spinner.style.display = 'none';
+        Swal.fire({ icon: 'error', title: 'عفواً', text: 'إيميل أو كلمة مرور غير صحيحة', background: '#12121f', color: '#fff' });
+        btn.disabled = false; btn.textContent = "دخول";
       }
     });
-  </script>
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then((reg) => console.log('✅ PWA شغال بنجاح', reg.scope))
-          .catch((err) => console.log('❌ فشل تفعيل PWA', err));
-      });
-    }
   </script>
 </body>
 </html>
