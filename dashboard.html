@@ -13,7 +13,7 @@
     .navbar { background: rgba(11, 12, 16, 0.7); backdrop-filter: blur(16px); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100; }
     .nav-right { display: flex; align-items: center; gap: 10px; }
     .nav-right .logo { font-size: 1.5rem; font-weight: 700; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.2); }
-    .nav-center { display: flex; gap: 30px; }
+    .nav-center { display: flex; gap: 25px; }
     .nav-center a { color: var(--text-muted); font-weight: 500; font-size: 0.95rem; position: relative; text-decoration: none; transition: var(--transition); }
     .nav-center a:hover, .nav-center a.active { color: #fff; }
     .nav-center a.active::after { content: ''; position: absolute; bottom: -5px; right: 0; width: 100%; height: 2px; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
@@ -36,7 +36,7 @@
     .hero-card {
       background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(34, 211, 238, 0.1) 100%);
       border: 1px solid var(--primary-light); border-radius: var(--radius); padding: 30px;
-      display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 40px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 30px;
       box-shadow: 0 10px 30px rgba(124, 58, 237, 0.2); position: relative; overflow: hidden;
     }
     .hero-card::before {
@@ -56,8 +56,8 @@
     .xp-bar-bg { width: 100%; height: 15px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
     .xp-bar-fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #ef4444); width: 0%; border-radius: 10px; transition: width 1s ease-out; box-shadow: 0 0 10px #f59e0b; }
 
-    /* الإحصائيات القديمة */
-    .stats-grid { padding: 30px; margin-bottom: 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; }
+    /* الإحصائيات */
+    .hero-stats { padding: 25px; margin-bottom: 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 25px; }
     .stat-item { display: flex; align-items: center; gap: 15px; }
     .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
     .stat-info h4 { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; margin-bottom: 5px; }
@@ -79,12 +79,7 @@
     .mini-progress-fill { height: 100%; border-radius: 10px; width: 0%; transition: width 1s ease-in-out; background: var(--primary); }
     .loading-text { text-align: center; color: var(--text-muted); font-size: 1.2rem; padding: 50px; grid-column: 1 / -1; }
 
-    .whatsapp-float {
-      position: fixed; width: 60px; height: 60px; bottom: 30px; left: 30px; 
-      background: #25d366; color: #FFF; border-radius: 50px; text-align: center; font-size: 30px;
-      box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); z-index: 1000;
-      display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;
-    }
+    .whatsapp-float { position: fixed; width: 60px; height: 60px; bottom: 30px; left: 30px; background: #25d366; color: #FFF; border-radius: 50px; text-align: center; font-size: 30px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); z-index: 1000; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
     .whatsapp-float:hover { transform: scale(1.1) translateY(-5px); box-shadow: 0 8px 25px rgba(37, 211, 102, 0.6); color: #FFF; }
     .whatsapp-icon { width: 35px; height: 35px; fill: currentColor; }
 
@@ -109,7 +104,7 @@
       .hero-card { flex-direction: column; text-align: center; gap: 15px; }
       .hero-info { flex-direction: column; }
       .hero-progress { width: 100%; max-width: 100%; }
-      .stats-grid { grid-template-columns: 1fr; gap: 20px; }
+      .hero-stats { grid-template-columns: 1fr; gap: 20px; }
       .whatsapp-float { width: 50px; height: 50px; bottom: 20px; left: 20px; }
       .ai-fab { width: 55px; height: 55px; bottom: 20px; right: 20px; font-size: 24px; }
       .ai-chat-container { width: calc(100% - 40px); right: 20px; bottom: 85px; height: 400px; }
@@ -167,12 +162,8 @@
       </div>
     </div>
 
-    <!-- إحصائيات عامة -->
+    <!-- إحصائيات عامة (شلنا منها نسبة الإنجاز العام) -->
     <div class="hero-stats glass-panel">
-      <div class="stat-item">
-        <div class="stat-icon" style="background: rgba(124, 58, 237, 0.1); color: var(--primary-light);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
-        <div class="stat-info"><h4>نسبة الإنجاز العام</h4><p>35%</p></div>
-      </div>
       <div class="stat-item">
         <div class="stat-icon" style="color: var(--accent); background: rgba(34, 211, 238, 0.1);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg></div>
         <div class="stat-info"><h4>المواد النشطة</h4><p id="subjects-count">0</p></div>
@@ -252,7 +243,6 @@
             document.getElementById("hero-level").textContent = `المستوى: ${userLevel}`;
             document.getElementById("hero-xp-text").textContent = `${userXP % 100} / 100 XP`;
             
-            // حساب نسبة الشريط (بيتحدث كل لفل)
             const xpPercentage = (userXP % 100);
             document.getElementById("hero-xp-bar").style.width = `${xpPercentage}%`;
 
@@ -265,21 +255,46 @@
       } else { window.location.href = "index.html"; }
     });
 
+    // 🔥 اللوجيك الجديد بتاع الاستريك (بيعتمد على التاريخ)
     async function updateStreak(userId, userData) {
       const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      let currentStreak = userData.currentStreak || 0;
+      // بنجيب تاريخ النهاردة بصيغة (سنة-شهر-يوم) عشان نتجنب مشاكل التوقيت
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      
+     let currentStreak = userData.currentStreak || 0;
       let lastLoginStr = userData.lastLoginDate;
-      let lastLogin = null;
-      if (lastLoginStr) { lastLogin = new Date(lastLoginStr); lastLogin = new Date(lastLogin.getFullYear(), lastLogin.getMonth(), lastLogin.getDate()); }
       let needsUpdate = false;
-      if (!lastLogin) { currentStreak = 1; needsUpdate = true; } 
-      else {
-        const diffDays = Math.ceil(Math.abs(today - lastLogin) / (1000 * 60 * 60 * 24));
-        if (diffDays === 1) { currentStreak += 1; needsUpdate = true; } 
-        else if (diffDays > 1) { currentStreak = 1; needsUpdate = true; }
+
+      if (!lastLoginStr) {
+        // أول مرة يدخل
+        currentStreak = 1;
+        needsUpdate = true;
+      } else {
+        // بنجيب تاريخ إمبارح
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+        const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+
+        if (lastLoginStr === todayStr) {
+           // لو داخل النهاردة قبل كده، منعملش حاجة
+        } else if (lastLoginStr === yesterdayStr) {
+           // لو داخل إمبارح والنهاردة، نزود اليوم
+           currentStreak += 1;
+           needsUpdate = true;
+        } else {
+           // لو غاب يوم أو أكتر، نرجع لـ 1
+           currentStreak = 1;
+           needsUpdate = true;
+        }
       }
-      if (needsUpdate) { await updateDoc(doc(db, "users", userId), { currentStreak: currentStreak, lastLoginDate: today.toISOString() }); }
+
+      if (needsUpdate) {
+        await updateDoc(doc(db, "users", userId), {
+          currentStreak: currentStreak,
+          lastLoginDate: todayStr
+        });
+      }
+      
       displayStreakUI(currentStreak);
     }
 
