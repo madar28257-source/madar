@@ -13,7 +13,12 @@
 
   <div class="bg-orbs"></div>
 
-  <aside class="sidebar">
+  <!-- الطبقة السوداء اللي بتظهر ورا القائمة -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- القائمة الجانبية -->
+  <aside class="sidebar" id="sidebar">
+    <button class="close-sidebar-btn" id="close-sidebar-btn">✖</button>
     <div class="logo">MADAR</div>
     <nav class="nav-links">
       <a href="admin.html" class="active">
@@ -45,6 +50,9 @@
 
   <main class="main-content">
     <div class="top-bar">
+      <!-- زرار فتح القائمة في الموبايل -->
+      <button class="mobile-menu-btn" id="mobile-menu-btn">☰ القائمة</button>
+      
       <h2>لوحة تحكم المعلم</h2>
       <div class="admin-info">
         <span style="font-weight:600; font-size:0.9rem;" id="admin-name">جاري التحميل...</span>
@@ -93,7 +101,23 @@
 
   </main>
 
-  <!-- استدعاء ملف الجافاسكريبت اللي هيتحقق من الصلاحيات -->
+  <!-- سكريبت فتح وقفل القائمة -->
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const menuBtn = document.getElementById('mobile-menu-btn');
+    const closeBtn = document.getElementById('close-sidebar-btn');
+
+    function toggleMenu() {
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('active');
+    }
+
+    menuBtn.addEventListener('click', toggleMenu);
+    closeBtn.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', toggleMenu);
+  </script>
+
   <script type="module" src="../js/admin-dashboard.js"></script>
 </body>
 </html>
