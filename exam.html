@@ -9,7 +9,6 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
-    /* 🔥 صلحنا السكرول هنا */
     body { background-color: #0b0c10; overflow-x: hidden; }
     
     .navbar { background: rgba(11, 12, 16, 0.8); backdrop-filter: blur(12px); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); position: fixed; top: 0; width: 100%; z-index: 100; }
@@ -22,55 +21,18 @@
     .spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* 🔥 تصميم ساحة المعركة */
-    .battle-arena {
-      max-width: 800px;
-      margin: 90px auto 20px;
-      padding: 0 20px 50px; /* ضفنا مساحة تحت عشان السكرول */
-      position: relative;
-      z-index: 10;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+    .battle-arena { max-width: 800px; margin: 90px auto 20px; padding: 0 20px 50px; position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; }
 
     /* الزعيم */
-    .boss-container {
-      text-align: center;
-      margin-bottom: 30px;
-      position: relative;
-    }
-    .boss-avatar {
-      font-size: 5rem;
-      animation: bossFloat 3s ease-in-out infinite;
-      filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.6));
-    }
+    .boss-container { text-align: center; margin-bottom: 30px; position: relative; }
+    .boss-avatar { font-size: 5rem; animation: bossFloat 3s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.6)); }
     @keyframes bossFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
-    
     .boss-name { color: #ef4444; font-weight: 900; font-size: 1.2rem; margin-bottom: 10px; text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
 
     /* شريط صحة الزعيم */
-    .boss-health-bar-container {
-      width: 300px;
-      height: 20px;
-      background: rgba(0, 0, 0, 0.8);
-      border: 2px solid #ef4444;
-      border-radius: 10px;
-      overflow: hidden;
-      position: relative;
-      margin: 0 auto;
-      box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
-    }
-    .boss-health-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #991b1b, #ef4444);
-      width: 100%;
-      transition: width 0.5s ease-out;
-    }
-    .boss-hp-text {
-      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-      color: #fff; font-size: 0.7rem; font-weight: 900; text-shadow: 1px 1px 2px #000;
-    }
+    .boss-health-bar-container { width: 300px; height: 20px; background: rgba(0, 0, 0, 0.8); border: 2px solid #ef4444; border-radius: 10px; overflow: hidden; position: relative; margin: 0 auto; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+    .boss-health-fill { height: 100%; background: linear-gradient(90deg, #991b1b, #ef4444); width: 100%; transition: width 0.5s ease-out; }
+    .boss-hp-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.7rem; font-weight: 900; text-shadow: 1px 1px 2px #000; }
 
     /* تأثير الاهتزاز عند الضرب */
     .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
@@ -82,16 +44,8 @@
     }
 
     /* أرقام الضرر الطايرة */
-    .damage-number {
-      position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
-      font-size: 2rem; font-weight: 900; color: #ef4444;
-      text-shadow: 0 0 10px #fff; pointer-events: none;
-      animation: floatUp 1s forwards;
-    }
-    @keyframes floatUp {
-      0% { opacity: 1; transform: translate(-50%, 0) scale(1); }
-      100% { opacity: 0; transform: translate(-50%, -100px) scale(1.5); }
-    }
+    .damage-number { position: absolute; top: 20%; left: 50%; transform: translateX(-50%); font-size: 2rem; font-weight: 900; color: #ef4444; text-shadow: 0 0 10px #fff; pointer-events: none; animation: floatUp 1s forwards; }
+    @keyframes floatUp { 0% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, -100px) scale(1.5); } }
 
     /* كارت السؤال */
     .question-card { padding: 30px; margin-bottom: 20px; width: 100%; animation: fadeIn 0.4s ease-out; border: 1px solid var(--primary); box-shadow: 0 0 20px rgba(124, 58, 237, 0.2); }
@@ -102,14 +56,25 @@
     .question-text { font-size: 1.3rem; font-weight: 700; line-height: 1.6; color: #fff; margin-bottom: 20px; }
     .question-image { max-width: 100%; border-radius: 10px; margin-bottom: 20px; display: none; }
 
+    /* الاختيارات */
     .options-list { display: flex; flex-direction: column; gap: 12px; }
     .option-item { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); padding: 15px 20px; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; gap: 15px; transition: var(--transition); font-size: 1.1rem; }
-    .option-item:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(124, 58, 237, 0.6); transform: translateX(-5px); }
+    .option-item:hover:not(.disabled) { background: rgba(255, 255, 255, 0.08); border-color: rgba(124, 58, 237, 0.6); transform: translateX(-5px); }
+    
+    /* حالات الاختيارات */
     .option-item.selected { background: rgba(124, 58, 237, 0.2); border-color: var(--primary); box-shadow: 0 0 15px rgba(124, 58, 237, 0.4); }
+    .option-item.correct-answer { background: rgba(34, 197, 94, 0.2) !important; border-color: #22c55e !important; box-shadow: 0 0 15px rgba(34, 197, 94, 0.4) !important; }
+    .option-item.wrong-answer { background: rgba(239, 68, 68, 0.2) !important; border-color: #ef4444 !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4) !important; }
+    
+    .option-item.disabled { cursor: not-allowed; pointer-events: none; opacity: 0.7; }
     
     .option-radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--text-muted); display: flex; align-items: center; justify-content: center; transition: var(--transition); flex-shrink: 0; }
     .option-item.selected .option-radio { border-color: #fff; background: var(--primary); }
-    .option-item.selected .option-radio::after { content: '✓'; font-size: 12px; color: #fff; font-weight: bold; }
+    .option-item.correct-answer .option-radio { border-color: #fff; background: #22c55e; }
+    .option-item.wrong-answer .option-radio { border-color: #fff; background: #ef4444; }
+    
+    .option-item.selected .option-radio::after, .option-item.correct-answer .option-radio::after, .option-item.wrong-answer .option-radio::after { content: '✓'; font-size: 12px; color: #fff; font-weight: bold; }
+    .option-item.wrong-answer .option-radio::after { content: '✖'; }
 
     .essay-area { display: none; width: 100%; min-height: 120px; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: #fff; font-family: inherit; font-size: 1.1rem; outline: none; resize: vertical; }
     .essay-area:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(124, 58, 237, 0.3); }
@@ -121,7 +86,6 @@
     .btn-next { background: linear-gradient(135deg, #7c3aed, #22d3ee); color: #fff; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4); }
     .btn-next:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(124, 58, 237, 0.6); }
     .btn-submit { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; display: none; margin-right: auto; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4); }
-    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(34, 197, 94, 0.6); }
 
     .result-score { font-size: 4.5rem; font-weight: 900; color: var(--primary-light); text-align: center; margin: 20px 0; text-shadow: 0 0 20px rgba(124, 58, 237, 0.3); line-height: 1; }
     .result-text { text-align: center; font-size: 1.1rem; color: #fff; margin-top: 15px; }
@@ -145,7 +109,6 @@
 
   <main class="battle-arena" id="exam-container" style="display:none;">
     
-    <!-- 👹 الزعيم -->
     <div class="boss-container" id="boss-container">
       <div class="boss-avatar">👹</div>
       <div class="boss-name">حارس المعرفة</div>
@@ -155,7 +118,6 @@
       </div>
     </div>
 
-    <!-- 📝 كارت السؤال -->
     <div class="question-card glass-panel" id="question-card">
       <div class="question-header"><span class="question-number" id="question-number">السؤال 1</span></div>
       <div class="question-text" id="question-text">جاري التحميل...</div>
@@ -166,7 +128,7 @@
 
       <div class="controls">
         <button class="btn btn-prev" id="btn-prev" onclick="prevQuestion()" style="visibility: hidden;">السابق</button>
-        <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">التالي</button>
+        <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">تأكيد والانتقال</button>
         <button class="btn btn-submit" id="btn-submit" onclick="confirmSubmit()">إنهاء المعركة!</button>
       </div>
     </div>
@@ -180,6 +142,7 @@
     let examData = null;
     let currentQuestionIndex = 0;
     let userAnswers = [];
+    let evaluatedQuestions = []; // 🔥 مصفوفة عشان نعرف السؤال ده اتأكدنا منه ولا لأ
     let timeLeft = 0;
     let timerInterval;
     let totalExamMarks = 0;
@@ -235,6 +198,7 @@
           if (!examData.questions || examData.questions.length === 0) throw new Error("الامتحان لا يحتوي على أسئلة");
 
           userAnswers = new Array(examData.questions.length).fill(null);
+          evaluatedQuestions = new Array(examData.questions.length).fill(false); // كل الأسئلة لسه متأكدتش
           totalExamMarks = examData.questions.reduce((sum, q) => sum + q.points, 0);
           timeLeft = examData.duration * 60;
           startTime = Date.now(); 
@@ -287,11 +251,26 @@
           essayInput.style.display = 'none';
           
           optionsListEl.innerHTML = '';
+          const isEvaluated = evaluatedQuestions[currentQuestionIndex]; // هل السؤال ده اتأكدنا منه؟
+
           q.options.forEach((opt, index) => {
             const div = document.createElement('div');
-            div.className = `option-item ${userAnswers[currentQuestionIndex] === index ? 'selected' : ''}`;
+            
+            if (isEvaluated) {
+                // لو اتأكدنا منه، بنقفل الاختيارات ونلونها
+                div.className = 'option-item disabled';
+                if (index === q.correct) {
+                    div.classList.add('correct-answer');
+                } else if (index === userAnswers[currentQuestionIndex]) {
+                    div.classList.add('wrong-answer');
+                }
+            } else {
+                // لو لسه متأكدش، مجرد تحديد عادي
+                div.className = `option-item ${userAnswers[currentQuestionIndex] === index ? 'selected' : ''}`;
+                div.onclick = () => selectOption(index);
+            }
+
             div.innerHTML = `<div class="option-radio"></div><span>${opt}</span>`;
-            div.onclick = () => selectOption(index, q.correct, q.points);
             optionsListEl.appendChild(div);
           });
       }
@@ -306,23 +285,70 @@
       }
     }
 
-    window.selectOption = (index, correctIndex, points) => {
-        userAnswers[currentQuestionIndex] = index; 
+    // دالة تحديد الإجابة (بتغير اللون بس)
+    window.selectOption = (index) => {
+        if (evaluatedQuestions[currentQuestionIndex]) return; // لو متأكد منه ميتعدلش
+
+        userAnswers[currentQuestionIndex] = index;
         
         const options = document.querySelectorAll('.option-item');
         options.forEach((opt, i) => {
             if (i === index) opt.classList.add('selected');
             else opt.classList.remove('selected');
         });
+    };
 
-        if (index === correctIndex) {
-            attackBoss(currentQuestionIndex, points);
+    // دالة الانتقال للسؤال التالي (اللي بتأكد الإجابة وتضرب الزعيم)
+    window.nextQuestion = () => {
+        const q = examData.questions[currentQuestionIndex];
+        
+        // لو السؤال اختياري ولسه متأكدش، بنأكد الإجابة هنا
+        if (!evaluatedQuestions[currentQuestionIndex] && q.type === 'mcq') {
+            if (userAnswers[currentQuestionIndex] === null) {
+                Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'اختر إجابة أولاً قبل الانتقال!', background: '#12121f', color: '#fff' });
+                return;
+            }
+
+            // تأكيد الإجابة
+            evaluatedQuestions[currentQuestionIndex] = true;
+            const selected = userAnswers[currentQuestionIndex];
+            const options = document.querySelectorAll('.option-item');
+            
+            options.forEach((opt, i) => {
+                opt.classList.add('disabled');
+                opt.onclick = null;
+                opt.classList.remove('selected'); // شيل التحديد البنفسجي
+
+                if (i === q.correct) {
+                    opt.classList.add('correct-answer');
+                } else if (i === selected) {
+                    opt.classList.add('wrong-answer');
+                }
+            });
+
+            // لو الإجابة صح، نضرب الزعيم
+            if (selected === q.correct) {
+                attackBoss(currentQuestionIndex);
+            }
+
+            return; // بنقف هنا عشان الطالب يشوف النتيجة (الصح والغلط) قبل ما ينقل
+        }
+
+        // لو السؤال اتأكد خلاص، أو كان مقالي، ننقل للسؤال اللي بعده
+        if (currentQuestionIndex < examData.questions.length - 1) {
+            currentQuestionIndex++;
+            renderQuestion();
         }
     };
 
-    function attackBoss(qIndex, points) {
-        if (bossHealthFill.style.width !== "" && parseFloat(bossHealthFill.style.width) < 0) return;
+    window.prevQuestion = () => { 
+        if (currentQuestionIndex > 0) { 
+            currentQuestionIndex--; 
+            renderQuestion(); 
+        } 
+    };
 
+    function attackBoss(qIndex) {
         let damage = damagePerQuestion[qIndex];
         currentBossHP -= damage;
         if (currentBossHP < 0) currentBossHP = 0;
@@ -339,9 +365,6 @@
         bossContainer.appendChild(damageEl);
         setTimeout(() => damageEl.remove(), 1000);
     }
-
-    window.nextQuestion = () => { if (currentQuestionIndex < examData.questions.length - 1) { currentQuestionIndex++; renderQuestion(); } };
-    window.prevQuestion = () => { if (currentQuestionIndex > 0) { currentQuestionIndex--; renderQuestion(); } };
 
     function startTimer() {
       timerInterval = setInterval(() => {
@@ -420,8 +443,7 @@
         const studentGrade = userDocSnap.exists() ? userDocSnap.data().gradeLevel : "unknown";
 
         await addDoc(collection(db, "results"), {
-          studentId: 
-          auth.currentUser.uid,
+          studentId: auth.currentUser.uid,
           studentName: auth.currentUser.displayName || "طالب",
           studentGrade: studentGrade, 
           examId: currentExamId,
