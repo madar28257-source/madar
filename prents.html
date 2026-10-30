@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>بوابة أولياء الأمور — منصة MADAR</title>
+  
+  <link rel="stylesheet" href="base.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .auth-card { width: 100%; max-width: 450px; padding: 40px 30px; text-align: center; background: var(--surface-color); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: var(--radius); }
+    .auth-card h2 { color: #fff; margin-bottom: 5px; }
+    .auth-card p { color: var(--text-muted); margin-bottom: 30px; font-size: 0.9rem; }
+    
+    .input-group { margin-bottom: 15px; text-align: right; }
+    .input-group label { display: block; color: var(--text-muted); margin-bottom: 8px; font-size: 0.9rem; }
+    .input-group input, .input-group select { width: 100%; padding: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: #fff; font-family: inherit; outline: none; transition: 0.3s; }
+    .input-group input:focus, .input-group select:focus { border-color: var(--primary); }
+    .input-group select option { background: #12121f; color: #fff; }
+    
+    .btn-submit { width: 100%; padding: 15px; background: linear-gradient(135deg, #7c3aed, #22d3ee); color: #fff; border: none; border-radius: var(--radius-sm); font-family: inherit; font-weight: 700; font-size: 1.1rem; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4); }
+    .back-link { display: block; margin-top: 20px; color: var(--text-muted); font-size: 0.9rem; text-decoration: none; }
+    .back-link:hover { color: #fff; }
+  </style>
+</head>
+<body>
+
+  <div class="bg-orbs"></div>
+
+  <main class="auth-wrap">
+    <div class="auth-card">
+      <span style="font-size: 3rem;">👨‍👩‍👦</span>
+      <h2>بوابة أولياء الأمور</h2>
+      <p>تابع تقدم ابنك الدراسي ونتائجه</p>
+
+      <form id="parent-login-form">
+        <div class="input-group">
+          <label>اسم الطالب (رباعي)</label>
+          <input type="text" id="student-name" required placeholder="مثال: محمد أحمد علي حسن">
+        </div>
+        <div class="input-group">
+          <label>رقم الهاتف المسجل بالمنصة</label>
+          <input type="tel" id="student-phone" required placeholder="01xxxxxxxxx">
+        </div>
+        <div class="input-group">
+          <label>السنة الدراسية</label>
+          <select id="student-grade" required>
+            <option value="" disabled selected>اختر السنة...</option>
+            <option value="1-prep">الأول الإعدادي</option>
+            <option value="2-prep">الثاني الإعدادي</option>
+            <option value="3-prep">الثالث الإعدادي</option>
+            <option value="1-sec">الأول الثانوي</option>
+            <option value="2-sec">الثاني الثانوي</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-submit" id="login-btn">دخول</button>
+      </form>
+
+      <a href="index.html" class="back-link">← العودة لدخول الطلاب</a>
+    </div>
+  </main>
+
+  <script type="module">
+    import { db } from "./firebase.js";
+    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+
+    document.getElementById('parent-login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const name = document.getElementById('student-name').value.trim();
+      const phone = document.getElementById('student-phone').value.trim();
+      const grade = document.getElementById('student-grade').value;
+      const btn = document.getElementById('login-btn');
+
+      btn.disabled = true; btn.textContent = "جاري التحقق...";
+
+      try {
+        // البحث عن الطالب في الداتابيز
+        const q = query(
+          collection(db, "users"), 
+          where("gradeLevel", "==", grade),
+          where("phone", "==", phone)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        let foundStudent = null;
+
+        // نقارن الاسم كمان في المتصفح عشان نتفادى مشاكل المسافات
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          // بنشيل المسافات الزيادة ونقارن
+          if (data.name.replace(/\s+/g, ' ').trim() === name.replace(/\s+/g, ' ').trim()) {
+            foundStudent = { id: doc.id, ...data };
+          }
+        });
+
+        if (foundStudent) {
+          // حفظ بيانات الطالب في الجلسة عشان صفحة الداشبورد تشوفها
+          sessionStorage.setItem('parentStudentId', foundStudent.id);
+          sessionStorage.setItem('parentStudentName', foundStudent.name);
+          sessionStorage.setItem('parentStudentGrade', foundStudent.gradeLevel);
+          
+          window.location.href = "parent-dashboard.html";
+        } else {
+          Swal.fire({ icon: 'error', title: 'عفواً', text: 'لم يتم العثور على طالب بهذه البيانات. تأكد من الاسم ورقم الهاتف والسنة الدراسية.', background: '#12121f', color: '#fff' });
+          btn.disabled = false; btn.textContent = "دخول";
+        }
+
+      } catch (error) {
+        console.error("Error:", error);
+        Swal.fire({ icon: 'error', title: 'خطأ', text: 'حدث خطأ في الاتصال.', background: '#12121f', color: '#fff' });
+        btn.disabled = false; btn.textContent = "دخول";
+      }
+    });
+  </script>
+</body>
+</html>
