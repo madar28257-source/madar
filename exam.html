@@ -42,7 +42,6 @@
     .option-item.selected .option-radio { border-color: var(--primary-light); }
     .option-item.selected .option-radio::after { content: ''; width: 10px; height: 10px; background: var(--primary-light); border-radius: 50%; }
 
-    /* تنسيق السؤال المقالي */
     .essay-area { display: none; width: 100%; min-height: 150px; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: #fff; font-family: inherit; font-size: 1.1rem; outline: none; resize: vertical; }
     .essay-area:focus { border-color: var(--primary); }
 
@@ -83,9 +82,7 @@
       <div class="question-text" id="question-text">جاري التحميل...</div>
       <img id="question-image" class="question-image" src="" alt="صورة السؤال">
       
-      <!-- الاختيارات (للمقالي) -->
       <div class="options-list" id="options-list"></div>
-      <!-- المقالي (للكتابة) -->
       <textarea id="essay-input" class="essay-area" placeholder="اكتب إجابتك المقالية هنا..."></textarea>
 
       <div class="controls">
@@ -99,7 +96,7 @@
   <script type="module">
     import { auth, db } from "./firebase.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-    import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+    import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
     let examData = null;
     let currentQuestionIndex = 0;
@@ -109,7 +106,7 @@
     let totalExamMarks = 0;
     let currentExamId = null;
     let currentSubjectName = null;
-    let startTime = null; // 🔥 عشان نحسب وقت الحل
+    let startTime = null; 
 
     const qNumberEl = document.getElementById('question-number');
     const qTextEl = document.getElementById('question-text');
@@ -158,8 +155,6 @@
           userAnswers = new Array(examData.questions.length).fill(null);
           totalExamMarks = examData.questions.reduce((sum, q) => sum + q.points, 0);
           timeLeft = examData.duration * 60;
-          
-          // 🔥 تسجيل وقت بداية الامتحان
           startTime = Date.now(); 
 
           loadingScreen.style.opacity = '0';
@@ -186,7 +181,6 @@
       qNumberEl.textContent = `السؤال ${currentQuestionIndex + 1} من ${examData.questions.length} (الدرجة: ${q.points})`;
       qTextEl.textContent = q.text;
       
-      // عرض الصورة لو موجودة
       if (q.imageUrl) {
           qImageEl.src = q.imageUrl;
           qImageEl.style.display = 'block';
@@ -197,14 +191,12 @@
       const progress = ((currentQuestionIndex + 1) / examData.questions.length) * 100;
       progressFill.style.width = progress + '%';
 
-      // لو السؤال مقالي
       if (q.type === 'essay') {
           optionsListEl.style.display = 'none';
           essayInput.style.display = 'block';
           essayInput.value = userAnswers[currentQuestionIndex] || "";
           essayInput.oninput = () => { userAnswers[currentQuestionIndex] = essayInput.value; };
       } else {
-          // لو اختيار من متعدد
           optionsListEl.style.display = 'flex';
           essayInput.style.display = 'none';
           
@@ -270,7 +262,6 @@
       btnSubmit.disabled = true;
       btnSubmit.textContent = "جاري الحفظ...";
 
-      // 🔥 حساب الوقت اللي الطالب أخده بالثواني
       const timeTaken = Math.floor((Date.now() - startTime) / 1000);
 
       let studentScore = 0;
@@ -286,8 +277,7 @@
             pointsEarned = isCorrect ? q.points : 0;
             studentAnsText = userAnswers[index] !== null ? q.options[userAnswers[index]] : "لم يجب على السؤال";
         } else {
-            // 🔥 هنا بيتم تصحيح المقالي (مبدئياً 0 لحد ما نربط الـ AI)
-            pointsEarned = 0; // سيتم تعديلها بالـ AI
+            pointsEarned = 0; 
             if (!studentAnsText) studentAnsText = "لم يجب على السؤال";
         }
 
@@ -312,6 +302,7 @@
         const userDocSnap = await getDoc(userDocRef);
         const studentGrade = userDocSnap.exists() ? userDocSnap.data().gradeLevel : "unknown";
 
+        // 1. حفظ النتيجة في الداتابيز
         await addDoc(collection(db, "results"), {
           studentId: auth.currentUser.uid,
           studentName: auth.currentUser.displayName || "طالب",
@@ -322,17 +313,45 @@
           score: studentScore,
           totalMarks: totalExamMarks,
           percentage: percentage,
-          timeTaken: timeTaken, // 🔥 حفظنا وقت الحل هنا
+          timeTaken: timeTaken,
           submittedAt: serverTimestamp(),
           studentAnswers: studentAnswersDetails
         });
 
+        // 2. 🔥 حساب الخبرة (XP) والمستوى (Level)
+        const currentXP = userDocSnap.data().xp || 0;
+        const currentLevel = userDocSnap.data().level || 1;
+        
+        // كل درجة = 10 خبرة
+        const earnedXP = studentScore * 10; 
+        const newXP = currentXP + earnedXP;
+        
+        // كل 100 خبرة = مستوى جديد
+        const newLevel = Math.floor(newXP / 100) + 1;
+        const leveledUp = newLevel > currentLevel;
+
+        // تحديث بيانات الطالب
+        await updateDoc(userDocRef, {
+            xp: newXP,
+            level: newLevel
+        });
+
+        // 3. عرض النتيجة مع الخبرة
         let resultColor = percentage >= 50 ? '#22c55e' : '#ef4444';
         let resultMsg = percentage >= 50 ? 'لقد اجتزت الاختبار بنجاح.' : 'تحتاج لمزيد من المراجعة والمذاكرة.';
+        
+        let xpHTML = `<div style="margin-top: 15px; color: #f59e0b; font-weight: bold; font-size: 1.1rem;">+${earnedXP} XP 🌟</div>`;
+        if (leveledUp) {
+            xpHTML += `<div style="margin-top: 5px; color: #a78bfa; font-weight: 900; font-size: 1.3rem; animation: pulse 1s infinite;">🎉 مبروك! لقد وصلت للمستوى ${newLevel} 🎉</div>`;
+        }
 
         Swal.fire({
           title: 'نتيجة الاختبار',
-          html: `<div class="result-score" style="color: ${resultColor}">${studentScore} / ${totalExamMarks}</div><div class="result-text">${resultMsg}</div>`,
+          html: `
+            <div class="result-score" style="color: ${resultColor}">${studentScore} / ${totalExamMarks}</div>
+            <div class="result-text">${resultMsg}</div>
+            ${xpHTML}
+          `,
           icon: percentage >= 50 ? 'success' : 'error',
           confirmButtonColor: '#7c3aed', confirmButtonText: 'العودة للمواد', background: '#12121f', color: '#fff', allowOutsideClick: false
         }).then(() => { window.location.href = `subject.html?name=${encodeURIComponent(currentSubjectName)}`; });
