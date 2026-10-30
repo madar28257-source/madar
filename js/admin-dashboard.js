@@ -4,39 +4,21 @@ import { collection, getDocs, query, orderBy, limit, where } from "https://www.g
 
 let recentResultsData = [];
 
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(auth, (user) => {
   if (user) {
-    try {
-        // 🔥 السر هنا: بنجيب كل الأدمن ونقارن في المتصفح عشان نتفادى المسافات السرية
-        const cleanEmail = user.email.trim().toLowerCase();
-        const adminSnap = await getDocs(collection(db, "admins"));
-        
-        let isAdmin = false;
-        adminSnap.forEach((doc) => {
-            const adminData = doc.data();
-            if (adminData.email && adminData.email.trim().toLowerCase() === cleanEmail) {
-                isAdmin = true;
-            }
-        });
-
-        if (isAdmin) {
-            document.getElementById("admin-name").textContent = user.displayName || "الأدمن";
-            loadDashboardData();
-        } else {
-            Swal.fire({
-                icon: 'error', title: 'ممنوع الدخول', text: 'هذه الصفحة مخصصة للمعلم فقط.',
-                background: '#12121f', color: '#fff', allowOutsideClick: false
-            }).then(() => { window.location.href = "../dashboard.html"; });
-        }
-    } catch (error) {
-        console.error(error);
-        window.location.href = "../dashboard.html";
+    // 🔥 حل الطوارئ: إنت بس اللي هتشوف الداتا
+    if (user.email.trim().toLowerCase() === "mohamed7@gmail.com") {
+      document.getElementById("admin-name").textContent = user.displayName || "الأدمن";
+      loadDashboardData();
+    } else {
+      window.location.href = "../dashboard.html";
     }
   } else {
     window.location.href = "../index.html";
   }
 });
 
+// تسجيل الخروج
 document.getElementById("logout-btn").addEventListener("click", () => {
   Swal.fire({
     title: 'تسجيل الخروج', text: "هل أنت متأكد من الخروج؟", icon: 'warning',
@@ -47,10 +29,12 @@ document.getElementById("logout-btn").addEventListener("click", () => {
   });
 });
 
+// جلب البيانات وعرضها
 async function loadDashboardData() {
   const tbody = document.getElementById("results-table-body");
   
   try {
+    // إحصائيات
     const usersQ = query(collection(db, "users"), where("role", "==", "student"));
     const usersSnap = await getDocs(usersQ);
     document.getElementById("stat-students").textContent = usersSnap.size;
@@ -61,6 +45,7 @@ async function loadDashboardData() {
     const evalsSnap = await getDocs(collection(db, "evaluations"));
     document.getElementById("stat-evals").textContent = evalsSnap.size;
 
+    // أحدث النتائج
     const resultsQ = query(collection(db, "results"), orderBy("submittedAt", "desc"), limit(5));
     const resultsSnap = await getDocs(resultsQ);
 
@@ -110,6 +95,7 @@ async function loadDashboardData() {
   }
 }
 
+// عرض الإجابات
 window.showAnswers = (index) => {
   const student = recentResultsData[index];
   let htmlContent = `
