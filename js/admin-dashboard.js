@@ -7,24 +7,37 @@ let recentResultsData = [];
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     try {
-        // 🔥 السر هنا: بنجيب كل الأدمن ونقارن في المتصفح عشان نتفادى المسافات السرية
         const cleanEmail = user.email.trim().toLowerCase();
         const adminSnap = await getDocs(collection(db, "admins"));
         
         let isAdmin = false;
+        let isSuper = false;
+
         adminSnap.forEach((doc) => {
             const adminData = doc.data();
+            // بنقارن الإيميلات بعد تنضيفها من المسافات
             if (adminData.email && adminData.email.trim().toLowerCase() === cleanEmail) {
                 isAdmin = true;
+                if (adminData.role && adminData.role.trim() === 'super_admin') {
+                    isSuper = true;
+                }
             }
         });
 
         if (isAdmin) {
+            // لو أدمن (سواء سوبر أو مدرس)، نعرض اسمه ونظهر لوحة التحكم
             document.getElementById("admin-name").textContent = user.displayName || "الأدمن";
+            
+            // لو مدير عام، نظهر زرار إدارة الأدمن
+            if (isSuper) {
+                document.getElementById("admins-tab").style.display = "flex";
+            }
+
             loadDashboardData();
         } else {
+            // لو مش موجود في كولكشن الأدمن، نطرده
             Swal.fire({
-                icon: 'error', title: 'ممنوع الدخول', text: 'هذه الصفحة مخصصة للمعلم فقط.',
+                icon: 'error', title: 'ممنوع الدخول', text: 'هذه الصفحة مخصصة للمعلمين فقط.',
                 background: '#12121f', color: '#fff', allowOutsideClick: false
             }).then(() => { window.location.href = "../dashboard.html"; });
         }
