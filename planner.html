@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المخطط الذكي — منصة MADAR</title>
+  
+  <link rel="stylesheet" href="base.css">
+  <link rel="stylesheet" href="css/planner.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+  <div class="bg-orbs"></div>
+
+  <nav class="navbar">
+    <div class="logo">🎓 MADAR - المخطط الذكي</div>
+    <a href="dashboard.html" class="btn-back">← رجوع للرئيسية</a>
+  </nav>
+
+  <main class="container">
+    <div class="header-section">
+      <h1>🧠 مخطط المذاكرة الذكي</h1>
+      <p>الذكاء الاصطناعي هيحلل مستواك ويرتبلك جدول مذاكرة مخصوص عشان تجيب الدرجة النهائية.</p>
+      <button id="generate-btn" class="generate-btn">✨ توليد خطة المذاكرة الآن</button>
+    </div>
+
+    <div id="loading" class="loading-state" style="display: none;">
+      <div class="spinner"></div>
+      <p>الذكاء الاصطناعي بيحلل درجاتك وبيجهز خطتك... ⏳</p>
+    </div>
+
+    <div id="plan-result" class="plan-container" style="display: none;">
+      <!-- الخطة هتظهر هنا -->
+    </div>
+  </main>
+
+  <script type="module" src="js/planner.js"></script>
+</body>
+</html>
