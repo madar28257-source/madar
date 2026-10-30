@@ -37,17 +37,18 @@
       try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         let userLevel = 1;
-        let userXP = 0;
-
+        
         if (userDoc.exists()) {
             userLevel = userDoc.data().level || 1;
-            userXP = userDoc.data().xp || 0;
         }
 
-        // بنرسم 15 طابق (أو أكتر لو المستوى عالي)
-        const maxLevels = Math.max(15, userLevel + 3); 
+        // 🎨 تحديد الثيم بناءً على الليفل
+        applyTheme(userLevel);
 
-        // بنرسم البرج من فوق لتحت (عشان الطالب يبدأ من فوق)
+        // بنرسم طوابق كفاية (أكتر من الليفل الحالي بـ 10 طوابق)
+        const maxLevels = userLevel + 10; 
+
+        // بنرسم البرج من فوق لتحت
         for (let i = maxLevels; i >= 1; i--) {
             createTowerLevel(i, userLevel);
         }
@@ -65,6 +66,19 @@
       }
     });
 
+    // دالة تحديد شكل البرج حسب ليفل الطالب
+    function applyTheme(level) {
+        if (level >= 1 && level <= 5) {
+            document.body.className = "theme-stone";
+        } else if (level >= 6 && level <= 10) {
+            document.body.className = "theme-neon";
+        } else if (level >= 11 && level <= 15) {
+            document.body.className = "theme-gold";
+        } else {
+            document.body.className = "theme-demon"; // 16+
+        }
+    }
+
     function createTowerLevel(levelNum, currentLevel) {
         const div = document.createElement('div');
         div.className = 'tower-level';
@@ -73,6 +87,7 @@
         let icon = '';
         let title = '';
         let desc = '';
+        let isBoss = (levelNum % 5 === 0); // 👹 هل ده طابق زعيم؟ (5, 10, 15...)
 
         if (levelNum < currentLevel) {
             status = 'completed';
@@ -91,13 +106,29 @@
             desc = 'أكمل الطوابق السابقة للوصول هنا.';
         }
 
+        // لو ده طابق زعيم، هنغير شكله
+        if (isBoss) {
+            div.classList.add('boss-level');
+            icon = `<span class="boss-icon">👹</span>`;
+            if (status === 'completed') {
+                title = 'الزعيم مهزوم!';
+                desc = 'لقد هزمت هذا الزعيم الشامل بنجاح.';
+            } else if (status === 'current') {
+                title = 'معركة الزعيم!';
+                desc = 'يجب عليك حل الامتحان الشامل للانتقال للطابق التالي.';
+            } else {
+                title = 'زعيم مقفول';
+                desc = 'أكمل الطوابق للوصول لمعركة الزعيم.';
+            }
+        }
+
         div.classList.add(status);
         
         div.innerHTML = `
             ${levelNum === currentLevel ? '<div class="hero-marker">🦸‍♂️</div>' : ''}
-            <div class="level-node">
-                ${icon}
-                <span class="level-number">${levelNum}</span>
+            <div class="level-node" onclick="handleLevelClick(${levelNum}, ${isBoss}, '${status}')">
+                ${isBoss ? icon : icon}
+                ${!isBoss ? `<span class="level-number">${levelNum}</span>` : ''}
             </div>
             <div class="level-details">
                 <h4>الطابق ${levelNum}: ${title}</h4>
@@ -106,6 +137,25 @@
         `;
         
         towerContainer.appendChild(div);
+    }
+
+    // دالة لما الطالب يدوس على طابق
+    window.handleLevelClick = (level, isBoss, status) => {
+        if (isBoss) {
+            Swal.fire({
+                title: '👹 معركة الزعيم!',
+                text: 'هذا الطابق يحتوي على امتحان شامل. اذهب إلى صفحة المواد وحل الامتحانات الشاملة لتتمكن من تجاوز هذا الطابق!',
+                icon: 'warning',
+                background: '#12121f',
+                color: '#fff',
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'تمام، سأذهب للمواد',
+                showCancelButton: true,
+                cancelButtonText: 'إلغاء'
+            });
+        } else if (status === 'locked') {
+            Swal.fire({ icon: 'lock', title: 'مقفول', text: 'لازم تخلص الطوابق اللي قبل كده الأول.', background: '#12121f', color: '#fff', confirmButtonColor: '#7c3aed' });
+        }
     }
   </script>
 </body>
