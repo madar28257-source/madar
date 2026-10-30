@@ -1,6 +1,6 @@
 import { auth, db } from "../firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import { collection, getDocs, query, orderBy, limit, where } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import { collection, getDocs, query, orderBy, limit, where, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
 let recentResultsData = [];
 
@@ -31,12 +31,9 @@ onAuthStateChanged(auth, async (user) => {
 
         if (isAdmin) {
             document.getElementById("admin-name").textContent = user.displayName || "الأدمن";
-            
-            // إظهار زرار إدارة الأدمن
             if (isSuper) {
                 document.getElementById("admins-tab").style.display = "flex";
             }
-
             loadDashboardData();
         } else {
             Swal.fire({
@@ -115,7 +112,10 @@ async function loadDashboardData() {
           <span class="score-percent">(${res.percentage}%)</span>
         </td>
         <td style="color: var(--text-muted); font-size: 0.85rem;">${dateStr}</td>
-        <td><button class="btn-action" onclick="showAnswers(${index})">عرض الإجابات</button></td>
+        <td style="display: flex; gap: 5px;">
+          <button class="btn-action" onclick="showAnswers(${index})">الإجابات</button>
+          <button class="btn-action" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" onclick="deleteResult('${res.id}', '${res.studentName}')">مسح</button>
+        </td>
       `;
       tbody.appendChild(tr);
     });
@@ -128,14 +128,17 @@ async function loadDashboardData() {
 
 window.showAnswers = (index) => {
   const student = recentResultsData[index];
+  
   let htmlContent = `
     <div style="margin-bottom: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
       <h3 style="color: #fff; margin-bottom: 5px;">${student.studentName}</h3>
       <p style="color: var(--text-muted); font-size: 0.9rem;">الدرجة النهائية: <b style="color: #22c55e; font-size:1.2rem;">${student.score} / ${student.totalMarks}</b></p>
     </div>
   `;
+
+  // تأمين الكود: لو النتيجة قديمة ومفيهاش إجابات، ميعملش كراش
   if (!student.studentAnswers || student.studentAnswers.length === 0) {
-    htmlContent += `<div style="text-align: center; padding: 20px; color: var(--text-muted);"><p>لم يتم تسجيل تفاصيل الإجابات لهذا الامتحان.</p></div>`;
+    htmlContent += `<div style="text-align: center; padding: 20px; color: #f59e0b;"><p>هذه النتيجة قديمة، لم يتم تسجيل تفاصيل الإجابات لها.</p></div>`;
   } else {
     htmlContent += `<div style="max-height: 400px; overflow-y: auto; padding-left: 10px;">`;
     student.studentAnswers.forEach((ans, i) => {
@@ -152,5 +155,20 @@ window.showAnswers = (index) => {
     });
     htmlContent += `</div>`;
   }
+
   Swal.fire({ html: htmlContent, width: 600, background: '#12121f', showCloseButton: true, confirmButtonText: 'إغلاق', confirmButtonColor: '#7c3aed' });
+};
+
+// 🔥 دالة مسح النتيجة
+window.deleteResult = (id, name) => {
+  Swal.fire({
+    title: 'تأكيد المسح', text: `هل أنت متأكد من مسح نتيجة الطالب (${name})؟`, icon: 'warning',
+    showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'نعم، امسح', cancelButtonText: 'إلغاء', background: '#12121f', color: '#fff'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      await deleteDoc(doc(db, "results", id));
+      Swal.fire({ icon: 'success', title: 'تم المسح', background: '#12121f', color: '#fff', timer: 1500, showConfirmButton: false });
+      loadDashboardData(); // تحديث الجدول
+    }
+  });
 };
