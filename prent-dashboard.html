@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة ولي الأمر — منصة MADAR</title>
+  
+  <link rel="stylesheet" href="base.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    .navbar { background: rgba(11, 12, 16, 0.8); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); }
+    .navbar .logo { font-size: 1.5rem; font-weight: 900; color: #fff; }
+    .btn-logout { background: transparent; color: #ef4444; border: 1px solid #ef4444; padding: 8px 15px; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; font-weight: 600; }
+
+    .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+    .welcome-sec { margin-bottom: 30px; }
+    .welcome-sec h2 { color: #fff; font-size: 1.8rem; margin-bottom: 5px; }
+    .welcome-sec p { color: var(--text-muted); }
+
+    /* كروت الإحصائيات */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 40px; }
+    .stat-card { padding: 25px; display: flex; flex-direction: column; align-items: center; text-align: center; background: var(--surface-color); border: 1px solid var(--glass-border); border-radius: var(--radius); }
+    .stat-card h4 { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px; }
+    .stat-card p { color: #fff; font-size: 1.8rem; font-weight: 900; }
+    
+    /* التابات (نتائج / تصنيف) */
+    .tabs { display: flex; gap: 15px; margin-bottom: 20px; }
+    .tab-btn { padding: 10px 25px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-muted); border-radius: 30px; cursor: pointer; font-family: inherit; font-weight: 700; transition: 0.3s; }
+    .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    /* الجداول */
+    .tab-content { display: none; background: var(--surface-color); border: 1px solid var(--glass-border); border-radius: var(--radius); padding: 20px; }
+    .tab-content.active { display: block; }
+    
+    table { width: 100%; border-collapse: collapse; text-align: right; }
+    th { padding: 15px; color: var(--text-muted); border-bottom: 1px solid var(--glass-border); font-size: 0.9rem; }
+    td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.02); color: #fff; font-size: 0.95rem; }
+    
+    .rank-badge { background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 5px 12px; border-radius: 20px; font-weight: 700; }
+    .score-badge { font-weight: 800; color: #22c55e; }
+
+    /* اختيار المادة للتصنيف العالمي */
+    .select-subject-wrap { margin-bottom: 20px; display: flex; gap: 15px; align-items: center; }
+    .select-subject-wrap select { padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; border-radius: var(--radius-sm); font-family: inherit; outline: none; }
+    
+    @media (max-width: 768px) {
+      .navbar { padding: 15px 20px; }
+      .tabs { flex-direction: column; }
+      table { min-width: 600px; }
+      .table-responsive { overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-orbs"></div>
+
+  <nav class="navbar">
+    <div class="logo">🎓 MADAR - بوابة ولي الأمر</div>
+    <button class="btn-logout" onclick="logout()">خروج</button>
+  </nav>
+
+  <main class="container">
+    <div class="welcome-sec">
+      <h2>أهلاً بك، ولي أمر الطالب: <span id="student-name-display" style="color: var(--primary-light);"></span></h2>
+      <p>متابعة مستمرة لمستوى ابنك الدراسي</p>
+    </div>
+
+    <!-- الإحصائيات العامة -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h4>الامتحانات المنجزة</h4>
+        <p id="stat-exams">0</p>
+      </div>
+      <div class="stat-card">
+        <h4>إجمالي الدرجات</h4>
+        <p id="stat-score">0</p>
+      </div>
+      <div class="stat-card">
+        <h4>وقت المذاكرة والامتحانات</h4>
+        <p id="stat-time">0 دقيقة</p>
+      </div>
+      <div class="stat-card">
+        <h4>الترتيب في الصف</h4>
+        <p id="stat-rank" style="color: #f59e0b;">جاري الحساب...</p>
+      </div>
+    </div>
+
+    <!-- التابات -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('results')">سجل النتائج</button>
+      <button class="tab-btn" onclick="switchTab('leaderboard')">التصنيف العالمي</button>
+    </div>
+
+    <!-- محتوى سجل النتائج -->
+    <div class="tab-content active" id="tab-results">
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>المادة</th>
+              <th>الامتحان</th>
+              <th>الدرجة</th>
+              <th>الوقت المستغرق</th>
+              <th>التاريخ</th>
+            </tr>
+          </thead>
+          <tbody id="results-table-body">
+            <tr><td colspan="5" style="text-align:center;">جاري التحميل...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- محتوى التصنيف العالمي -->
+    <div class="tab-content" id="tab-leaderboard">
+      <div class="select-subject-wrap">
+        <label style="color: var(--text-muted);">اختر المادة:</label>
+        <select id="leaderboard-subject" onchange="loadLeaderboard()">
+          <option value="" disabled selected>-- اختر المادة --</option>
+          <option value="الرياضيات">الرياضيات</option>
+          <option value="اللغة العربية">اللغة العربية</option>
+          <option value="اللغة الإنجليزية">اللغة الإنجليزية</option>
+          <option value="العلوم">العلوم</option>
+          <option value="التاريخ">التاريخ</option>
+          <option value="الجغرافيا">الجغرافيا</option>
+          <option value="الفلسفة">الفلسفة</option>
+        </select>
+      </div>
+      
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>الترتيب</th>
+              <th>اسم الطالب</th>
+              <th>الدرجة الكلية</th>
+              <th>الوقت الكلي</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-table-body">
+            <tr><td colspan="4" style="text-align:center;">اختر المادة لعرض التصنيف...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script type="module">
+    import { db } from "./firebase.js";
+    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+
+    // 1. التأكد من وجود جلسة ولي الأمر
+    const studentId = sessionStorage.getItem('parentStudentId');
+    const studentName = sessionStorage.getItem('parentStudentName');
+    const studentGrade = sessionStorage.getItem('parentStudentGrade');
+
+    if (!studentId) {
+      window.location.href = "parents.html"; // لو حاول يفتح اللينك من غير ما يسجل
+    }
+
+    document.getElementById('student-name-display').textContent = studentName;
+
+    const gradeNames = {
+      "1-prep": "أولى إعدادي", "2-prep": "تانية إعدادي", "3-prep": "تالتة إعدادي",
+      "1-sec": "أولى ثانوي", "2-sec": "تانية ثانوي"
+    };
+
+    // 2. دالة تسجيل الخروج
+    window.logout = () => {
+      sessionStorage.clear();
+      window.location.href = "parents.html";
+    };
+
+    // 3. دالة تغيير التابات
+    window.switchTab = (tabName) => {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      if (tabName === 'results') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('tab-results').classList.add('active');
+      } else {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('tab-leaderboard').classList.add('active');
+      }
+    };
+
+    // 4. تحميل بيانات الطالب
+    async function loadStudentData() {
+      const tbody = document.getElementById("results-table-body");
+      
+      try {
+        const q = query(collection(db, "results"), where("studentId", "==", studentId));
+        const querySnapshot = await getDocs(q);
+        
+        let totalExams = 0;
+        let totalScore = 0;
+        let totalTimeSeconds = 0;
+
+        tbody.innerHTML = "";
+
+        if (querySnapshot.empty) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">لم يقم الطالب بأي امتحانات حتى الآن.</td></tr>`;
+        } else {
+          // ترتيب النتائج بالأحدث
+          let resultsArray = [];
+          querySnapshot.forEach(doc => resultsArray.push(doc.data()));
+          resultsArray.sort((a, b) => (b.submittedAt?.toMillis() || 0) - (a.submittedAt?.toMillis() || 0));
+
+          resultsArray.forEach(res => {
+            totalExams++;
+            totalScore += res.score;
+            totalTimeSeconds += (res.timeTaken || 0);
+
+            let timeStr = "غير مسجل";
+            if (res.timeTaken) {
+              const mins = Math.floor(res.timeTaken / 60);
+              timeStr = `${mins} دقيقة`;
+            }
+            
+            let dateStr = "غير معروف";
+            if (res.submittedAt) { dateStr = res.submittedAt.toDate().toLocaleDateString('ar-EG'); }
+
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td><span class="subject-badge" style="background: rgba(124, 58, 237, 0.1); color: var(--primary-light); padding: 4px 10px; border-radius: 20px;">${res.subject}</span></td>
+              <td>${res.examTitle}</td>
+              <td><span class="score-badge">${res.score} / ${res.totalMarks}</span></td>
+              <td style="color: var(--text-muted);">${timeStr}</td>
+              <td style="color: var(--text-muted);">${dateStr}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+
+        // تحديث الإحصائيات
+        document.getElementById("stat-exams").textContent = totalExams;
+        document.getElementById("stat-score").textContent = totalScore;
+        document.getElementById("stat-time").textContent = Math.floor(totalTimeSeconds / 60) + " دقيقة";
+
+        // حساب ترتيب الطالب في صفه
+        await calculateStudentRank(totalScore, totalTimeSeconds);
+
+      } catch (error) {
+        console.error("Error loading data:", error);
+      }
+    }
+
+    // 5. حساب ترتيب الطالب
+    async function calculateStudentRank(studentTotalScore, studentTotalTime) {
+      try {
+        // بنجيب كل طلاب نفس السنة
+        const usersQ = query(collection(db, "users"), where("gradeLevel", "==", studentGrade));
+        const usersSnap = await getDocs(usersQ);
+        
+        // بنجيب كل النتائج بتاعت نفس السنة
+        const resultsQ = query(collection(db, "results"), where("studentGrade", "==", studentGrade));
+        const resultsSnap = await getDocs(resultsQ);
+
+        // تجميع درجات كل طالب
+        const studentsScores = {};
+        resultsSnap.forEach(doc => {
+          const data = doc.data();
+          if (!studentsScores[data.studentId]) {
+            studentsScores[data.studentId] = { score: 0, time: 0 };
+          }
+          studentsScores[data.studentId].score += data.score;
+          studentsScores[data.studentId].time += (data.timeTaken || 0);
+        });
+
+        // تحويلها لمصفوفة وترتيبها
+        let rankList = Object.keys(studentsScores).map(id => ({
+          id: id,
+          score: studentsScores[id].score,
+          time: studentsScores[id].time
+        }));
+
+        rankList.sort((a, b) => {
+          if (b.score !== a.score) return b.score - a.score; // الأكثر درجات أولاً
+          return a.time - b.time; // الأقل وقتاً أولاً
+        });
+
+        // نلاقي ترتيب الطالب بتاعنا
+        const rankIndex = rankList.findIndex(s => s.id === studentId);
+        if (rankIndex !== -1) {
+          document.getElementById("stat-rank").textContent = `المركز ${rankIndex + 1} من ${rankList.length}`;
+        } else {
+          document.getElementById("stat-rank").textContent = "غير مصنف";
+        }
+
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    // 6. تحميل التصنيف العالمي (لكل مادة)
+    window.loadLeaderboard = async () => {
+      const subject = document.getElementById("leaderboard-subject").value;
+      const tbody = document.getElementById("leaderboard-table-body");
+      
+      if (!subject) return;
+
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">جاري تحميل التصنيف...</td></tr>`;
+
+      try {
+        // نجيب نتائج المادة دي في السنة دي
+        const q = query(
+          collection(db, "results"), 
+          where("studentGrade", "==", studentGrade),
+          where("subject", "==", subject)
+        );
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted);">لا توجد نتائج لهذه المادة حتى الآن.</td></tr>`;
+          return;
+        }
+
+        // تجميع درجات كل طالب في المادة دي
+        const subjectScores = {};
+        snap.forEach(doc => {
+          const data = doc.data();
+          if (!subjectScores[data.studentId]) {
+            subjectScores[data.studentId] = { name: data.studentName, score: 0, time: 0 };
+          }
+          subjectScores[data.studentId].score += data.score;
+          subjectScores[data.studentId].time += (data.timeTaken || 0);
+        });
+
+        // تحويلها لمصفوفة وترتيبها
+        let leaderboard = Object.values(subjectScores);
+        leaderboard.sort((a, b) => {
+          if (b.score !== a.score) return b.score - a.score;
+          return a.time - b.time;
+        });
+
+        tbody.innerHTML = "";
+        // نعرض أول 10 طلاب
+        leaderboard.slice(0, 10).forEach((student, index) => {
+          const timeMins = Math.floor(student.time / 60);
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><span class="rank-badge">#${index + 1}</span></td>
+            <td style="font-weight: bold; color: #fff;">${student.name}</td>
+            <td><span class="score-badge">${student.score} درجة</span></td>
+            <td style="color: var(--text-muted);">${timeMins} دقيقة</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+      } catch (error) {
+        console.error(error);
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: #ef4444;">حدث خطأ في تحميل التصنيف.</td></tr>`;
+      }
+    };
+
+    // تشغيل الدالة أول ما الصفحة تفتح
+    loadStudentData();
+  </script>
+</body>
+</html>
