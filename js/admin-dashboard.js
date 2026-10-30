@@ -15,7 +15,6 @@ onAuthStateChanged(auth, async (user) => {
 
         adminSnap.forEach((doc) => {
             const adminData = doc.data();
-            // بنقارن الإيميلات بعد تنضيفها من المسافات
             if (adminData.email && adminData.email.trim().toLowerCase() === cleanEmail) {
                 isAdmin = true;
                 if (adminData.role && adminData.role.trim() === 'super_admin') {
@@ -24,18 +23,22 @@ onAuthStateChanged(auth, async (user) => {
             }
         });
 
+        // 🔥 حل الطوارئ: لو الإيميل ده بتاعك، اعتبره سوبر أدمن واظهر الزرار
+        if (cleanEmail === "mohamed7@gmail.com") {
+            isSuper = true;
+            isAdmin = true;
+        }
+
         if (isAdmin) {
-            // لو أدمن (سواء سوبر أو مدرس)، نعرض اسمه ونظهر لوحة التحكم
             document.getElementById("admin-name").textContent = user.displayName || "الأدمن";
             
-            // لو مدير عام، نظهر زرار إدارة الأدمن
+            // إظهار زرار إدارة الأدمن
             if (isSuper) {
                 document.getElementById("admins-tab").style.display = "flex";
             }
 
             loadDashboardData();
         } else {
-            // لو مش موجود في كولكشن الأدمن، نطرده
             Swal.fire({
                 icon: 'error', title: 'ممنوع الدخول', text: 'هذه الصفحة مخصصة للمعلمين فقط.',
                 background: '#12121f', color: '#fff', allowOutsideClick: false
