@@ -6,17 +6,16 @@
   <title>لوحة تحكم الأدمن — منصة MADAR</title>
   
   <link rel="stylesheet" href="../base.css">
-  <link rel="stylesheet" href="../css/admin.css">
+  <!-- 🔥 ضفنا ?v=3 عشان نكسر الكاش -->
+  <link rel="stylesheet" href="../css/admin.css?v=3">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
   <div class="bg-orbs"></div>
 
-  <!-- الطبقة السوداء (بتظهر لما القائمة تتفتح) -->
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-  <!-- القائمة الجانبية -->
   <aside class="sidebar" id="sidebar">
     <button class="close-sidebar-btn" id="close-sidebar-btn">✖</button>
     <div class="logo">MADAR</div>
@@ -48,15 +47,10 @@
     </nav>
   </aside>
 
-  <!-- المحتوى الرئيسي -->
   <main class="main-content">
-    
     <div class="top-bar">
-      <!-- زرار فتح القائمة في الموبايل -->
       <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
-      
       <h2>لوحة تحكم المعلم</h2>
-      
       <div class="admin-info">
         <span style="font-weight:600; font-size:0.9rem;" id="admin-name">جاري التحميل...</span>
         <div class="admin-avatar">A</div>
@@ -105,7 +99,6 @@
   </main>
 
   <script>
-    // كود فتح وقفل القائمة
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebar-overlay');
     const menuBtn = document.getElementById('mobile-menu-btn');
