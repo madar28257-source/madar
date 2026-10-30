@@ -23,31 +23,21 @@
 
     .battle-arena { max-width: 800px; margin: 90px auto 20px; padding: 0 20px 50px; position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; }
 
-    /* الزعيم */
     .boss-container { text-align: center; margin-bottom: 30px; position: relative; }
     .boss-avatar { font-size: 5rem; animation: bossFloat 3s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.6)); }
     @keyframes bossFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
     .boss-name { color: #ef4444; font-weight: 900; font-size: 1.2rem; margin-bottom: 10px; text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
 
-    /* شريط صحة الزعيم */
     .boss-health-bar-container { width: 300px; height: 20px; background: rgba(0, 0, 0, 0.8); border: 2px solid #ef4444; border-radius: 10px; overflow: hidden; position: relative; margin: 0 auto; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
     .boss-health-fill { height: 100%; background: linear-gradient(90deg, #991b1b, #ef4444); width: 100%; transition: width 0.5s ease-out; }
     .boss-hp-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.7rem; font-weight: 900; text-shadow: 1px 1px 2px #000; }
 
-    /* تأثير الاهتزاز عند الضرب */
     .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
-    @keyframes shake {
-      10%, 90% { transform: translate3d(-1px, 0, 0); }
-      20%, 80% { transform: translate3d(2px, 0, 0); }
-      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-      40%, 60% { transform: translate3d(4px, 0, 0); }
-    }
+    @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
 
-    /* أرقام الضرر الطايرة */
     .damage-number { position: absolute; top: 20%; left: 50%; transform: translateX(-50%); font-size: 2rem; font-weight: 900; color: #ef4444; text-shadow: 0 0 10px #fff; pointer-events: none; animation: floatUp 1s forwards; }
     @keyframes floatUp { 0% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, -100px) scale(1.5); } }
 
-    /* كارت السؤال */
     .question-card { padding: 30px; margin-bottom: 20px; width: 100%; animation: fadeIn 0.4s ease-out; border: 1px solid var(--primary); box-shadow: 0 0 20px rgba(124, 58, 237, 0.2); }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -56,23 +46,19 @@
     .question-text { font-size: 1.3rem; font-weight: 700; line-height: 1.6; color: #fff; margin-bottom: 20px; }
     .question-image { max-width: 100%; border-radius: 10px; margin-bottom: 20px; display: none; }
 
-    /* الاختيارات */
     .options-list { display: flex; flex-direction: column; gap: 12px; }
     .option-item { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); padding: 15px 20px; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; gap: 15px; transition: var(--transition); font-size: 1.1rem; }
     .option-item:hover:not(.disabled) { background: rgba(255, 255, 255, 0.08); border-color: rgba(124, 58, 237, 0.6); transform: translateX(-5px); }
     
-    /* حالات الاختيارات */
     .option-item.selected { background: rgba(124, 58, 237, 0.2); border-color: var(--primary); box-shadow: 0 0 15px rgba(124, 58, 237, 0.4); }
     .option-item.correct-answer { background: rgba(34, 197, 94, 0.2) !important; border-color: #22c55e !important; box-shadow: 0 0 15px rgba(34, 197, 94, 0.4) !important; }
     .option-item.wrong-answer { background: rgba(239, 68, 68, 0.2) !important; border-color: #ef4444 !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4) !important; }
-    
     .option-item.disabled { cursor: not-allowed; pointer-events: none; opacity: 0.7; }
     
     .option-radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--text-muted); display: flex; align-items: center; justify-content: center; transition: var(--transition); flex-shrink: 0; }
     .option-item.selected .option-radio { border-color: #fff; background: var(--primary); }
     .option-item.correct-answer .option-radio { border-color: #fff; background: #22c55e; }
     .option-item.wrong-answer .option-radio { border-color: #fff; background: #ef4444; }
-    
     .option-item.selected .option-radio::after, .option-item.correct-answer .option-radio::after, .option-item.wrong-answer .option-radio::after { content: '✓'; font-size: 12px; color: #fff; font-weight: bold; }
     .option-item.wrong-answer .option-radio::after { content: '✖'; }
 
@@ -137,12 +123,13 @@
   <script type="module">
     import { auth, db } from "./firebase.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-    import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+    // 🔥 ضفنا increment عشان نزود الصناديق
+    import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, updateDoc, increment } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
     let examData = null;
     let currentQuestionIndex = 0;
     let userAnswers = [];
-    let evaluatedQuestions = []; // 🔥 مصفوفة عشان نعرف السؤال ده اتأكدنا منه ولا لأ
+    let evaluatedQuestions = [];
     let timeLeft = 0;
     let timerInterval;
     let totalExamMarks = 0;
@@ -198,7 +185,7 @@
           if (!examData.questions || examData.questions.length === 0) throw new Error("الامتحان لا يحتوي على أسئلة");
 
           userAnswers = new Array(examData.questions.length).fill(null);
-          evaluatedQuestions = new Array(examData.questions.length).fill(false); // كل الأسئلة لسه متأكدتش
+          evaluatedQuestions = new Array(examData.questions.length).fill(false);
           totalExamMarks = examData.questions.reduce((sum, q) => sum + q.points, 0);
           timeLeft = examData.duration * 60;
           startTime = Date.now(); 
@@ -251,13 +238,12 @@
           essayInput.style.display = 'none';
           
           optionsListEl.innerHTML = '';
-          const isEvaluated = evaluatedQuestions[currentQuestionIndex]; // هل السؤال ده اتأكدنا منه؟
+          const isEvaluated = evaluatedQuestions[currentQuestionIndex];
 
           q.options.forEach((opt, index) => {
             const div = document.createElement('div');
             
             if (isEvaluated) {
-                // لو اتأكدنا منه، بنقفل الاختيارات ونلونها
                 div.className = 'option-item disabled';
                 if (index === q.correct) {
                     div.classList.add('correct-answer');
@@ -265,7 +251,6 @@
                     div.classList.add('wrong-answer');
                 }
             } else {
-                // لو لسه متأكدش، مجرد تحديد عادي
                 div.className = `option-item ${userAnswers[currentQuestionIndex] === index ? 'selected' : ''}`;
                 div.onclick = () => selectOption(index);
             }
@@ -285,12 +270,9 @@
       }
     }
 
-    // دالة تحديد الإجابة (بتغير اللون بس)
     window.selectOption = (index) => {
-        if (evaluatedQuestions[currentQuestionIndex]) return; // لو متأكد منه ميتعدلش
-
+        if (evaluatedQuestions[currentQuestionIndex]) return;
         userAnswers[currentQuestionIndex] = index;
-        
         const options = document.querySelectorAll('.option-item');
         options.forEach((opt, i) => {
             if (i === index) opt.classList.add('selected');
@@ -298,18 +280,14 @@
         });
     };
 
-    // دالة الانتقال للسؤال التالي (اللي بتأكد الإجابة وتضرب الزعيم)
     window.nextQuestion = () => {
         const q = examData.questions[currentQuestionIndex];
         
-        // لو السؤال اختياري ولسه متأكدش، بنأكد الإجابة هنا
         if (!evaluatedQuestions[currentQuestionIndex] && q.type === 'mcq') {
             if (userAnswers[currentQuestionIndex] === null) {
                 Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'اختر إجابة أولاً قبل الانتقال!', background: '#12121f', color: '#fff' });
                 return;
             }
-
-            // تأكيد الإجابة
             evaluatedQuestions[currentQuestionIndex] = true;
             const selected = userAnswers[currentQuestionIndex];
             const options = document.querySelectorAll('.option-item');
@@ -317,36 +295,22 @@
             options.forEach((opt, i) => {
                 opt.classList.add('disabled');
                 opt.onclick = null;
-                opt.classList.remove('selected'); // شيل التحديد البنفسجي
-
-                if (i === q.correct) {
-                    opt.classList.add('correct-answer');
-                } else if (i === selected) {
-                    opt.classList.add('wrong-answer');
-                }
+                opt.classList.remove('selected');
+                if (i === q.correct) opt.classList.add('correct-answer');
+                else if (i === selected) opt.classList.add('wrong-answer');
             });
 
-            // لو الإجابة صح، نضرب الزعيم
-            if (selected === q.correct) {
-                attackBoss(currentQuestionIndex);
-            }
-
-            return; // بنقف هنا عشان الطالب يشوف النتيجة (الصح والغلط) قبل ما ينقل
+            if (selected === q.correct) attackBoss(currentQuestionIndex);
+            return; 
         }
 
-        // لو السؤال اتأكد خلاص، أو كان مقالي، ننقل للسؤال اللي بعده
         if (currentQuestionIndex < examData.questions.length - 1) {
             currentQuestionIndex++;
             renderQuestion();
         }
     };
 
-    window.prevQuestion = () => { 
-        if (currentQuestionIndex > 0) { 
-            currentQuestionIndex--; 
-            renderQuestion(); 
-        } 
-    };
+    window.prevQuestion = () => { if (currentQuestionIndex > 0) { currentQuestionIndex--; renderQuestion(); } };
 
     function attackBoss(qIndex) {
         let damage = damagePerQuestion[qIndex];
@@ -372,7 +336,6 @@
         const minutes = Math.floor(timeLeft / 60);
         const seconds = timeLeft % 60;
         timerText.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-
         if (timeLeft <= 60) timerBox.className = 'timer-box danger';
         if (timeLeft <= 0) { clearInterval(timerInterval); autoSubmit(); }
       }, 1000);
@@ -382,7 +345,6 @@
       const unanswered = userAnswers.filter(ans => ans === null || ans === "").length;
       let textMsg = "هل أنت متأكد من إنهاء المعركة وتسليم إجاباتك؟";
       if (unanswered > 0) textMsg = `لديك ${unanswered} أسئلة لم تجب عليها. هل تريد التسليم؟`;
-
       Swal.fire({
         title: 'تأكيد التسليم', text: textMsg, icon: 'warning',
         showCancelButton: true, confirmButtonColor: '#22c55e', cancelButtonColor: '#ef4444',
@@ -403,7 +365,6 @@
       btnSubmit.textContent = "جاري حساب النتيجة...";
 
       const timeTaken = Math.floor((Date.now() - startTime) / 1000);
-
       let studentScore = 0;
       const studentAnswersDetails = [];
 
@@ -420,18 +381,11 @@
             pointsEarned = 0; 
             if (!studentAnsText) studentAnsText = "لم يجب على السؤال";
         }
-
         if (isCorrect) studentScore += q.points;
-
         const correctAnsText = q.type === 'mcq' ? q.options[q.correct] : "تصحيح بالذكاء الاصطناعي";
 
         studentAnswersDetails.push({
-          questionText: q.text,
-          studentAnswer: studentAnsText,
-          correctAnswer: correctAnsText,
-          pointsEarned: pointsEarned,
-          maxPoints: q.points,
-          type: q.type
+          questionText: q.text, studentAnswer: studentAnsText, correctAnswer: correctAnsText, pointsEarned: pointsEarned, maxPoints: q.points, type: q.type
         });
       });
 
@@ -443,18 +397,10 @@
         const studentGrade = userDocSnap.exists() ? userDocSnap.data().gradeLevel : "unknown";
 
         await addDoc(collection(db, "results"), {
-          studentId: auth.currentUser.uid,
-          studentName: auth.currentUser.displayName || "طالب",
-          studentGrade: studentGrade, 
-          examId: currentExamId,
-          examTitle: examData.title,
-          subject: currentSubjectName,
-          score: studentScore,
-          totalMarks: totalExamMarks,
-          percentage: percentage,
-          timeTaken: timeTaken,
-          submittedAt: serverTimestamp(),
-          studentAnswers: studentAnswersDetails
+          studentId: auth.currentUser.uid, studentName: auth.currentUser.displayName || "طالب", studentGrade: studentGrade, 
+          examId: currentExamId, examTitle: examData.title, subject: currentSubjectName,
+          score: studentScore, totalMarks: totalExamMarks, percentage: percentage,
+          timeTaken: timeTaken, submittedAt: serverTimestamp(), studentAnswers: studentAnswersDetails
         });
 
         const currentXP = userDocSnap.data().xp || 0;
@@ -464,23 +410,27 @@
         const newLevel = Math.floor(newXP / 100) + 1;
         const leveledUp = newLevel > currentLevel;
 
-        await updateDoc(userDocRef, { xp: newXP, level: newLevel });
+        // 🔥 التعديل هنا: حفظ الـ XP وإضافة صندوق غنائم لو نجح
+        let updateData = { xp: newXP, level: newLevel };
+        let gotLootBox = false;
+
+        if (percentage >= 50) {
+            updateData.lootBoxes = increment(1);
+            gotLootBox = true;
+        }
+
+        await updateDoc(userDocRef, updateData);
 
         let resultColor = percentage >= 50 ? '#22c55e' : '#ef4444';
         let resultMsg = percentage >= 50 ? '🎉 لقد هزمت الزعيم بنجاح! 🎉' : '💀 لقد هُزمت.. تحتاج لمزيد من التدريب.';
         
-        let xpHTML = `<div style="margin-top: 15px; color: #f59e0b; font-weight: bold; font-size: 1.1rem;">+${earnedXP} XP 🌟</div>`;
-        if (leveledUp) {
-            xpHTML += `<div style="margin-top: 5px; color: #a78bfa; font-weight: 900; font-size: 1.3rem; animation: pulse 1s infinite;">🎉 مبروك! لقد وصلت للمستوى ${newLevel} 🎉</div>`;
-        }
+        let extraHTML = `<div style="margin-top: 15px; color: #f59e0b; font-weight: bold; font-size: 1.1rem;">+${earnedXP} XP 🌟</div>`;
+        if (leveledUp) extraHTML += `<div style="margin-top: 5px; color: #a78bfa; font-weight: 900; font-size: 1.3rem; animation: pulse 1s infinite;">🎉 مبروك! لقد وصلت للمستوى ${newLevel} 🎉</div>`;
+        if (gotLootBox) extraHTML += `<div style="margin-top: 10px; color: #facc15; font-weight: 900; font-size: 1.3rem; animation: pulse 1s infinite;">🎁 لقد كسبت صندوق غنائم! افتحه من لوحة التحكم.</div>`;
 
         Swal.fire({
           title: percentage >= 50 ? 'انتصار!' : 'هزيمة!',
-          html: `
-            <div class="result-score" style="color: ${resultColor}">${studentScore} / ${totalExamMarks}</div>
-            <div class="result-text" style="color: ${resultColor}; font-weight:bold; font-size:1.2rem;">${resultMsg}</div>
-            ${xpHTML}
-          `,
+          html: `<div class="result-score" style="color: ${resultColor}">${studentScore} / ${totalExamMarks}</div><div class="result-text" style="color: ${resultColor}; font-weight:bold; font-size:1.2rem;">${resultMsg}</div>${extraHTML}`,
           imageUrl: percentage >= 50 ? 'https://cdn-icons-png.flaticon.com/512/3112/3112946.png' : 'https://cdn-icons-png.flaticon.com/512/564/564619.png',
           imageWidth: 100, imageHeight: 100, imageAlt: 'Result',
           confirmButtonColor: '#7c3aed', confirmButtonText: 'العودة للمواد', background: '#12121f', color: '#fff', allowOutsideClick: false
