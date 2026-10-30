@@ -5,17 +5,35 @@ import { collection, getDocs, addDoc, deleteDoc, doc, query, where } from "https
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     document.getElementById("admin-name").textContent = user.displayName || "الأدمن";
-    
-    // فحص الأمان: التأكد إن اللي داخل هو Super Admin
-    const adminQ = query(collection(db, "admins"), where("email", "==", user.email));
-    const adminSnap = await getDocs(adminQ);
-    
-    if (!adminSnap.empty && adminSnap.docs[0].data().role === 'super_admin') {
-      document.getElementById("admins-tab").style.display = "flex"; 
-      loadAdmins();
-    } else {
-      Swal.fire({ icon: 'error', title: 'ممنوع الدخول', text: 'هذه الصفحة مخصصة للمدير العام فقط.', background: '#12121f', color: '#fff' })
-      .then(() => window.location.href = "admin.html");
+    const cleanEmail = user.email.trim().toLowerCase();
+
+    // 🔥 حل الطوارئ: إنت (mohamed7) هتخش علطول
+    if (cleanEmail === "mohamed7@gmail.com") {
+        document.getElementById("admins-tab").style.display = "flex";
+        loadAdmins();
+        return; // وقف هنا ومتطلعش بره
+    }
+
+    // لو حد تاني، نشوف هو super_admin ولا لأ
+    try {
+        const adminSnap = await getDocs(collection(db, "admins"));
+        let isSuper = false;
+        adminSnap.forEach((doc) => {
+            const data = doc.data();
+            if (data.email && data.email.trim().toLowerCase() === cleanEmail && data.role && data.role.trim() === 'super_admin') {
+                isSuper = true;
+            }
+        });
+
+        if (isSuper) {
+            document.getElementById("admins-tab").style.display = "flex";
+            loadAdmins();
+        } else {
+            Swal.fire({ icon: 'error', title: 'ممنوع الدخول', text: 'هذه الصفحة مخصصة للمدير العام فقط.', background: '#12121f', color: '#fff' })
+            .then(() => window.location.href = "admin.html");
+        }
+    } catch (error) {
+        window.location.href = "admin.html";
     }
   } else {
     window.location.href = "../index.html";
@@ -33,12 +51,12 @@ async function loadAdmins() {
 
     snap.forEach((docSnap) => {
       const data = docSnap.data();
-      let gradesText = Array.isArray(data.gradeLevel) ? data.gradeLevel.map(g => gradeNames[g] || g).join(" و ") : (gradeNames[data.gradeLevel] || data.gradeLevel);
+      let gradesText = Array.isArray(data.gradeLevel) ? data.gradeLevel.map(g => gradeNames[g] || g).join(" و ") : (gradeNames[data.gradeLevel] || data.gradeLevel || "غير محدد");
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td class="student-name" style="direction: ltr; text-align: right;">${data.email}</td>
-        <td><span class="subject-badge">${roleNames[data.role]}</span></td>
+        <td><span class="subject-badge">${roleNames[data.role] || data.role}</span></td>
         <td>${gradesText}</td>
         <td><button class="btn-action" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" onclick="deleteAdmin('${docSnap.id}', '${data.email}')">مسح</button></td>
       `;
@@ -83,14 +101,8 @@ document.getElementById("add-admin-btn").addEventListener("click", async () => {
 
 window.deleteAdmin = (id, email) => {
   Swal.fire({
-    title: 'تأكيد المسح',
-    text: `هل تريد إزالة صلاحيات الأدمن من (${email})؟`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#ef4444',
-    confirmButtonText: 'نعم، امسح',
-    cancelButtonText: 'إلغاء',
-    background: '#12121f', color: '#fff'
+    title: 'تأكيد المسح', text: `هل تريد إزالة صلاحيات الأدمن من (${email})؟`, icon: 'warning',
+    showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'نعم، امسح', cancelButtonText: 'إلغاء', background: '#12121f', color: '#fff'
   }).then(async (result) => {
     if (result.isConfirmed) {
       await deleteDoc(doc(db, "admins", id));
