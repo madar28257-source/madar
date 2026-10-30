@@ -1,13 +1,17 @@
 import { auth, db } from "../firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import { collection, addDoc, serverTimestamp, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
 onAuthStateChanged(auth, (user) => {
-  if (user) { document.getElementById("admin-name").textContent = user.displayName || "الأدمن"; } 
-  else { window.location.href = "../index.html"; }
+  if (user) { 
+    document.getElementById("admin-name").textContent = user.displayName || "الأدمن"; 
+    loadExistingExams(); // تحميل الجدول
+  } else { 
+    window.location.href = "../index.html"; 
+  }
 });
 
-// السحر بتاع القوائم (السنة -> النظام -> المسار)
+// القوائم المنسدلة
 const gradeSelect = document.getElementById('exam-grade');
 const systemGroup = document.getElementById('system-group');
 const systemSelect = document.getElementById('exam-system');
@@ -15,26 +19,18 @@ const trackGroup = document.getElementById('track-group');
 const trackSelect = document.getElementById('exam-track');
 
 gradeSelect.addEventListener('change', (e) => {
-  if (e.target.value === '2-sec') {
-    systemGroup.classList.remove('hidden-field');
-  } else {
-    systemGroup.classList.add('hidden-field');
-    trackGroup.classList.add('hidden-field');
-  }
+  if (e.target.value === '2-sec') { systemGroup.classList.remove('hidden-field'); } 
+  else { systemGroup.classList.add('hidden-field'); trackGroup.classList.add('hidden-field'); }
 });
-
 systemSelect.addEventListener('change', (e) => {
-  if (e.target.value === 'baccalaureate') {
-    trackGroup.classList.remove('hidden-field');
-  } else {
-    trackGroup.classList.add('hidden-field');
-  }
+  if (e.target.value === 'baccalaureate') { trackGroup.classList.remove('hidden-field'); } 
+  else { trackGroup.classList.add('hidden-field'); }
 });
 
 let questionCount = 0;
 const container = document.getElementById("questions-container");
 
-// 🔥 دالة إضافة سؤال جديد (فيها اختيار النوع والصور)
+// دالة إضافة سؤال (فيها نوع السؤال والصور)
 function addQuestionBlock() {
   questionCount++;
   const qId = `q-${questionCount}`;
@@ -67,7 +63,6 @@ function addQuestionBlock() {
       <input type="text" class="q-text-input" placeholder="اكتب السؤال هنا..." required>
     </div>
 
-    <!-- قسم الاختيارات (بيختفي لو السؤال مقالي) -->
     <div class="mcq-section">
       <div class="options-grid">
         <div class="input-group"><label>الاختيار (A)</label><input type="text" class="q-opt1" required></div>
@@ -89,13 +84,11 @@ function addQuestionBlock() {
   container.appendChild(block);
 }
 
-// دالة إخفاء/إظهار الاختيارات حسب النوع
 window.toggleQuestionType = (selectEl) => {
     const block = selectEl.closest('.question-block');
     const mcqSection = block.querySelector('.mcq-section');
     if (selectEl.value === 'essay') {
         mcqSection.style.display = 'none';
-        // نشيل شرط الـ required من الاختيارات عشان ميعطلش الحفظ
         block.querySelectorAll('.q-opt1, .q-opt2, .q-opt3, .q-opt4').forEach(input => input.required = false);
     } else {
         mcqSection.style.display = 'block';
@@ -117,7 +110,7 @@ document.getElementById("save-exam-btn").addEventListener("click", async () => {
   const duration = parseInt(document.getElementById("exam-duration").value);
 
   if (!grade || !subject || !title) {
-    Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'لازم تختار السنة وتكتب المادة والعنوان', background: '#12121f', color: '#fff' });
+    Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'اختر السنة، المادة، والعنوان', background: '#12121f', color: '#fff' });
     return;
   }
 
@@ -132,12 +125,7 @@ document.getElementById("save-exam-btn").addEventListener("click", async () => {
     const qText = block.querySelector(".q-text-input").value.trim();
     const points = parseInt(block.querySelector(".q-points").value);
 
-    let qData = {
-        text: qText,
-        type: type,
-        imageUrl: imageUrl || null,
-        points: points
-    };
+    let qData = { text: qText, type: type, imageUrl: imageUrl || null, points: points };
 
     if (type === 'mcq') {
         const opt1 = block.querySelector(".q-opt1").value.trim();
@@ -145,18 +133,14 @@ document.getElementById("save-exam-btn").addEventListener("click", async () => {
         const opt3 = block.querySelector(".q-opt3").value.trim();
         const opt4 = block.querySelector(".q-opt4").value.trim();
         const correct = parseInt(block.querySelector(".q-correct").value);
-
         if (!qText || !opt1 || !opt2 || !opt3 || !opt4) { isValid = false; return; }
-        
         qData.options = [opt1, opt2, opt3, opt4];
         qData.correct = correct;
     } else {
-        // لو مقالي، نتأكد بس إن فيه نص للسؤال
         if (!qText) { isValid = false; return; }
-        qData.options = []; // مفيش اختيارات
+        qData.options = [];
         qData.correct = null;
     }
-
     totalMarks += points;
     questions.push(qData);
   });
@@ -171,21 +155,17 @@ document.getElementById("save-exam-btn").addEventListener("click", async () => {
 
   try {
     await addDoc(collection(db, "exams"), {
-      gradeLevel: grade,
-      system: system,
-      track: track,
-      subject: subject,
-      title: title,
-      duration: duration,
-      totalMarks: totalMarks,
-      questions: questions,
-      createdAt: serverTimestamp()
+      gradeLevel: grade, system: system, track: track, subject: subject, title: title, duration: duration, totalMarks: totalMarks, questions: questions, createdAt: serverTimestamp()
     });
-
-    Swal.fire({ 
-      icon: 'success', title: 'تم بنجاح!', text: 'تم حفظ الامتحان وربطه بالسنة الدراسية.', 
-      background: '#12121f', color: '#fff' 
-    }).then(() => { window.location.reload(); });
+    Swal.fire({ icon: 'success', title: 'تم الحفظ!', text: 'الامتحان متاح للطلاب الآن.', background: '#12121f', color: '#fff' });
+    
+    // تفريغ الفورم وتحديث الجدول
+    document.getElementById("exam-subject").value = "";
+    document.getElementById("exam-title").value = "";
+    container.innerHTML = "";
+    questionCount = 0;
+    addQuestionBlock();
+    loadExistingExams();
 
   } catch (error) {
     console.error(error);
@@ -194,3 +174,47 @@ document.getElementById("save-exam-btn").addEventListener("click", async () => {
     btn.disabled = false; btn.textContent = "حفظ الامتحان في قاعدة البيانات";
   }
 });
+
+// 🔥 دالة جلب الامتحانات وعرضها في الجدول
+async function loadExistingExams() {
+  const tbody = document.getElementById("exams-table-body");
+  try {
+    const snap = await getDocs(collection(db, "exams"));
+    tbody.innerHTML = "";
+    
+    const gradeNames = { "1-prep": "أولى إعدادي", "2-prep": "تانية إعدادي", "3-prep": "تالتة إعدادي", "1-sec": "أولى ثانوي", "2-sec": "تانية ثانوي" };
+
+    if (snap.empty) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted);">لا توجد امتحانات مضافة.</td></tr>`;
+        return;
+    }
+
+    snap.forEach((docSnap) => {
+      const data = docSnap.data();
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="student-name">${data.title}</td>
+        <td>${data.subject}</td>
+        <td><span class="subject-badge">${gradeNames[data.gradeLevel] || data.gradeLevel}</span></td>
+        <td><button class="btn-action" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" onclick="deleteExam('${docSnap.id}', '${data.title}')">مسح</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// 🔥 دالة مسح الامتحان
+window.deleteExam = (id, title) => {
+  Swal.fire({
+    title: 'تأكيد المسح', text: `هل أنت متأكد من مسح امتحان (${title})؟`, icon: 'warning',
+    showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'نعم، امسح', cancelButtonText: 'إلغاء', background: '#12121f', color: '#fff'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      await deleteDoc(doc(db, "exams", id));
+      Swal.fire({ icon: 'success', title: 'تم المسح', background: '#12121f', color: '#fff' });
+      loadExistingExams();
+    }
+  });
+};
