@@ -16,12 +16,20 @@
     .input-group { text-align: right; margin-bottom: 15px; }
     .input-group label { display: block; color: var(--text-muted); margin-bottom: 5px; font-size: 0.9rem; }
     .input-group input { width: 100%; padding: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: #fff; outline: none; }
+    .input-group input:focus { border-color: var(--primary); }
     .btn-submit { width: 100%; padding: 15px; background: linear-gradient(135deg, #7c3aed, #22d3ee); color: #fff; border: none; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; margin-top: 10px; }
     .auth-footer { margin-top: 20px; font-size: 0.9rem; color: var(--text-muted); }
     .auth-footer a { color: var(--accent); font-weight: 700; }
     .admin-link { display: block; margin-top: 30px; font-size: 0.8rem; color: #555; text-decoration: none; }
     .admin-link:hover { color: var(--primary-light); }
-    @media (max-width: 900px) { .split-screen { flex-direction: column; } .brand-section { display: none; } }
+    
+    /* 🔥 التعديل هنا: إظهار اللوجو في الموبايل */
+    @media (max-width: 900px) { 
+      .split-screen { flex-direction: column; } 
+      .brand-section { padding: 30px 20px 10px 20px; } 
+      .brand-logo { max-width: 200px; }
+      .form-section { padding: 10px 20px 30px 20px; }
+    }
   </style>
 </head>
 <body>
@@ -45,7 +53,6 @@
           <button type="submit" class="btn-submit" id="login-btn">دخول</button>
         </form>
         <div class="auth-footer">مش عندك حساب؟ <a href="register.html">سجل دلوقتي</a></div>
-        <!-- لينك خفي للمعلمين -->
         <a href="admin-login.html" class="admin-link">دخول المعلمين</a>
       </div>
     </div>
@@ -67,7 +74,6 @@
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const studentName = userCredential.user.displayName || "طالب";
         
-        // رسالة الترحيب بالاسم
         Swal.fire({ 
             icon: 'success', 
             title: `أهلاً بك يا ${studentName} في منصة مدار!`, 
