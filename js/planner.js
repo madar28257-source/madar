@@ -1,10 +1,10 @@
 import { auth, db } from "../firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai";
 
-// ⚠️ حط مفتاح Gemini هنا (اللي بيبدأ بـ AIza)
-const GEMINI_API_KEY = "AQ.Ab8RN6JJm_UIJRTuYcjgxkWV3TvcPOwGKIMxtDOE_6X688Abqg";
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+// ⚠️ حط المفتاح بتاعك هنا (نفس المفتاح اللي فوق)
+const GEMINI_API_KEY = "AQ.Ab8RN6Lt3Innae9OJGV7qGpBKOf9OeBd6NG18h-PstSZ8swl4g"; 
 
 const generateBtn = document.getElementById('generate-btn');
 const loadingDiv = document.getElementById('loading');
@@ -44,7 +44,6 @@ generateBtn.addEventListener('click', async () => {
     generateBtn.style.display = 'none';
     loadingDiv.style.display = 'block';
 
-    // تجهيز البيانات للـ AI
     let resultsSummary = studentResults.map(r => `مادة ${r.subject}: جبت ${r.score} من ${r.totalMarks} (${r.percentage}%)`).join('\n');
 
     const prompt = `أنت مستشار تعليمي ذكي في منصة "مدار". الطالب اسمه ${studentName}.
@@ -60,22 +59,15 @@ ${resultsSummary}
 اجعل الرد منسقاً بـ HTML (استخدم <h3> و <ul> و <li>) عشان يظهر بشكل جميل في المتصفح.`;
 
     try {
-        const response = await fetch(GEMINI_API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
-            })
-        });
+        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        const data = await response.json();
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        let aiReply = response.text();
         
-        if (data.candidates && data.candidates.length > 0) {
-            let aiReply = data.candidates[0].content.parts[0].text;
-            
-            // تنظيف الرد من أي علامات Markdown عشان يظهر كـ HTML
+        if (aiReply) {
             aiReply = aiReply.replace(/```html/g, '').replace(/```/g, '');
-
             loadingDiv.style.display = 'none';
             resultDiv.style.display = 'block';
             resultDiv.innerHTML = aiReply;
@@ -87,6 +79,11 @@ ${resultsSummary}
         console.error("AI Error:", error);
         loadingDiv.style.display = 'none';
         generateBtn.style.display = 'block';
-        Swal.fire({ icon: 'error', title: 'خطأ', text: 'حدث خطأ أثناء توليد الخطة. تأكد من صحة الـ API Key.', background: '#12121f', color: '#fff' });
+        
+        let errorMsg = "حدث خطأ أثناء توليد الخطة.";
+        if(error.message.includes("API_KEY_INVALID")) errorMsg = "مفتاح الـ API غير صحيح.";
+        if(error.message.includes("PERMISSION_DENIED")) errorMsg = "تأكد من تفعيل خدمة Gemini API في Google Cloud.";
+        
+        Swal.fire({ icon: 'error', title: 'خطأ', text: errorMsg, background: '#12121f', color: '#fff' });
     }
 });
