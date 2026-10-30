@@ -1,0 +1,166 @@
+/* ==========================================
+   تصميم برج المعرفة (The Knowledge Tower)
+   ========================================== */
+
+body {
+  background-color: #05050A;
+  overflow-x: hidden;
+}
+
+/* الحاوية الرئيسية للبرج */
+.tower-container {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 50px 20px 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* خلفية البرج (خط مضيء في النص) */
+.tower-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  background: linear-gradient(to bottom, transparent, var(--primary), var(--accent), transparent);
+  z-index: 0;
+  opacity: 0.3;
+}
+
+/* الطوابق */
+.tower-level {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 60px;
+  z-index: 1;
+}
+
+/* تصميم الدايرة (الطابق) */
+.level-node {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-color);
+  border: 4px solid var(--glass-border);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+  transition: var(--transition);
+  cursor: pointer;
+  position: relative;
+}
+
+/* الطوابق اللي خلصها (مكتملة) */
+.tower-level.completed .level-node {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+}
+.tower-level.completed .level-node svg { color: #22c55e; }
+
+/* الطابق الحالي (البطل واقف فيه) */
+.tower-level.current .level-node {
+  border-color: var(--accent);
+  background: rgba(34, 211, 238, 0.15);
+  box-shadow: 0 0 30px rgba(34, 211, 238, 0.6);
+  transform: scale(1.2);
+  animation: pulseCurrent 2s infinite;
+}
+.tower-level.current .level-node svg { color: var(--accent); }
+
+/* الطوابق المقفولة (المستقبلية) */
+.tower-level.locked .level-node {
+  opacity: 0.5;
+  filter: grayscale(1);
+}
+.tower-level.locked .level-node svg { color: var(--text-muted); }
+
+/* رقم الطابق */
+.level-number {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #fff;
+  margin-top: 4px;
+}
+
+/* تأثير النبض للطابق الحالي */
+@keyframes pulseCurrent {
+  0% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.4); }
+  50% { box-shadow: 0 0 50px rgba(34, 211, 238, 0.8); }
+  100% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.4); }
+}
+
+/* تفاصيل الطابق (بتظهر جنب الدايرة) */
+.level-details {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 200px;
+  background: rgba(18, 18, 31, 0.9);
+  border: 1px solid var(--glass-border);
+  padding: 10px 15px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  display: none;
+}
+
+.tower-level:hover .level-details {
+  display: block;
+}
+
+/* ترتيب التفاصيل يمين وشمال عشان ميبقاش ممل */
+.tower-level:nth-child(odd) .level-details {
+  right: calc(50% + 60px);
+  text-align: right;
+}
+.tower-level:nth-child(even) .level-details {
+  left: calc(50% + 60px);
+  text-align: left;
+}
+
+.level-details h4 { color: #fff; font-size: 0.9rem; margin-bottom: 5px; }
+.level-details p { color: var(--text-muted); font-size: 0.8rem; }
+
+/* البطل (إنت) */
+.hero-marker {
+  position: absolute;
+  top: -40px;
+  font-size: 2rem;
+  animation: floatHero 3s ease-in-out infinite;
+}
+@keyframes floatHero {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* خلفية متحركة للنجوم */
+.stars-bg {
+  position: fixed; inset: 0; z-index: -1;
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 40px 70px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 50px 160px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 90px 40px, #ffffff, rgba(0,0,0,0));
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  animation: moveStars 60s linear infinite;
+  opacity: 0.4;
+}
+@keyframes moveStars { from { background-position: 0 0; } to { background-position: 0 -1000px; } }
+
+/* الموبايل */
+@media (max-width: 768px) {
+  .level-details { display: none !important; } /* نخفي التفاصيل في الموبايل عشان تبقى نضيفة */
+  .level-node { width: 70px; height: 70px; }
+  .tower-level { margin-bottom: 40px; }
+}
