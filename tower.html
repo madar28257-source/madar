@@ -66,16 +66,16 @@
       }
     });
 
-    // دالة تحديد شكل البرج حسب ليفل الطالب
+    // 🔥 دالة تحديد شكل البرج حسب التقسيمة الجديدة
     function applyTheme(level) {
-        if (level >= 1 && level <= 5) {
-            document.body.className = "theme-stone";
-        } else if (level >= 6 && level <= 10) {
-            document.body.className = "theme-neon";
-        } else if (level >= 11 && level <= 15) {
-            document.body.className = "theme-gold";
+        if (level >= 1 && level <= 10) {
+            document.body.className = "theme-stone"; // البداية
+        } else if (level >= 11 && level <= 20) {
+            document.body.className = "theme-neon"; // الغابة
+        } else if (level >= 21 && level <= 35) {
+            document.body.className = "theme-gold"; // ذهبي
         } else {
-            document.body.className = "theme-demon"; // 16+
+            document.body.className = "theme-demon"; // أحمر شيطاني (36 لحد 100 وما لا نهاية)
         }
     }
 
@@ -87,7 +87,7 @@
         let icon = '';
         let title = '';
         let desc = '';
-        let isBoss = (levelNum % 5 === 0); // 👹 هل ده طابق زعيم؟ (5, 10, 15...)
+        let isBoss = (levelNum % 5 === 0); // 👹 طوابق الزعماء (5, 10, 15, 20, 25...) شغالة زي ما هي
 
         if (levelNum < currentLevel) {
             status = 'completed';
