@@ -1,6 +1,6 @@
 import { auth, db } from "../firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import { collection, getDocs, doc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
 // دالة تحويل لينك جوجل درايف لتحميل مباشر
 function getDirectLink(url) {
@@ -22,24 +22,29 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById("nav-name").textContent = name;
     document.getElementById("user-avatar").textContent = name.charAt(0).toUpperCase();
 
-    // 🔥 التعديل الجديد: جلب بيانات الطالب عشان نخفي التقييمات لتالتة إعدادي
     try {
       const userDocRef = doc(db, "users", user.uid);
       const userDocSnap = await getDoc(userDocRef);
       
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data();
+        
+        // إخفاء التقييمات لتالتة إعدادي
         if (userData.gradeLevel === "3-prep") {
           const evalTab = document.getElementById("evaluations-tab");
           if (evalTab) evalTab.style.display = "none";
         }
+
+        // 🔥 جلب الكتب الخاصة بسنة الطالب دي بس
+        loadBooks(userData.gradeLevel);
+
+      } else {
+        // لو مفيش بيانات (حساب قديم)، نجيب كل الكتب كاحتياطي
+        loadBooks(null); 
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
-
-    // تحميل الكتب بعد التأكد من بيانات الطالب
-    loadBooks();
   } else {
     window.location.href = "index.html";
   }
@@ -72,19 +77,27 @@ document.getElementById("logout-btn").addEventListener("click", (e) => {
   });
 });
 
-// 4. دالة جلب الكتب من الفايربيز
-async function loadBooks() {
+// 4. دالة جلب الكتب من الفايربيز (مفلترة بالسنة)
+async function loadBooks(gradeLevel) {
   try {
     const booksRef = collection(db, "books");
-    const snapshot = await getDocs(booksRef);
+    let booksQuery;
 
+    // لو معانا سنة الطالب، نفلتر بيها. لو مش معانا (null)، نجيب الكل
+    if (gradeLevel) {
+        booksQuery = query(booksRef, where("gradeLevel", "==", gradeLevel));
+    } else {
+        booksQuery = booksRef;
+    }
+
+    const snapshot = await getDocs(booksQuery);
     booksContainer.innerHTML = ''; // مسح علامة التحميل
 
     if (snapshot.empty) {
       booksContainer.innerHTML = `
         <div class="loading-state">
-          <h3>لا توجد كتب أو ملازم حالياً 😅</h3>
-          <p>المعلم لم يقم برفع أي ملفات بعد. تابعنا لاحقاً!</p>
+          <h3>لا توجد كتب أو ملازم لصفك الدراسي حالياً 😅</h3>
+          <p>المعلم لم يقم برفع أي ملفات لصفك بعد. تابعنا لاحقاً!</p>
         </div>
       `;
       return;
@@ -104,7 +117,6 @@ async function loadBooks() {
         <h3 class="book-title">${book.title}</h3>
         <p class="book-desc">${book.description || 'ملزمة تعليمية شاملة لمساعدتك في المذاكرة.'}</p>
         
-        <!-- استخدام الدالة السحرية عشان تفتح الملف علطول -->
         <a href="${getDirectLink(book.pdfUrl)}" target="_blank" class="btn-download">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           تحميل الملف
