@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>برج المعرفة — منصة MADAR</title>
+  
+  <link rel="stylesheet" href="base.css">
+  <link rel="stylesheet" href="css/tower.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+  <div class="stars-bg"></div>
+  <div class="bg-orbs"></div>
+
+  <nav class="navbar" style="background: rgba(11, 12, 16, 0.7); backdrop-filter: blur(16px); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100;">
+    <div class="logo" style="font-size: 1.5rem; font-weight: 900; color: #fff;">🏰 برج المعرفة</div>
+    <a href="dashboard.html" style="color: var(--text-muted); text-decoration: none; font-weight: 700; border: 1px solid var(--glass-border); padding: 8px 15px; border-radius: 8px;">← رجوع للرئيسية</a>
+  </nav>
+
+  <!-- حاوية البرج -->
+  <main class="tower-container" id="tower-container">
+    <!-- الطوابق هتترسم هنا بالجافاسكريبت -->
+  </main>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+
+    const towerContainer = document.getElementById('tower-container');
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = "index.html"; return; }
+
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        let userLevel = 1;
+        let userXP = 0;
+
+        if (userDoc.exists()) {
+            userLevel = userDoc.data().level || 1;
+            userXP = userDoc.data().xp || 0;
+        }
+
+        // بنرسم 15 طابق (أو أكتر لو المستوى عالي)
+        const maxLevels = Math.max(15, userLevel + 3); 
+
+        // بنرسم البرج من فوق لتحت (عشان الطالب يبدأ من فوق)
+        for (let i = maxLevels; i >= 1; i--) {
+            createTowerLevel(i, userLevel);
+        }
+
+        // سكرول تلقائي للطابق الحالي
+        setTimeout(() => {
+            const currentLevelNode = document.querySelector('.tower-level.current');
+            if (currentLevelNode) {
+                currentLevelNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 500);
+
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    });
+
+    function createTowerLevel(levelNum, currentLevel) {
+        const div = document.createElement('div');
+        div.className = 'tower-level';
+        
+        let status = '';
+        let icon = '';
+        let title = '';
+        let desc = '';
+
+        if (levelNum < currentLevel) {
+            status = 'completed';
+            icon = `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            title = 'مكتمل';
+            desc = 'لقد اجتزت هذا الطابق بنجاح!';
+        } else if (levelNum === currentLevel) {
+            status = 'current';
+            icon = `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 22h20L12 2z"></path></svg>`;
+            title = 'أنت هنا!';
+            desc = 'ذاكر وحل الامتحانات للوصول للطابق التالي.';
+        } else {
+            status = 'locked';
+            icon = `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
+            title = 'مقفول';
+            desc = 'أكمل الطوابق السابقة للوصول هنا.';
+        }
+
+        div.classList.add(status);
+        
+        div.innerHTML = `
+            ${levelNum === currentLevel ? '<div class="hero-marker">🦸‍♂️</div>' : ''}
+            <div class="level-node">
+                ${icon}
+                <span class="level-number">${levelNum}</span>
+            </div>
+            <div class="level-details">
+                <h4>الطابق ${levelNum}: ${title}</h4>
+                <p>${desc}</p>
+            </div>
+        `;
+        
+        towerContainer.appendChild(div);
+    }
+  </script>
+</body>
+</html>
