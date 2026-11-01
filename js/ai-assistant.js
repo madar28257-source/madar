@@ -73,7 +73,7 @@ function init() {
       history.pop();   // نشيل سؤال الطالب من الذاكرة حتى لا تتلخبط المحادثة
       typing.remove();
       const msg = err instanceof AIError ? err.message : "حدث خطأ غير متوقع. حاول مرة أخرى.";
-      addError(msg, err && err.code);
+      addError(msg, err && (err.details || err.code));
     } finally {
       busy = false;
       sendBtn.disabled = false;
@@ -109,7 +109,7 @@ function init() {
     div.appendChild(p);
     if (code) {
       const small = document.createElement("small");
-      small.textContent = `رمز الخطأ: ${code}`;
+      small.textContent = `تفاصيل: ${code}`;
       div.appendChild(small);
     }
     messages.appendChild(div);
