@@ -10,6 +10,26 @@ const BASE = "https://generativelanguage.googleapis.com/v1beta";
 const TIMEOUT_MS = 45000;
 const STORE_MODEL = "madar_ai_model";
 const STORE_FOUND = "madar_ai_found";
+const STORE_BACKEND = "madar_ai_backend";
+
+// الخدمتان اللتان يقبلان مفاتيح AQ. :
+//  gemini = مفاتيح Google AI Studio (الأشهر)
+//  vertex = مفاتيح Google Cloud / Vertex AI Express
+const BACKENDS = {
+  gemini: {
+    url: (model) => `${BASE}/models/${encodeURIComponent(model)}:generateContent`,
+    headers: (key) => ({ "x-goog-api-key": key })
+  },
+  vertex: {
+    url: (model, key) => `https://aiplatform.googleapis.com/v1/publishers/google/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,
+    headers: () => ({})
+  }
+};
+
+// جزء بسيط من المفتاح للتأكد أن المفتاح الجديد هو الذي يُستخدم فعلًا
+function keyHint(key) {
+  return key && key.length > 14 ? `${key.slice(0, 6)}…${key.slice(-4)}` : "—";
+}
 
 // ---------- خطأ مخصّص برسالة عربية جاهزة للعرض ----------
 export class AIError extends Error {
@@ -20,6 +40,8 @@ export class AIError extends Error {
     this.code = info.code || "";          // رمز تقني صغير يظهر للتشخيص
     this.raw = info.raw || "";            // رسالة جوجل الأصلية
     this.modelLevel = !!info.modelLevel;  // المشكلة في النموذج نفسه؟ (فيمكن تجربة غيره)
+    this.backend = info.backend || "";
+    this.details = info.details || "";   // سطر صغير للتشخيص يظهر تحت الرسالة
   }
 }
 
@@ -62,13 +84,14 @@ function toArabic({ status, apiStatus, message }) {
 }
 
 // ---------- استدعاء نموذج واحد ----------
-async function callModel(model, key, body) {
+async function callModel(backend, model, key, body) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(`${BASE}/models/${encodeURIComponent(model)}:generateContent`, {
+    const be = BACKENDS[backend];
+    const res = await fetch(be.url(model, key), {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+      headers: { "Content-Type": "application/json", ...be.headers(key) },
       body: JSON.stringify(body),
       signal: ctrl.signal
     });
@@ -79,8 +102,9 @@ async function callModel(model, key, body) {
         (info.status === 400 && /model/i.test(info.message) && !/api key/i.test(info.message));
       throw new AIError(toArabic(info), {
         status: info.status,
-        code: `${info.status} ${info.reason || info.apiStatus}`.trim(),
+        code: `${backend} ${info.status} ${info.reason || info.apiStatus}`.trim(),
         raw: info.message,
+        backend,
         modelLevel
       });
     }
@@ -88,9 +112,9 @@ async function callModel(model, key, body) {
   } catch (err) {
     if (err instanceof AIError) throw err;
     if (err && err.name === "AbortError") {
-      throw new AIError("الرد تأخّر أكثر من اللازم. حاول مرة أخرى.", { code: "TIMEOUT", modelLevel: true });
+      throw new AIError("الرد تأخّر أكثر من اللازم. حاول مرة أخرى.", { code: `${backend} TIMEOUT`, backend, modelLevel: true });
     }
-    throw new AIError("تعذّر الاتصال بالخدمة. تأكد من اتصالك بالإنترنت ثم حاول مرة أخرى.", { code: "NETWORK" });
+    throw new AIError("تعذّر الاتصال بالخدمة. تأكد من اتصالك بالإنترنت ثم حاول مرة أخرى.", { code: `${backend} NETWORK`, backend });
   } finally {
     clearTimeout(timer);
   }
@@ -165,64 +189,107 @@ export async function generate({ system = "", contents, temperature = 0.7, maxOu
   if (thinkingLevel) body.generationConfig.thinkingConfig = { thinkingLevel };
   if (system) body.systemInstruction = { parts: [{ text: system }] };
 
-  const tried = new Set();
+  // تجربة كل النماذج على خدمة واحدة
+  async function runBackend(backend) {
+    const tried = new Set();
 
-  // محاولة على نموذج واحد (مع إعادة عند الازدحام، وبدون thinking لو لم يدعمه)
-  async function attempt(model) {
-    tried.add(model);
-    let payload = body;
-    let waited = false;
-    let dropped = false;
-    for (;;) {
-      try {
-        const data = await callModel(model, key, payload);
-        return { text: extractText(data), model };
-      } catch (err) {
-        if (!(err instanceof AIError)) throw err;
-        if (err.status === 400 && /thinking/i.test(err.raw) && !dropped) {
-          dropped = true;
-          const cfg = { ...payload.generationConfig };
-          delete cfg.thinkingConfig;
-          payload = { ...payload, generationConfig: cfg };
-          continue;
+    // محاولة على نموذج واحد (مع إعادة عند الازدحام، وبدون thinking لو لم يدعمه)
+    async function attempt(model) {
+      tried.add(model);
+      let payload = body;
+      let waited = false;
+      let dropped = false;
+      for (;;) {
+        try {
+          const data = await callModel(backend, model, key, payload);
+          return { text: extractText(data), model };
+        } catch (err) {
+          if (!(err instanceof AIError)) throw err;
+          if (err.status === 400 && /thinking/i.test(err.raw) && !dropped) {
+            dropped = true;
+            const cfg = { ...payload.generationConfig };
+            delete cfg.thinkingConfig;
+            payload = { ...payload, generationConfig: cfg };
+            continue;
+          }
+          if ((err.status === 500 || err.status === 503) && !waited) {
+            waited = true;
+            await sleep(1500);
+            continue;
+          }
+          throw err;
         }
-        if ((err.status === 500 || err.status === 503) && !waited) {
-          waited = true;
-          await sleep(1500);
-          continue;
+      }
+    }
+
+    let lastErr = null;
+    async function tryList(models) {
+      for (const m of models) {
+        if (tried.has(m)) continue;
+        try {
+          const r = await attempt(m);
+          rememberModel(m);
+          return r;
+        } catch (err) {
+          if (!(err instanceof AIError)) throw err;
+          lastErr = err;
+          if (!err.modelLevel) throw err;   // مشكلة في المفتاح أو الإنترنت: لا فائدة من تجربة نموذج آخر
         }
+      }
+      return null;
+    }
+
+    const first = savedModel();
+    const known = backend === "gemini" ? AI_MODELS : AI_MODELS.slice(0, 2);
+    let result = await tryList([...(first ? [first] : []), ...known]);
+    if (result) return result;
+
+    // (خدمة Gemini فقط) كل النماذج المعروفة فشلت: نكتشف المتاح لهذا المفتاح فعليًا
+    if (backend === "gemini" && lastErr && (lastErr.status === 404 || lastErr.status === 401)) {
+      result = await tryList((await discoverModels(key)).slice(0, 4));
+      if (result) return result;
+    }
+    throw lastErr || new AIError("تعذّر الحصول على رد من الذكاء الاصطناعي.", { code: `${backend} UNKNOWN`, backend });
+  }
+
+  // هل المفتاح نفسه مرفوض على هذه الخدمة؟ (إذن ربما هو من النوع الآخر)
+  const keyRejected = (e) =>
+    [401, 403, 404].includes(e.status) || (e.status === 400 && /api key/i.test(e.raw));
+
+  let saved = "";
+  try { saved = sessionStorage.getItem(STORE_BACKEND) || ""; } catch (_) {}
+  const order = saved === "vertex" ? ["vertex", "gemini"] : ["gemini", "vertex"];
+
+  const failures = [];
+  for (const backend of order) {
+    try {
+      const r = await runBackend(backend);
+      try { sessionStorage.setItem(STORE_BACKEND, backend); } catch (_) {}
+      return r;
+    } catch (err) {
+      if (!(err instanceof AIError)) throw err;
+      failures.push(err);
+      // خدمة Vertex قد تكون محجوبة من المتصفح: لو الأولى رفضت المفتاح فلا نعرض "تأكد من الإنترنت"
+      const unreachableAfterReject = failures.length > 1 && /NETWORK$/.test(err.code);
+      if (!keyRejected(err) && !unreachableAfterReject) {
+        // المفتاح مقبول لكن هناك مشكلة أخرى (ازدحام، حد مجاني، إنترنت): لا نجرّب الخدمة الأخرى
+        err.details = `${err.code} | المفتاح: ${keyHint(key)}`;
         throw err;
       }
     }
   }
 
-  let lastErr = null;
-  async function tryList(models) {
-    for (const m of models) {
-      if (tried.has(m)) continue;
-      try {
-        const r = await attempt(m);
-        rememberModel(m);
-        return r;
-      } catch (err) {
-        if (!(err instanceof AIError)) throw err;
-        lastErr = err;
-        if (!err.modelLevel) throw err;   // مشكلة في المفتاح أو الإنترنت: لا فائدة من تجربة نموذج آخر
-      }
-    }
-    return null;
-  }
-
-  const first = savedModel();
-  let result = await tryList([...(first ? [first] : []), ...AI_MODELS]);
-  if (result) return result;
-
-  // كل النماذج المعروفة فشلت: نكتشف المتاح لهذا المفتاح فعليًا
-  if (lastErr && (lastErr.status === 404 || lastErr.status === 401)) {
-    result = await tryList((await discoverModels(key)).slice(0, 4));
-    if (result) return result;
-  }
-  throw lastErr || new AIError("تعذّر الحصول على رد من الذكاء الاصطناعي.", { code: "UNKNOWN" });
+  // الخدمتان رفضتا المفتاح (أو إحداهما لا يمكن الوصول إليها من المتصفح)
+  const primary = failures.find((e) => e.backend === "gemini") || failures[0];
+  const hint = "جوجل رفضت المفتاح. تأكد أنه من Google AI Studio (aistudio.google.com/app/apikey) وليس من Google Cloud، ثم الصقه كاملًا في الملف js/ai-config.js.";
+  const err = new AIError(
+    // 403 = جوجل عرفت المفتاح لكنه ممنوع (مقيّد أو موقوف)، فنُبقي رسالتها الأدق ونضيف التلميح
+    primary.status === 403 ? `${primary.message} وإن استمر الخطأ فتأكد أن المفتاح من Google AI Studio وليس من Google Cloud.` : hint,
+    { status: primary.status, code: primary.code, raw: primary.raw, backend: primary.backend }
+  );
+  const lines = failures.map((e) => e.code + (e.raw ? ` (${e.raw.slice(0, 90)})` : ""));
+  err.details = `${lines.join("  ||  ")} | المفتاح: ${keyHint(key)}`;
+  throw err;
 }
 
 // ==========================================
