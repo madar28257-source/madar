@@ -101,7 +101,7 @@ ${summarize(studentResults)}
       icon: "error",
       title: "تعذّر توليد الخطة",
       text: isAI ? error.message : "حدث خطأ غير متوقع أثناء توليد الخطة.",
-      footer: isAI && error.code ? `رمز الخطأ: ${error.code}` : undefined
+      footer: isAI && (error.details || error.code) ? `تفاصيل: ${error.details || error.code}` : undefined
     });
   }
 });
