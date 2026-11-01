@@ -7,7 +7,7 @@
 // 🔑 مفتاح Gemini. يدعم الصيغتين:
 //    • AQ.…   (الصيغة الجديدة التي يُنشئها Google AI Studio)
 //    • AIza…  (الصيغة القديمة، بشرط أن تكون مقيّدة بخدمة Gemini)
-export const AI_API_KEY = "AQ.Ab8RN6IYCsd6ZHhDgROYE0QSSXFtvNXtzQD-9KSAJnoCt0ZjwQ";
+export const AI_API_KEY = "AQ.Ab8RN6Jgw6OL95NyqYLCFwe7LeECiAumWBcobTSKFwNYtJb_oQ";
 
 // 🧠 النماذج بالترتيب: لو الأول لم يعمل (اتقفل أو وصل للحد) يجرّب اللي بعده تلقائيًا.
 // جوجل تُغيّر أسماء النماذج كل بضعة شهور، ولو كلها اتقفلت يكتشف الكود
