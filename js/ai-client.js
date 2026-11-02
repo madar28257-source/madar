@@ -13,8 +13,9 @@ const AI_MODELS = Array.isArray(CFG.AI_MODELS) && CFG.AI_MODELS.length
 
 // 🛡️ الوسيط (Cloudflare Worker): لو رابطه موجود في ai-config.js يمر كل شيء عبره،
 // والمفتاح يعيش عند Cloudflare فقط ولا يظهر في الموقع أو GitHub.
-const PROXY = String(CFG.AI_PROXY_URL || "").trim().replace(/\/+$/, "");
-const USE_PROXY = /^https:\/\//i.test(PROXY);
+const PROXY_RAW = String(CFG.AI_PROXY_URL || "").trim().replace(/\/+$/, "");
+const PROXY = PROXY_RAW && !/^https?:\/\//i.test(PROXY_RAW) ? `https://${PROXY_RAW}` : PROXY_RAW;
+const USE_PROXY = /^https:\/\/[^\s/]+/i.test(PROXY);
 const KEY_WHERE = USE_PROXY ? "في إعدادات الوسيط على Cloudflare (السر GEMINI_API_KEY)" : "في الملف js/ai-config.js";
 
 const BASE = "https://generativelanguage.googleapis.com/v1beta";
@@ -63,7 +64,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function getKey() {
   const key = String(AI_API_KEY || "").trim();
   if (!key || /ضع|YOUR|PASTE/i.test(key)) {
-    throw new AIError("لم يتم وضع مفتاح الذكاء الاصطناعي بعد. افتح الملف js/ai-config.js وضع المفتاح.", { code: "NO_KEY" });
+    throw new AIError("الذكاء الاصطناعي غير مضبوط بعد. ضع رابط الوسيط في AI_PROXY_URL (يبدأ بـ https://) داخل الملف js/ai-config.js، وتأكد أنك رفعت الملف على GitHub وانتظرت دقيقة.", { code: "NO_CONFIG" });
   }
   if (!/^(AQ\.|AIza)[A-Za-z0-9_.\-]{20,}$/.test(key)) {
     throw new AIError("شكل المفتاح غير صحيح. تأكد أنك نسخته كاملًا (يبدأ بـ AQ. أو AIza) بدون مسافات أو علامات زائدة.", { code: "BAD_KEY_FORMAT" });
