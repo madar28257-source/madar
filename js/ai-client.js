@@ -4,7 +4,18 @@
 // يتعامل مع واجهة Gemini API الحالية (REST) ويدعم مفاتيح AQ. و AIza.
 // يُستخدم من: ai-assistant.js (الشات) و planner.js (المخطط الذكي).
 
-import { AI_API_KEY, AI_MODELS } from "./ai-config.js";
+import * as CFG from "./ai-config.js";
+
+const AI_API_KEY = CFG.AI_API_KEY;
+const AI_MODELS = Array.isArray(CFG.AI_MODELS) && CFG.AI_MODELS.length
+  ? CFG.AI_MODELS
+  : ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"];
+
+// 🛡️ الوسيط (Cloudflare Worker): لو رابطه موجود في ai-config.js يمر كل شيء عبره،
+// والمفتاح يعيش عند Cloudflare فقط ولا يظهر في الموقع أو GitHub.
+const PROXY = String(CFG.AI_PROXY_URL || "").trim().replace(/\/+$/, "");
+const USE_PROXY = /^https:\/\//i.test(PROXY);
+const KEY_WHERE = USE_PROXY ? "في إعدادات الوسيط على Cloudflare (السر GEMINI_API_KEY)" : "في الملف js/ai-config.js";
 
 const BASE = "https://generativelanguage.googleapis.com/v1beta";
 const TIMEOUT_MS = 45000;
@@ -41,6 +52,7 @@ export class AIError extends Error {
     this.raw = info.raw || "";            // رسالة جوجل الأصلية
     this.modelLevel = !!info.modelLevel;  // المشكلة في النموذج نفسه؟ (فيمكن تجربة غيره)
     this.backend = info.backend || "";
+    this.proxy = !!info.proxy;           // الخطأ صادر من الوسيط نفسه (لا فائدة من إعادة المحاولة)
     this.details = info.details || "";   // سطر صغير للتشخيص يظهر تحت الرسالة
   }
 }
@@ -71,40 +83,85 @@ async function readError(res) {
 function toArabic({ status, apiStatus, message }) {
   const msg = String(message).toLowerCase();
   if (status === 400 && (msg.includes("api key not valid") || msg.includes("api key expired") || msg.includes("api_key_invalid"))) {
-    return "مفتاح الذكاء الاصطناعي غير صحيح أو منتهي. أنشئ مفتاحًا جديدًا من Google AI Studio وضعه في js/ai-config.js.";
+    return `مفتاح الذكاء الاصطناعي غير صحيح أو موقوف. أنشئ مفتاحًا جديدًا من Google AI Studio وضعه ${KEY_WHERE}.`;
   }
   if (status === 400 && apiStatus === "FAILED_PRECONDITION") return "خدمة Gemini غير متاحة لهذا المفتاح في منطقتك الحالية.";
   if (status === 400) return "الخدمة لم تقبل الطلب. جرّب صياغة السؤال بشكل مختلف.";
-  if (status === 401) return "جوجل رفضت المفتاح. تأكد أنه منسوخ كاملًا من Google AI Studio، أو أنشئ مفتاحًا جديدًا.";
-  if (status === 403) return "جوجل رفضت الصلاحية. غالبًا المفتاح مقيّد بموقع آخر أو تم إيقافه تلقائيًا (يحدث لو ظهر المفتاح علنًا). أنشئ مفتاحًا جديدًا.";
+  if (status === 401) return USE_PROXY
+    ? "جوجل رفضت المفتاح المحفوظ في الوسيط. أنشئ مفتاحًا جديدًا من Google AI Studio (aistudio.google.com/app/apikey) وحدّثه في إعدادات الوسيط على Cloudflare."
+    : "جوجل رفضت المفتاح. تأكد أنه منسوخ كاملًا من Google AI Studio، أو أنشئ مفتاحًا جديدًا.";
+  if (status === 403) return `جوجل رفضت الصلاحية. غالبًا المفتاح مقيّد بموقع آخر أو تم إيقافه تلقائيًا (يحدث لو ظهر المفتاح علنًا). أنشئ مفتاحًا جديدًا وضعه ${KEY_WHERE}.`;
   if (status === 404) return "النموذج المطلوب لم يعد متاحًا.";
   if (status === 429) return "وصلنا للحد المجاني للاستخدام حاليًا. انتظر دقيقة ثم حاول مرة أخرى.";
   if (status >= 500) return "خدمة الذكاء الاصطناعي مشغولة الآن. حاول بعد قليل.";
   return "حدث خطأ غير متوقع في الاتصال بالذكاء الاصطناعي.";
 }
 
+// رسائل أخطاء الوسيط نفسه (أسبابها تبدأ بـ PROXY_)
+function proxyMessage(reason, fallback) {
+  switch (reason) {
+    case "PROXY_AUTH_REQUIRED":
+    case "PROXY_TOKEN_INVALID": return "انتهت جلسة الدخول. سجّل الدخول من جديد ثم حاول مرة أخرى.";
+    case "PROXY_ORIGIN_DENIED": return "عنوان موقعك غير مضاف في إعدادات الوسيط. أضفه في المتغير ALLOWED_ORIGINS على Cloudflare.";
+    case "PROXY_RATE_LIMITED": return "كثرت الطلبات في وقت قصير. انتظر نصف دقيقة ثم حاول مرة أخرى.";
+    case "PROXY_NOT_CONFIGURED": return "الوسيط لم يُضبط بعد: أضف السر GEMINI_API_KEY في إعداداته على Cloudflare.";
+    case "PROXY_BAD_REQUEST":
+    case "PROXY_TOO_LARGE": return "الطلب كبير أو غير صالح. اختصر سؤالك وحاول مرة أخرى.";
+    case "PROXY_UPSTREAM_FAILED": return "تعذّر وصول الوسيط لخدمة جوجل. حاول بعد قليل.";
+    default: return fallback || "حدث خطأ في الوسيط.";
+  }
+}
+
+// توكن دخول الطالب في Firebase: الوسيط يتأكد منه قبل أي طلب
+async function getIdToken(force = false) {
+  let auth = null;
+  try { ({ auth } = await import("../firebase.js")); } catch (_) { /* سنعرض رسالة مناسبة */ }
+  if (!auth) throw new AIError("تعذّر تحميل نظام الدخول. أعد تحميل الصفحة.", { code: "proxy NO_AUTH_MODULE" });
+  try { if (auth.authStateReady) await auth.authStateReady(); } catch (_) {}
+  const user = auth.currentUser;
+  if (!user) throw new AIError("سجّل دخولك أولًا لاستخدام الذكاء الاصطناعي.", { status: 401, code: "proxy NOT_SIGNED_IN" });
+  return user.getIdToken(force);
+}
+
 // ---------- استدعاء نموذج واحد ----------
-async function callModel(backend, model, key, body) {
+async function callModel(backend, model, key, body, freshToken = false) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
-    const be = BACKENDS[backend];
-    const res = await fetch(be.url(model, key), {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...be.headers(key) },
-      body: JSON.stringify(body),
-      signal: ctrl.signal
-    });
+    let res;
+    if (backend === "proxy") {
+      const token = await getIdToken(freshToken);
+      res = await fetch(`${PROXY}/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ model, payload: body }),
+        signal: ctrl.signal
+      });
+    } else {
+      const be = BACKENDS[backend];
+      res = await fetch(be.url(model, key), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...be.headers(key) },
+        body: JSON.stringify(body),
+        signal: ctrl.signal
+      });
+    }
     if (!res.ok) {
       const info = await readError(res);
+      const fromProxy = backend === "proxy" && info.reason.startsWith("PROXY_");
+      // التوكن انتهى للتو: نجرّب مرة واحدة بتوكن جديد
+      if (fromProxy && info.reason === "PROXY_TOKEN_INVALID" && !freshToken) {
+        return await callModel(backend, model, key, body, true);
+      }
       // 401 يظهر أحيانًا مع النماذج المسحوبة (رسالة مضلّلة من جوجل)، لذلك نجرّب نموذجًا آخر قبل الاستسلام
-      const modelLevel = [401, 404, 429].includes(info.status) || info.status >= 500 ||
-        (info.status === 400 && /model/i.test(info.message) && !/api key/i.test(info.message));
-      throw new AIError(toArabic(info), {
+      const modelLevel = !fromProxy && ([401, 404, 429].includes(info.status) || info.status >= 500 ||
+        (info.status === 400 && /model/i.test(info.message) && !/api key/i.test(info.message)));
+      throw new AIError(fromProxy ? proxyMessage(info.reason, info.message) : toArabic(info), {
         status: info.status,
         code: `${backend} ${info.status} ${info.reason || info.apiStatus}`.trim(),
         raw: info.message,
         backend,
+        proxy: fromProxy,
         modelLevel
       });
     }
@@ -114,7 +171,12 @@ async function callModel(backend, model, key, body) {
     if (err && err.name === "AbortError") {
       throw new AIError("الرد تأخّر أكثر من اللازم. حاول مرة أخرى.", { code: `${backend} TIMEOUT`, backend, modelLevel: true });
     }
-    throw new AIError("تعذّر الاتصال بالخدمة. تأكد من اتصالك بالإنترنت ثم حاول مرة أخرى.", { code: `${backend} NETWORK`, backend });
+    throw new AIError(
+      USE_PROXY
+        ? "تعذّر الاتصال بالوسيط. تأكد من الإنترنت ومن رابط الوسيط في js/ai-config.js."
+        : "تعذّر الاتصال بالخدمة. تأكد من اتصالك بالإنترنت ثم حاول مرة أخرى.",
+      { code: `${backend} NETWORK`, backend }
+    );
   } finally {
     clearTimeout(timer);
   }
@@ -160,7 +222,9 @@ async function discoverModels(key) {
     if (c && Date.now() - c.t < 60 * 60 * 1000) return c.list;
   } catch (_) {}
   try {
-    const res = await fetch(`${BASE}/models?pageSize=200`, { headers: { "x-goog-api-key": key } });
+    const res = USE_PROXY
+      ? await fetch(`${PROXY}/models`, { headers: { Authorization: `Bearer ${await getIdToken()}` } })
+      : await fetch(`${BASE}/models?pageSize=200`, { headers: { "x-goog-api-key": key } });
     if (!res.ok) return [];
     const data = await res.json();
     const list = (data.models || [])
@@ -183,7 +247,7 @@ async function discoverModels(key) {
 //  maxOutputTokens : يشمل رموز "التفكير" الداخلية، لذلك القيمة الافتراضية كبيرة
 //  thinkingLevel   : "low" = أسرع (مناسب للمساعد). مرّر null لتعطيله.
 export async function generate({ system = "", contents, temperature = 0.7, maxOutputTokens = 4096, thinkingLevel = "low" }) {
-  const key = getKey();
+  const key = USE_PROXY ? "" : getKey();
 
   const body = { contents, generationConfig: { temperature, maxOutputTokens } };
   if (thinkingLevel) body.generationConfig.thinkingConfig = { thinkingLevel };
@@ -212,7 +276,7 @@ export async function generate({ system = "", contents, temperature = 0.7, maxOu
             payload = { ...payload, generationConfig: cfg };
             continue;
           }
-          if ((err.status === 500 || err.status === 503) && !waited) {
+          if ((err.status === 500 || err.status === 503) && !waited && !err.proxy) {
             waited = true;
             await sleep(1500);
             continue;
@@ -240,12 +304,12 @@ export async function generate({ system = "", contents, temperature = 0.7, maxOu
     }
 
     const first = savedModel();
-    const known = backend === "gemini" ? AI_MODELS : AI_MODELS.slice(0, 2);
+    const known = backend === "vertex" ? AI_MODELS.slice(0, 2) : AI_MODELS;
     let result = await tryList([...(first ? [first] : []), ...known]);
     if (result) return result;
 
     // (خدمة Gemini فقط) كل النماذج المعروفة فشلت: نكتشف المتاح لهذا المفتاح فعليًا
-    if (backend === "gemini" && lastErr && (lastErr.status === 404 || lastErr.status === 401)) {
+    if (backend !== "vertex" && lastErr && (lastErr.status === 404 || lastErr.status === 401)) {
       result = await tryList((await discoverModels(key)).slice(0, 4));
       if (result) return result;
     }
@@ -258,7 +322,7 @@ export async function generate({ system = "", contents, temperature = 0.7, maxOu
 
   let saved = "";
   try { saved = sessionStorage.getItem(STORE_BACKEND) || ""; } catch (_) {}
-  const order = saved === "vertex" ? ["vertex", "gemini"] : ["gemini", "vertex"];
+  const order = USE_PROXY ? ["proxy"] : (saved === "vertex" ? ["vertex", "gemini"] : ["gemini", "vertex"]);
 
   const failures = [];
   for (const backend of order) {
@@ -269,6 +333,7 @@ export async function generate({ system = "", contents, temperature = 0.7, maxOu
     } catch (err) {
       if (!(err instanceof AIError)) throw err;
       failures.push(err);
+      if (USE_PROXY) { err.details = err.code; throw err; }   // وضع الوسيط: خدمة واحدة، فلا بديل نجرّبه
       // خدمة Vertex قد تكون محجوبة من المتصفح: لو الأولى رفضت المفتاح فلا نعرض "تأكد من الإنترنت"
       const unreachableAfterReject = failures.length > 1 && /NETWORK$/.test(err.code);
       if (!keyRejected(err) && !unreachableAfterReject) {
