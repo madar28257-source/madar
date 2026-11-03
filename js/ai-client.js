@@ -4,7 +4,7 @@
 // يتعامل مع واجهة Gemini API الحالية (REST) ويدعم مفاتيح AQ. و AIza.
 // يُستخدم من: ai-assistant.js (الشات) و planner.js (المخطط الذكي).
 
-import * as CFG from "./ai-config.js";
+import * as CFG from "./ai-config.js?v=4";   // v=4 يجبر المتصفح على تحميل أحدث إعدادات
 
 const AI_API_KEY = CFG.AI_API_KEY;
 const AI_MODELS = Array.isArray(CFG.AI_MODELS) && CFG.AI_MODELS.length
@@ -64,7 +64,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function getKey() {
   const key = String(AI_API_KEY || "").trim();
   if (!key || /ضع|YOUR|PASTE/i.test(key)) {
-    throw new AIError("الذكاء الاصطناعي غير مضبوط بعد. ضع رابط الوسيط في AI_PROXY_URL (يبدأ بـ https://) داخل الملف js/ai-config.js، وتأكد أنك رفعت الملف على GitHub وانتظرت دقيقة.", { code: "NO_CONFIG" });
+    const why = !("AI_PROXY_URL" in CFG) ? "السطر AI_PROXY_URL غير موجود في الملف (نسخة قديمة من ai-config.js)"
+      : !PROXY_RAW ? "AI_PROXY_URL فارغ"
+      : `AI_PROXY_URL غير صالح: ${PROXY_RAW.slice(0, 24)}`;
+    throw new AIError("الذكاء الاصطناعي غير مضبوط بعد. ضع رابط الوسيط في AI_PROXY_URL (يبدأ بـ https://) داخل الملف js/ai-config.js، وتأكد أنك رفعت الملف على GitHub وانتظرت دقيقة.",
+      { code: "NO_CONFIG", details: `NO_CONFIG | ${why}` });
   }
   if (!/^(AQ\.|AIza)[A-Za-z0-9_.\-]{20,}$/.test(key)) {
     throw new AIError("شكل المفتاح غير صحيح. تأكد أنك نسخته كاملًا (يبدأ بـ AQ. أو AIza) بدون مسافات أو علامات زائدة.", { code: "BAD_KEY_FORMAT" });
