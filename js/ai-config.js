@@ -5,8 +5,8 @@
 
 // 🛡️ رابط الوسيط (Cloudflare Worker) — الطريقة الآمنة الموصى بها.
 //    ضع هنا رابط الوسيط بعد ما تنشره، وسيُحفظ المفتاح عند Cloudflare فقط.
-//    مثال: "https://madar-ai.mansourlaptop8.workers.dev"
-export const AI_PROXY_URL = "";
+//    مثال: "https://madar-ai.اسم-حسابك.workers.dev"
+export const AI_PROXY_URL = "https://madar-ai.mansourlaptop8.workers.dev";
 
 // 🔑 مفتاح مباشر داخل الموقع — لا تستخدمه على GitHub العام!
 //    جوجل توقف أي مفتاح يظهر علنًا خلال دقائق. اتركه فارغًا طالما الوسيط يعمل.
