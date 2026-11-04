@@ -13,7 +13,7 @@
     .navbar { background: rgba(11, 12, 16, 0.7); backdrop-filter: blur(16px); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100; }
     .nav-right { display: flex; align-items: center; gap: 10px; }
     .nav-right .logo { font-size: 1.5rem; font-weight: 700; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.2); }
-    .nav-center { display: flex; gap: 25px; }
+    .nav-center { display: flex; gap: 20px; }
     .nav-center a { color: var(--text-muted); font-weight: 500; font-size: 0.95rem; position: relative; text-decoration: none; transition: var(--transition); }
     .nav-center a:hover, .nav-center a.active { color: #fff; }
     .nav-center a.active::after { content: ''; position: absolute; bottom: -5px; right: 0; width: 100%; height: 2px; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
@@ -33,42 +33,24 @@
     .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; position: relative; z-index: 10; }
     
     /* بطاقة البطل */
-    .hero-card {
-      background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(34, 211, 238, 0.1) 100%);
-      border: 1px solid var(--primary-light); border-radius: var(--radius); padding: 30px;
-      display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 30px;
-      box-shadow: 0 10px 30px rgba(124, 58, 237, 0.2); position: relative; overflow: hidden;
-    }
+    .hero-card { background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(34, 211, 238, 0.1) 100%); border: 1px solid var(--primary-light); border-radius: var(--radius); padding: 30px; display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(124, 58, 237, 0.2); position: relative; overflow: hidden; }
     .hero-info { display: flex; align-items: center; gap: 20px; z-index: 1; }
     .hero-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #ef4444); border: 3px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; box-shadow: 0 0 20px rgba(245, 158, 11, 0.5); }
     .hero-details h2 { color: #fff; font-size: 1.5rem; margin-bottom: 5px; }
     .hero-details .level-badge { background: #f59e0b; color: #000; padding: 4px 12px; border-radius: 20px; font-weight: 900; font-size: 0.9rem; display: inline-block; }
-    
     .hero-progress { flex: 1; max-width: 400px; z-index: 1; }
     .xp-text { display: flex; justify-content: space-between; color: #fff; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
     .xp-bar-bg { width: 100%; height: 15px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
     .xp-bar-fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #ef4444); width: 0%; border-radius: 10px; transition: width 1s ease-out; box-shadow: 0 0 10px #f59e0b; }
 
-    /* 🔥 صندوق الغنائم */
-    .loot-box-container {
-      display: flex; justify-content: center; margin-bottom: 40px; margin-top: 20px;
-    }
-    .loot-box {
-      background: linear-gradient(135deg, rgba(250, 204, 21, 0.2), rgba(234, 88, 12, 0.2));
-      border: 2px dashed #facc15; border-radius: 20px; padding: 20px 40px;
-      display: flex; align-items: center; gap: 20px; cursor: pointer;
-      transition: all 0.3s ease; box-shadow: 0 0 20px rgba(250, 204, 21, 0.3);
-      animation: bounceBox 2s infinite;
-    }
+    /* صندوق الغنائم */
+    .loot-box-container { display: flex; justify-content: center; margin-bottom: 40px; margin-top: 20px; }
+    .loot-box { background: linear-gradient(135deg, rgba(250, 204, 21, 0.2), rgba(234, 88, 12, 0.2)); border: 2px dashed #facc15; border-radius: 20px; padding: 20px 40px; display: flex; align-items: center; gap: 20px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 0 20px rgba(250, 204, 21, 0.3); animation: bounceBox 2s infinite; }
     .loot-box:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(250, 204, 21, 0.6); }
     .loot-box-icon { font-size: 3rem; }
     .loot-box-text h3 { color: #facc15; font-size: 1.5rem; margin: 0; }
     .loot-box-text p { color: #fff; margin: 0; font-size: 0.9rem; }
-    @keyframes bounceBox {
-      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-      40% { transform: translateY(-15px); }
-      60% { transform: translateY(-7px); }
-    }
+    @keyframes bounceBox { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-15px); } 60% { transform: translateY(-7px); } }
 
     /* زرار برج المعرفة */
     .tower-btn-wrapper { text-align: center; margin-bottom: 40px; }
@@ -89,7 +71,6 @@
     .subject-icon-wrap { width: 80px; height: 80px; margin: 0 auto 15px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); transition: transform 0.4s ease; font-size: 2rem; overflow: hidden; }
     .subject-card:hover .subject-icon-wrap { transform: scale(1.1); }
     .subject-card h3 { font-size: 1.15rem; margin-bottom: 20px; font-weight: 600; color: #fff; }
-
     .mini-progress-wrap { text-align: right; }
     .mini-progress-text { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; }
     .mini-progress-bg { width: 100%; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; overflow: hidden; }
@@ -113,6 +94,15 @@
     .ai-chat-input-area input { flex: 1; padding: 10px 15px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 20px; color: #fff; outline: none; }
     .ai-chat-input-area button { background: var(--accent); color: #000; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 1.2rem; transition: 0.3s; }
 
+    /* 🔥 زرار التيم العايم للموبايل */
+    .team-float {
+        position: fixed; width: 60px; height: 60px; bottom: 100px; right: 30px; 
+        background: rgba(34, 197, 94, 0.2); border: 2px solid #22c55e; color: #22c55e; 
+        border-radius: 50px; font-size: 30px; z-index: 999; 
+        display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;
+    }
+    .team-float:hover { background: #22c55e; color: #fff; }
+
     @media (max-width: 768px) {
       .nav-center { display: none; }
       .navbar { padding: 15px 20px; }
@@ -122,6 +112,7 @@
       .hero-stats { grid-template-columns: 1fr; gap: 20px; }
       .whatsapp-float { width: 50px; height: 50px; bottom: 20px; left: 20px; }
       .ai-fab { width: 55px; height: 55px; bottom: 20px; right: 20px; font-size: 24px; }
+      .team-float { width: 50px; height: 50px; bottom: 85px; right: 20px; font-size: 24px; }
       .ai-chat-container { width: calc(100% - 40px); right: 20px; bottom: 85px; height: 400px; }
       .tower-btn { font-size: 1.2rem; padding: 15px 30px; width: 100%; }
       .loot-box { flex-direction: column; text-align: center; width: 100%; }
@@ -140,6 +131,7 @@
       <a href="evaluations.html" id="evaluations-tab">التقييمات</a>
       <a href="schedule.html">جدول الامتحانات</a>
       <a href="tower.html" style="color: #f59e0b; font-weight: bold;">🏰 برج المعرفة</a>
+      <!-- 🔥 الزرار هنا للكمبيوتر -->
       <a href="teams.html" style="color: #22c55e; font-weight: bold;">🤝 فريق المذاكرة</a>
     </div>
     <div class="nav-left">
@@ -160,7 +152,6 @@
 
   <main class="container">
     
-    <!-- بطاقة البطل -->
     <div class="hero-card">
       <div class="hero-info">
         <div class="hero-avatar" id="hero-avatar">🦸‍♂️</div>
@@ -180,7 +171,6 @@
       </div>
     </div>
 
-    <!-- 🔥 صندوق الغنائم -->
     <div class="loot-box-container" id="loot-container" style="display: none;">
       <div class="loot-box" onclick="openLootBox()">
         <div class="loot-box-icon">🎁</div>
@@ -191,12 +181,10 @@
       </div>
     </div>
 
-    <!-- زرار برج المعرفة -->
     <div class="tower-btn-wrapper">
       <a href="tower.html" class="tower-btn">🏰 ادخل برج المعرفة 🏰</a>
     </div>
 
-    <!-- إحصائيات عامة -->
     <div class="hero-stats glass-panel">
       <div class="stat-item">
         <div class="stat-icon" style="color: var(--accent); background: rgba(34, 211, 238, 0.1);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg></div>
@@ -213,6 +201,9 @@
       <div class="loading-text">جاري تحميل موادك الدراسية... ⏳</div>
     </div>
   </main>
+
+  <!-- 🔥 زرار التيم العايم للموبايل (هيظهر تحت جنب الروبوت) -->
+  <a href="teams.html" class="team-float" title="فريق المذاكرة">🤝</a>
 
   <a href="https://wa.me/201121922398?text=أهلاً%20أستاذ%20محمد،%20عندي%20مشكلة%20في%20المنصة" class="whatsapp-float" target="_blank" title="تواصل مع الدعم الفني">
     <svg class="whatsapp-icon" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.7 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
@@ -238,7 +229,7 @@
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
     import { doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
-    let currentUserData = null; // 🔥 عشان نستخدمه في فتح الصندوق
+    let currentUserData = null;
 
     const subjectsMap = {
       "1-prep": ["اللغة العربية", "اللغة الإنجليزية", "الدراسات الاجتماعية", "الرياضيات", "العلوم", "التربية الدينية", "الكمبيوتر"],
@@ -257,7 +248,7 @@
     const trackNames = { "medicine": " (مسار الطب)", "engineering": " (مسار الهندسة)", "business": " (مسار الأعمال)", "arts": " (مسار الآداب)" };
 
     const subjectImages = {
-      "اللغة العربية": "arabic.jpg", "اللغة الإنجليزية": "english.jpg", "اللغة الأجنبية الأولى": "english.jpg", "اللغة الأجنبية الثانية": "english_level.jpg", "إنجليزي مستوى": "english_level.jpg", "الرياضيات": "math.jpg", "العلوم": "science.jpg", "العلوم المتكاملة": "science.jpg", "الدراسات الاجتماعية": "social.jpg", "التاريخ": "history.jpg", "الفلسفة": "philosophy.jpg", "الفلسفة والمنطق": "philosophy.jpg", "الفيزياء": "physics.jpg", "الكيمياء": "chemistry.jpg", "الجغرافيا": "geography.jpg", "علم النفس":  "psychology.jpg", "علم النفس والاجتماع": "psychology.jpg", "البرمجة والذكاء الاصطناعي": "programming.jpg", "التربية الدينية": "religion.jpg", "المحاسبة": "business.jpg", "إدارة الأعمال": "business.jpg", "الكمبيوتر": "computer.jpg", "الحاسب الآلي": "computer.jpg"
+      "اللغة العربية": "arabic.jpg", "اللغة الإنجليزية": "english.jpg", "اللغة الأجنبية الأولى": "english.jpg", "اللغة الأجنبية الثانية": "english_level.jpg", "إنجليزي مستوى": "english_level.jpg", "الرياضيات": "math.jpg", "العلوم": "science.jpg", "العلوم المتكاملة": "science.jpg", "الدراسات الاجتماعية": "social.jpg", "التاريخ": "history.jpg", "الفلسفة": "philosophy.jpg", "الفلسفة والمنطق": "philosophy.jpg", "الفيزياء": "physics.jpg", "الكيمياء": "chemistry.jpg", "الجغرافيا": "geography.jpg", "علم النفس": "psychology.jpg", "علم النفس والاجتماع": "psychology.jpg", "البرمجة والذكاء الاصطناعي": "programming.jpg", "التربية الدينية": "religion.jpg", "المحاسبة": "business.jpg", "إدارة الأعمال": "business.jpg", "الكمبيوتر": "computer.jpg", "الحاسب الآلي": "computer.jpg"
     };
 
     onAuthStateChanged(auth, async (user) => {
@@ -280,7 +271,6 @@
             const xpPercentage = (userXP % 100);
             document.getElementById("hero-xp-bar").style.width = `${xpPercentage}%`;
 
-            // 🔥 عرض صندوق الغنائم لو موجود
             const boxes = currentUserData.lootBoxes || 0;
             if (boxes > 0) {
                 document.getElementById("loot-count").textContent = boxes;
@@ -298,21 +288,15 @@
       } else { window.location.href = "index.html"; }
     });
 
-    // 🔥 فتح صندوق الغنائم
     window.openLootBox = async () => {
         const boxes = currentUserData.lootBoxes || 0;
         if (boxes <= 0) return;
 
-        // تأثير الاهتزاز والفتح
         Swal.fire({
-            title: 'جاري فتح الصندوق...',
-            html: '<div style="font-size: 4rem; animation: shake 0.5s infinite;">🎁</div>',
+            title: 'جاري فتح الصندوق...', html: '<div style="font-size: 4rem; animation: shake 0.5s infinite;">🎁</div>',
             background: '#12121f', color: '#fff', showConfirmButton: false, allowOutsideClick: false,
-            timer: 1500,
-            timerProgressBar: true,
-            didOpen: () => { Swal.showLoading(); }
+            timer: 1500, timerProgressBar: true, didOpen: () => { Swal.showLoading(); }
         }).then(async () => {
-            // سحب الجايزة عشوائياً
             const rewards = [
                 { type: 'xp', amount: 50, title: '50 نقطة خبرة!', icon: '🌟', color: '#f59e0b' },
                 { type: 'xp', amount: 100, title: '100 نقطة خبرة!', icon: '💎', color: '#a78bfa' },
@@ -323,7 +307,7 @@
 
             try {
                 const userRef = doc(db, "users", auth.currentUser.uid);
-                let updateData = { lootBoxes: increment(-1) }; // نقص صندوق
+                let updateData = { lootBoxes: increment(-1) };
 
                 if (randomReward.type === 'xp') {
                     const currentXP = currentUserData.xp || 0;
@@ -332,56 +316,37 @@
                 } else if (randomReward.type === 'hint') {
                     updateData.hints = increment(randomReward.amount);
                 } else if (randomReward.type === 'badge') {
-                    // شارة جديدة
                     updateData[`badges.${Date.now()}`] = randomReward.title;
                 }
-
                 await updateDoc(userRef, updateData);
 
                 Swal.fire({
                     title: 'مبروك! 🎉',
-                    html: `<div style="font-size: 5rem; margin-bottom: 20px;">${randomReward.icon}</div>
-                           <div style="font-size: 1.5rem; color: ${randomReward.color}; font-weight: bold;">${randomReward.title}</div>`,
-                    background: '#12121f', color: '#fff', confirmButtonColor: '#7c3aed',
-                    confirmButtonText: 'رائع!'
-                }).then(() => {
-                    window.location.reload(); // تحديث الصفحة عشان نشوف التغييرات
-                });
+                    html: `<div style="font-size: 5rem; margin-bottom: 20px;">${randomReward.icon}</div><div style="font-size: 1.5rem; color: ${randomReward.color}; font-weight: bold;">${randomReward.title}</div>`,
+                    background: '#12121f', color: '#fff', confirmButtonColor: '#7c3aed', confirmButtonText: 'رائع!'
+                }).then(() => { window.location.reload(); });
 
-            } catch (error) {
-                console.error(error);
-                Swal.fire({ icon: 'error', title: 'خطأ', text: 'حدث خطأ في فتح الصندوق.', background: '#12121f', color: '#fff' });
-            }
+            } catch (error) { console.error(error); }
         });
     };
 
     async function updateStreak(userId, userData) {
       const now = new Date();
       const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-      
       let currentStreak = userData.currentStreak || 0;
       let lastLoginStr = userData.lastLoginDate;
       let needsUpdate = false;
 
-      if (!lastLoginStr) {
-        currentStreak = 1; needsUpdate = true;
-      } else {
-        const yesterday = new Date(now);
-        yesterday.setDate(now.getDate() - 1);
+      if (!lastLoginStr) { currentStreak = 1; needsUpdate = true; } 
+      else {
+        const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
         const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
-
-        if (lastLoginStr === todayStr) {
-           // nothing
-        } else if (lastLoginStr === yesterdayStr) {
-           currentStreak += 1; needsUpdate = true;
-        } else {
-           currentStreak = 1; needsUpdate = true;
-        }
+        if (lastLoginStr === todayStr) { } 
+        else if (lastLoginStr === yesterdayStr) { currentStreak += 1; needsUpdate = true; } 
+        else { currentStreak = 1; needsUpdate = true; }
       }
 
-      if (needsUpdate) {
-        await updateDoc(doc(db, "users", userId), { currentStreak: currentStreak, lastLoginDate: todayStr });
-      }
+      if (needsUpdate) { await updateDoc(doc(db, "users", userId), { currentStreak: currentStreak, lastLoginDate: todayStr }); }
       displayStreakUI(currentStreak);
     }
 
