@@ -159,8 +159,10 @@ async function callModel(backend, model, key, body, freshToken = false) {
         return await callModel(backend, model, key, body, true);
       }
       // 401 يظهر أحيانًا مع النماذج المسحوبة (رسالة مضلّلة من جوجل)، لذلك نجرّب نموذجًا آخر قبل الاستسلام
-      const modelLevel = !fromProxy && ([401, 404, 429].includes(info.status) || info.status >= 500 ||
-        (info.status === 400 && /model/i.test(info.message) && !/api key/i.test(info.message)));
+      const modelLevel = fromProxy
+        ? info.reason === "PROXY_UPSTREAM_FAILED"
+        : ([401, 404, 429].includes(info.status) || info.status >= 500 ||
+          (info.status === 400 && /model/i.test(info.message) && !/api key/i.test(info.message)));
       throw new AIError(fromProxy ? proxyMessage(info.reason, info.message) : toArabic(info), {
         status: info.status,
         code: `${backend} ${info.status} ${info.reason || info.apiStatus}`.trim(),
@@ -292,6 +294,7 @@ export async function generate({ system = "", contents, temperature = 0.7, maxOu
     }
 
     let lastErr = null;
+    let upstreamFails = 0;
     async function tryList(models) {
       for (const m of models) {
         if (tried.has(m)) continue;
@@ -303,6 +306,7 @@ export async function generate({ system = "", contents, temperature = 0.7, maxOu
           if (!(err instanceof AIError)) throw err;
           lastErr = err;
           if (!err.modelLevel) throw err;   // مشكلة في المفتاح أو الإنترنت: لا فائدة من تجربة نموذج آخر
+        if (err.proxy && ++upstreamFails >= 2) throw err;   // الوسيط لا يصل لجوجل: لا نُطيل الانتظار بتجربة كل النماذج
         }
       }
       return null;
@@ -338,7 +342,7 @@ export async function generate({ system = "", contents, temperature = 0.7, maxOu
     } catch (err) {
       if (!(err instanceof AIError)) throw err;
       failures.push(err);
-      if (USE_PROXY) { err.details = err.code; throw err; }   // وضع الوسيط: خدمة واحدة، فلا بديل نجرّبه
+      if (USE_PROXY) { err.details = (err.raw ? `${err.code} | ${err.raw}` : err.code).slice(0, 260); throw err; }   // وضع الوسيط: خدمة واحدة، فلا بديل نجرّبه
       // خدمة Vertex قد تكون محجوبة من المتصفح: لو الأولى رفضت المفتاح فلا نعرض "تأكد من الإنترنت"
       const unreachableAfterReject = failures.length > 1 && /NETWORK$/.test(err.code);
       if (!keyRejected(err) && !unreachableAfterReject) {
