@@ -122,8 +122,9 @@
 
   <script type="module">
     import { auth, db } from "./firebase.js";
+    import { syncMyLeaderboard } from "./js/ranking-core.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-    // 🔥 ضفنا increment و doc و updateDoc عشان نحتاجهم
+    // 🔥 ضفنا increment عشان نزود الصناديق
     import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, updateDoc, increment } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
     let examData = null;
@@ -420,14 +421,7 @@
         }
 
         await updateDoc(userDocRef, updateData);
-
-        // 🔥 إضافة الـ XP لرصيد الفريق (لو الطالب في فريق)
-        if (userDocSnap.data().teamId) {
-            const teamRef = doc(db, "teams", userDocSnap.data().teamId);
-            await updateDoc(teamRef, {
-                totalXP: increment(earnedXP)
-            });
-        }
+        try { await syncMyLeaderboard(auth.currentUser, { force: true }); } catch (e) { console.warn("leaderboard:", e); }   // تحديث ترتيبك بعد الامتحان
 
         let resultColor = percentage >= 50 ? '#22c55e' : '#ef4444';
         let resultMsg = percentage >= 50 ? '🎉 لقد هزمت الزعيم بنجاح! 🎉' : '💀 لقد هُزمت.. تحتاج لمزيد من التدريب.';
