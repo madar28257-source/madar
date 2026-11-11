@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>التصنيف — منصة MADAR</title>
+  <link rel="stylesheet" href="base.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body { margin: 0; min-height: 100vh; color: #fff; font-family: 'Readex Pro', Tahoma, sans-serif;
+      background: radial-gradient(900px 500px at 85% -10%, rgba(124,58,237,.35), transparent), radial-gradient(700px 500px at 0% 20%, rgba(245,158,11,.14), transparent), #0B0C10; }
+    .rk { max-width: 680px; margin: 0 auto; padding: 22px 16px 60px; }
+    .rk h1 { margin: 6px 0 4px; font-size: 1.7rem; font-weight: 800; }
+    .rk .sub { margin: 0 0 18px; color: #9ca3af; }
+    .rk-pick { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .rk-pick label { color: #cbd0e3; font-weight: 600; font-size: .92rem; }
+    .rk-pick select { width: 100%; padding: 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,.14); background: rgba(25,27,38,.85); color: #fff; font: inherit; font-size: 1rem; }
+    .rk-me { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .rk-me > div { padding: 16px; border-radius: 16px; text-align: center; background: linear-gradient(135deg, rgba(245,158,11,.22), rgba(239,68,68,.12)); border: 1px solid rgba(245,158,11,.35); }
+    .rk-me small { display: block; color: #fcd9a0; font-size: .85rem; margin-bottom: 4px; }
+    .rk-me b { font-size: 1.8rem; font-weight: 800; }
+    .rk-state { padding: 34px 16px; text-align: center; color: #cbd0e3; border-radius: 16px; background: rgba(25,27,38,.5); border: 1px dashed rgba(255,255,255,.15); }
+    .rk-state.err { color: #fca5a5; border-color: rgba(239,68,68,.4); }
+    .rk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .rk-row { display: grid; grid-template-columns: 46px 1fr auto; align-items: center; gap: 10px; padding: 13px 14px; border-radius: 14px; background: rgba(25,27,38,.6); border: 1px solid rgba(255,255,255,.08); }
+    .rk-row.top1 { background: linear-gradient(90deg, rgba(250,204,21,.2), rgba(25,27,38,.6)); border-color: rgba(250,204,21,.4); }
+    .rk-row.top2 { border-color: rgba(203,213,225,.4); } .rk-row.top3 { border-color: rgba(217,119,6,.45); }
+    .rk-row.me { outline: 2px solid #f59e0b; background: rgba(245,158,11,.12); }
+    .rk-pos { text-align: center; font-weight: 800; font-size: 1.1rem; color: #cbd0e3; }
+    .rk-row.top1 .rk-pos, .rk-row.top2 .rk-pos, .rk-row.top3 .rk-pos { font-size: 1.5rem; }
+    .rk-name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rk-name em { margin-inline-start: 8px; font-style: normal; font-size: .72rem; background: #f59e0b; color: #000; padding: 2px 8px; border-radius: 10px; font-weight: 800; }
+    .rk-val { font-weight: 800; font-size: 1.1rem; color: #fbbf24; }
+    .rk-note { margin-top: 18px; color: #9ca3af; font-size: .85rem; line-height: 1.8; }
+  </style>
+</head>
+<body>
+  <main class="rk">
+    <h1>🏆 التصنيف</h1>
+    <p class="sub">شوف ترتيبك بين زملائك في نفس صفك</p>
+
+    <div class="rk-pick">
+      <label for="rk-select">عرض التصنيف حسب</label>
+      <select id="rk-select" disabled><option value="global">التصنيف العام (كل المواد)</option></select>
+    </div>
+
+    <section id="rk-me" class="rk-me" hidden>
+      <div><small>ترتيبك</small><b id="rk-my-rank">—</b></div>
+      <div><small id="rk-my-label">نقاطك</small><b id="rk-my-value">—</b></div>
+    </section>
+
+    <div id="rk-state" class="rk-state">جاري التحميل...</div>
+    <ol id="rk-list" class="rk-list" hidden></ol>
+    <p id="rk-note" class="rk-note"></p>
+  </main>
+  <script type="module" src="js/ranking.js"></script>
+</body>
+</html>
