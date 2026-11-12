@@ -2,53 +2,61 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>المعمل الافتراضي — منصة MADAR</title>
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>معمل العلوم المتكاملة — MADAR</title>
   <link rel="stylesheet" href="base.css">
   <link rel="stylesheet" href="css/lab.css">
-
+  <link rel="manifest" href="manifest.json">
   <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-      }
-    }
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
   </script>
 </head>
 <body>
+  <div class="loading-screen" id="loading-screen"><div class="spinner"></div><h2>جاري تجهيز المعمل...</h2><p>قد يستغرق بضع ثوانٍ حسب سرعة الإنترنت</p></div>
 
-  <div class="bg-orbs"></div>
-
-  <nav class="lab-navbar">
-    <div class="logo">MADAR Lab 🔬</div>
-    <a href="dashboard.html" class="btn-back">← رجوع للرئيسية</a>
-  </nav>
-
-  <div class="loading-screen" id="loading-screen">
-    <div class="spinner"></div>
-    <h2>جاري تحميل المجسم ثلاثي الأبعاد...</h2>
-    <p>قد يستغرق بضع ثوانٍ حسب سرعة الإنترنت</p>
-  </div>
-
-  <div id="canvas-container"></div>
-
-  <!-- لوحة المعلومات (تتفتح وتتقفل) -->
-  <div class="info-panel glass-panel" id="info-panel">
-    
-    <!-- الهيدر (ثابت) -->
-    <div class="info-header" id="info-header">
-      <h3 id="lab-title">جاري التحميل...</h3>
-      <span class="toggle-icon" id="toggle-icon">▼</span>
+  <div id="canvas-container">
+    <div id="stage">
+      <div id="hud">
+        <div class="chip">🌡️ <b id="hud-temp">25</b>°م</div>
+        <div class="chip" id="hud-rx">⚗️ اختر مادتين لتبدأ التجربة</div>
+      </div>
+      <div id="toast" hidden></div>
+      <div id="nogl" hidden><b>جهازك لا يدعم الرسوم ثلاثية الأبعاد (WebGL)</b><span>جرّب متصفحًا آخر أو حدّث المتصفح.</span></div>
     </div>
 
-    <!-- المحتوى (بيظهر ويختفي) -->
-    <div class="info-content" id="info-content">
-      <p id="lab-desc">جاري تحميل الوصف...</p>
-      <ul id="lab-features"></ul>
-      <button id="toggle-rotation" class="btn-toggle">إيقاف الدوران التلقائي</button>
-    </div>
+    <aside id="panel">
+      <button class="grab" id="grab" aria-label="طي أو فتح اللوحة"></button>
+      <div class="tabs" role="tablist">
+        <button class="tab on" data-tab="mix">🧪 المواد</button>
+        <button class="tab" data-tab="ctl">🔥 التحكم</button>
+        <button class="tab" data-tab="res">📋 النتيجة<i id="dot" hidden></i></button>
+      </div>
+
+      <section class="pane on" id="pane-mix">
+        <p class="hint">اضغط على مادة (أو على زجاجتها في المعمل) لتُصبّ في الكأس. جرّب مادتين معًا!</p>
+        <div id="reagents" class="reagents"></div>
+        <button id="btn-reset" class="btn-reset">🧹 تفريغ الكأس</button>
+      </section>
+
+      <section class="pane" id="pane-ctl">
+        <label class="ctl"><span>🔥 قوة الموقد <b id="v-heat">0٪</b></span><input id="heat" type="range" min="0" max="100" value="0"></label>
+        <label class="ctl"><span>💡 زاوية الضوء عن الرأسي <b id="v-light">0°</b></span><input id="light" type="range" min="0" max="90" value="0"></label>
+        <div class="gauge"><small>تقدّم التفاعل</small><div class="bar"><i id="g-prog"></i></div></div>
+        <div class="gauge"><small>🦠 نشاط الخلية الحية (ورا الموقد) <em id="g-cell-t"></em></small><div class="bar cell"><i id="g-cell"></i></div></div>
+        <p class="hint">جرّب ترفع الموقد شوية: الخلية بتنشط لحد حوالي 37°م وبعدها إنزيماتها بتتلف.</p>
+      </section>
+
+      <section class="pane" id="pane-res">
+        <p id="res-empty" class="hint">لسه ما حصلش تفاعل. اخلط مادتين وهتظهر هنا النتيجة العلمية.</p>
+        <div id="res-box" hidden>
+          <h3 id="res-name"></h3>
+          <div id="res-eq" dir="ltr"></div>
+          <div id="res-obs" class="obs"></div>
+          <p id="res-why"></p>
+          <p id="res-live" class="live"></p>
+        </div>
+      </section>
+    </aside>
   </div>
 
   <script type="module" src="js/lab.js"></script>
