@@ -65,8 +65,8 @@ function init() {
       <button type="button" id="sb-logout" class="sb-logout"><span class="sb-ico">🚪</span><span>تسجيل الخروج</span></button>
     </div>`;
 
-  const oldBar = document.querySelector(".navbar");
-  if (oldBar) oldBar.before(bar); else document.body.prepend(bar);
+  // الشريط يتحط برا <body> (قبله مباشرة) عشان تنسيق الصفحة نفسها (زي display:flex) ما يبوّظش مكانه
+  document.documentElement.insertBefore(bar, document.body);
   document.body.append(overlay, drawer);
 
   const openBtn = bar.querySelector("#sb-open");
