@@ -59,4 +59,15 @@
     </aside>
   </div>
 
- 
+  <script type="module" src="js/lab.js?v=3"></script>
+
+<script>
+  // ضمان إخفاء شاشة التحميل نهائياً بغض النظر عن حالة الـ 3D
+  setTimeout(() => {
+    const loader = document.getElementById('loading-screen');
+    if (loader) loader.classList.add('hidden');
+  }, 1500);
+</script>
+
+</body>
+</html>
