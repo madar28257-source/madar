@@ -5,14 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>معمل العلوم المتكاملة — MADAR</title>
   <link rel="stylesheet" href="base.css">
-  <link rel="stylesheet" href="css/lab.css?v=3">
+  <link rel="stylesheet" href="css/lab.css?v=4">
   <link rel="manifest" href="manifest.json">
   <script type="importmap">
     { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
   </script>
 </head>
 <body>
-  <div class="loading-screen" id="loading-screen"><div class="spinner"></div><h2>جاري تجهيز المعمل...</h2><p>قد يستغرق بضع ثوانٍ حسب سرعة الإنترنت</p></div>
+  <div class="loading-screen" id="loading-screen">
+    <div class="spinner"></div>
+    <h2>جاري تجهيز المعمل...</h2>
+    <p>قد يستغرق بضع ثوانٍ حسب سرعة الإنترنت</p>
+  </div>
 
   <div id="canvas-container">
     <div id="stage">
@@ -59,15 +63,18 @@
     </aside>
   </div>
 
-  <script type="module" src="js/lab.js?v=3"></script>
-
-<script>
-  // ضمان إخفاء شاشة التحميل نهائياً بغض النظر عن حالة الـ 3D
-  setTimeout(() => {
-    const loader = document.getElementById('loading-screen');
-    if (loader) loader.classList.add('hidden');
-  }, 1500);
-</script>
-
+  <script type="module" src="js/lab.js?v=4"></script>
+  <script>
+    // ضمان إخفاء شاشة التحميل غصب عن أي إيرور على الموبايل أو اللابتوب
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const loader = document.getElementById('loading-screen');
+        if (loader) {
+          loader.classList.add('hidden');
+          loader.style.display = 'none';
+        }
+      }, 1500);
+    });
+  </script>
 </body>
 </html>
