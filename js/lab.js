@@ -6,7 +6,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { REAGENTS, newState, add, reset, tick, view } from './lab-engine.js';
+import { REAGENTS, newState, add, reset, tick, view } from './lab-engine.js?v=3';
+
+const LAB_VERSION = 'v3';   // رقم الإصدار: يظهر في أعلى المعمل عشان نعرف أي نسخة شغّالة
 
 const $ = (id) => document.getElementById(id);
 const S = newState();
@@ -336,10 +338,11 @@ function showFail(e, noWebGL) {
   const b = document.createElement('b'), s = document.createElement('span');
   b.textContent = noWebGL ? 'جهازك لا يدعم الرسوم ثلاثية الأبعاد (WebGL)' : 'تعذّر تجهيز المعمل ثلاثي الأبعاد';
   s.textContent = noWebGL ? 'جرّب متصفح كروم، وتأكد إن تسريع الرسوميات (Hardware acceleration) شغّال.' : 'صوّر الشاشة دي وابعتها للمطوّر. تفاصيل الخطأ:';
-  n.append(b, s);
+  n.append(b, s); const vv = document.createElement('small'); vv.textContent = 'إصدار المعمل: ' + LAB_VERSION; vv.style.opacity = '.5'; n.append(vv);
   if (!noWebGL) { const c = document.createElement('code'); c.textContent = String((e && (e.stack || e.message)) || e).split('\n').slice(0, 3).join(' | ').slice(0, 300); n.appendChild(c); }
   n.hidden = false; $('loading-screen').classList.add('done');
 }
+{ const hud = $('hud'); if (hud) { const c = document.createElement('div'); c.className = 'chip'; c.style.cssText = 'opacity:.55;font-size:.75rem;padding:8px 10px'; c.textContent = LAB_VERSION; hud.appendChild(c); } }
 if (!hasWebGL()) showFail(null, true);
 else { try { api = start3D(); } catch (e) { console.error(e); showFail(e, false); } }
 setTimeout(() => $('loading-screen').classList.add('done'), 15000);   // أمان: لا تعلق شاشة التحميل أبدًا
