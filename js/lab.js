@@ -6,9 +6,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { REAGENTS, newState, add, reset, tick, view } from './lab-engine.js?v=3';
+import { REAGENTS, newState, add, reset, tick, view } from './lab-engine.js?v=4';
 
-const LAB_VERSION = 'v3';   // رقم الإصدار: يظهر في أعلى المعمل عشان نعرف أي نسخة شغّالة
+const LAB_VERSION = 'v4';   // رقم الإصدار: يظهر في أعلى المعمل عشان نعرف أي نسخة شغّالة
 
 const $ = (id) => document.getElementById(id);
 const S = newState();
@@ -75,6 +75,15 @@ function updateUI(v) {
   if (S.rx && S.rx.photo && S.dark > 0.15) live = '💡 الراسب بدأ يسوّد بتأثير الضوء';
   if (S.dissolved) live = '🔥 الحرارة عالية: الراسب ذاب';
   $('res-live').textContent = live;
+}
+
+// ---------- إخفاء شاشة التحميل بأمان ----------
+function hideLoader() {
+  const loader = $('loading-screen');
+  if (loader) {
+    loader.classList.add('hidden');
+    loader.style.display = 'none';
+  }
 }
 
 // ---------- المشهد ثلاثي الأبعاد ----------
@@ -309,7 +318,7 @@ function start3D() {
     prc.instanceMatrix.needsUpdate = true;
 
     // البخار
-    vap.visible = v.vapor > 0.02; vm.opacity = v.vapor * 0.55;
+    vap.visible = v.vapor > 0.02; vm.opacity = v.vapor* 0.55;
     if (vap.visible) {
       for (let i = 0; i < NV; i++) {
         const d = vd[i]; d.h += dt * d.s; if (d.h > 3.2) d.h = 0;
@@ -324,7 +333,7 @@ function start3D() {
     cellMat.color.copy(LIVE).lerp(GREY, S.damage);
 
     controls.update(); renderer.render(scene, camera);
-    if (first) { first = false; $('loading-screen').classList.add('done'); }
+    if (first) { first = false; hideLoader(); }
     hudT += dt; if (hudT > 0.12) { hudT = 0; updateUI(v); }
   }
   renderer.setAnimationLoop(frame);
@@ -340,12 +349,12 @@ function showFail(e, noWebGL) {
   s.textContent = noWebGL ? 'جرّب متصفح كروم، وتأكد إن تسريع الرسوميات (Hardware acceleration) شغّال.' : 'صوّر الشاشة دي وابعتها للمطوّر. تفاصيل الخطأ:';
   n.append(b, s); const vv = document.createElement('small'); vv.textContent = 'إصدار المعمل: ' + LAB_VERSION; vv.style.opacity = '.5'; n.append(vv);
   if (!noWebGL) { const c = document.createElement('code'); c.textContent = String((e && (e.stack || e.message)) || e).split('\n').slice(0, 3).join(' | ').slice(0, 300); n.appendChild(c); }
-  n.hidden = false; $('loading-screen').classList.add('done');
+  n.hidden = false; hideLoader();
 }
 { const hud = $('hud'); if (hud) { const c = document.createElement('div'); c.className = 'chip'; c.style.cssText = 'opacity:.55;font-size:.75rem;padding:8px 10px'; c.textContent = LAB_VERSION; hud.appendChild(c); } }
 if (!hasWebGL()) showFail(null, true);
 else { try { api = start3D(); } catch (e) { console.error(e); showFail(e, false); } }
-setTimeout(() => $('loading-screen').classList.add('done'), 15000);   // أمان: لا تعلق شاشة التحميل أبدًا
+setTimeout(hideLoader, 10000);   // أمان: لا تعلق شاشة التحميل أبدًا
 
 // القائمة الجانبية للمنصة (لأن الصفحة دي مابتحمّلش firebase.js بنفسها)
 import('./sidebar.js').catch(() => {});
