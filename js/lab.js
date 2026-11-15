@@ -78,7 +78,11 @@ function updateUI(v) {
 // ---------- المشهد ثلاثي الأبعاد ----------
 function start3D() {
   const stage = $('stage');
-  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  let renderer = null, lastErr = null;
+  for (const opts of [{ antialias: true, powerPreference: 'high-performance' }, { antialias: false }]) {
+    try { renderer = new THREE.WebGLRenderer(opts); break; } catch (e) { lastErr = e; }
+  }
+  if (!renderer) throw lastErr;
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, isMobile() ? 1.75 : 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1;
   renderer.shadowMap.enabled = !isMobile(); renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -87,7 +91,8 @@ function start3D() {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0b0c14);
   scene.fog = new THREE.Fog(0x0b0c14, 18, 36);
-  scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+  try { scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture; }
+  catch (e) { console.warn('environment skipped:', e); }
 
   const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 80);
   const controls = new OrbitControls(camera, renderer.domElement);
@@ -258,7 +263,9 @@ function start3D() {
 
   // ---------- الحلقة ----------
   const clock = new THREE.Clock(); let time = 0, hudT = 0, first = true, cellPulse = 0;
-  function frame() {
+  let frameErr = false;
+  function frame() { try { frameBody(); } catch (e) { if (!frameErr) { frameErr = true; console.error(e); showFail(e, false); } } }
+  function frameBody() {
     const dt = Math.min(clock.getDelta(), 0.1); time += dt;
     updatePour(dt);
     tick(S, dt, ctl);
@@ -323,8 +330,18 @@ function start3D() {
   return { pour: startPour, lamp: placeLamp };
 }
 
-try { api = start3D(); }
-catch (e) { console.error(e); $('nogl').hidden = false; $('loading-screen').classList.add('done'); }
+function hasWebGL() { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (_) { return false; } }
+function showFail(e, noWebGL) {
+  const n = $('nogl'); n.textContent = '';
+  const b = document.createElement('b'), s = document.createElement('span');
+  b.textContent = noWebGL ? 'جهازك لا يدعم الرسوم ثلاثية الأبعاد (WebGL)' : 'تعذّر تجهيز المعمل ثلاثي الأبعاد';
+  s.textContent = noWebGL ? 'جرّب متصفح كروم، وتأكد إن تسريع الرسوميات (Hardware acceleration) شغّال.' : 'صوّر الشاشة دي وابعتها للمطوّر. تفاصيل الخطأ:';
+  n.append(b, s);
+  if (!noWebGL) { const c = document.createElement('code'); c.textContent = String((e && (e.stack || e.message)) || e).split('\n').slice(0, 3).join(' | ').slice(0, 300); n.appendChild(c); }
+  n.hidden = false; $('loading-screen').classList.add('done');
+}
+if (!hasWebGL()) showFail(null, true);
+else { try { api = start3D(); } catch (e) { console.error(e); showFail(e, false); } }
 setTimeout(() => $('loading-screen').classList.add('done'), 15000);   // أمان: لا تعلق شاشة التحميل أبدًا
 
 // القائمة الجانبية للمنصة (لأن الصفحة دي مابتحمّلش firebase.js بنفسها)
