@@ -1,21 +1,22 @@
 // ==========================================
 // 🔬 معمل العلوم المتكاملة (Three.js) — منصة مدار
 // ==========================================
-// المنطق العلمي في lab-engine.js ، وهنا الرسم ثلاثي الأبعاد والتحكم.
+// المنطق العلمي في lab-engine.js ، والرسم والحركات الرياضية هنا.
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { REAGENTS, newState, add, reset, tick, view } from './lab-engine.js?v=4';
+import { G, mouthWorld, pourStance } from './lab-geo.js';
 
-const LAB_VERSION = 'v4';   // رقم الإصدار: يظهر في أعلى المعمل عشان نعرف أي نسخة شغّالة
+const LAB_VERSION = 'v5-geo';   // إصدار المعمل مع المحاكاة الهندسية
 
 const $ = (id) => document.getElementById(id);
 const S = newState();
 const ctl = { heat: 0, light: 0 };
 const isMobile = () => innerWidth < 900;
 const rnd = Math.random;
-let api = null;   // يُملأ بعد تجهيز الـ3D
+let api = null;   
 
 // لون كل زجاجة
 const BOTTLE = { hcl: 0xffe08a, naoh: 0x9fe6ff, phph: 0xff8cc6, na2co3: 0xd8e0ff, cuso4: 0x2f7dff, agno3: 0xe9e9ff, nacl: 0xf4f4f4, ki: 0xf5f0ff, pbno3: 0xf0f0ff };
@@ -208,7 +209,7 @@ function start3D() {
   const vap = new THREE.Points(vg, vm); vap.frustumCulled = false; scene.add(vap);
   const vd = Array.from({ length: NV }, () => ({ a: rnd() * 6.28, r: rnd() * 0.7, h: rnd() * 3.2, s: 0.4 + rnd() * 0.6 }));
 
-  // مصباح الضوء (زاوية الضوء)
+  // مصباح الضوء
   const lampG = new THREE.Group(); scene.add(lampG);
   const lh = new THREE.CylinderGeometry(0.45, 0.28, 0.6, 20); lh.rotateX(Math.PI / 2);
   lampG.add(new THREE.Mesh(lh, new THREE.MeshStandardMaterial({ color: 0x2b3042, metalness: 0.7, roughness: 0.4 })));
@@ -219,32 +220,56 @@ function start3D() {
   }
   placeLamp(0);
 
-  // ---------- الصبّ ----------
+  // ---------- الصب باستخدام الهندسة الرياضية (lab-geo.js) ----------
   let pour = null;
   const stream = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1, 8), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 }));
   stream.visible = false; scene.add(stream);
-  const POUR_POS = new THREE.Vector3(2.1, 5.6, 0), TILT = 1.9, v3 = new THREE.Vector3();
-  const smooth = (x) => x * x * (3 - 2 * x);
+
   function startPour(id) {
     if (pour) return toast('استنى لحد ما الزجاجة تخلص 🙂');
     if (S.doses >= 6) return toast('الكأس ممتلئ، فرّغه الأول 🧹');
     pour = { b: bottles.find((b) => b.id === id), t: 0, added: false };
     stream.material.color.setHex(BOTTLE[id]);
   }
+
   function updatePour(dt) {
     if (!pour) return;
     pour.t += dt; const t = pour.t, b = pour.b;
-    const k = smooth(Math.min(1, t / 0.7)) * (1 - smooth(Math.max(0, Math.min(1, (t - 1.9) / 0.5))));
-    b.g.position.lerpVectors(b.home, POUR_POS, k); b.g.rotation.z = k * TILT;
-    const flowing = t > 0.7 && t < 1.85;
-    if (flowing && !pour.added) { pour.added = true; add(S, b.id); }
+    
+    // حساب مراحل الصب رياضياً بسلاسة
+    const progress = Math.min(1, t / 1.5);
+    const a = G.A_CARRY + (G.A_POUR - G.A_CARRY) * progress;
+    const tilt = G.TILT_POUR * progress;
+    
+    // مركز الكأس في المعمل (x: 0, z: 0) وموضع وقفة الشخصية
+    const stance = pourStance({ x: 0, z: -2 }, { x: 0, z: 0 });
+    const mw = mouthWorld(stance.S, stance.yaw, a, tilt);
+    
+    // تحديث موضع الزجاجة بدقة المليمتر بناءً على المعادلات الرياضية
+    b.g.position.set(mw.x, mw.y - 1.2, mw.z);
+    b.g.rotation.y = stance.yaw;
+    b.g.rotation.z = tilt;
+
+    const flowing = t > 0.6 && t < 1.8;
+    if (flowing && !pour.added) { 
+      pour.added = true; 
+      add(S, b.id); 
+    }
+    
     stream.visible = flowing;
     if (flowing) {
-      b.mouth.getWorldPosition(v3);
-      const top = v3.y, len = Math.max(0.05, top - surface);
-      stream.position.set(v3.x, surface + len / 2, v3.z); stream.scale.set(1, len, 1);
+      const top = mw.y, len = Math.max(0.05, top - surface);
+      stream.position.set(mw.x, surface + len / 2, mw.z); 
+      stream.scale.set(1, len, 1);
     }
-    if (t > 2.45) { b.g.position.copy(b.home); b.g.rotation.z = 0; stream.visible = false; pour = null; }
+    
+    // رجوع الزجاجة لمكانها الأصلي بعد الانتهاء
+    if (t > 2.45) { 
+      b.g.position.copy(b.home); 
+      b.g.rotation.set(0, 0, 0); 
+      stream.visible = false; 
+      pour = null; 
+    }
   }
 
   // ---------- النقر على الزجاجات ----------
@@ -254,7 +279,7 @@ function start3D() {
   dom.addEventListener('pointerup', (e) => {
     if (!down) return;
     const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y), quick = performance.now() - down.t < 450; down = null;
-    if (moved > 8 || !quick) return;   // سحب للدوران مش نقرة
+    if (moved > 8 || !quick) return;   
     const r = dom.getBoundingClientRect();
     ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ndc, camera);
@@ -272,7 +297,7 @@ function start3D() {
   }
   new ResizeObserver(resize).observe(stage); resize();
 
-  // ---------- الحلقة ----------
+  // ---------- الحلقة الأساسية للرسم ----------
   const clock = new THREE.Clock(); let time = 0, hudT = 0, first = true, cellPulse = 0;
   let frameErr = false;
   function frame() { try { frameBody(); } catch (e) { if (!frameErr) { frameErr = true; console.error(e); showFail(e, false); } } }
@@ -318,7 +343,7 @@ function start3D() {
     prc.instanceMatrix.needsUpdate = true;
 
     // البخار
-    vap.visible = v.vapor > 0.02; vm.opacity = v.vapor* 0.55;
+    vap.visible = v.vapor > 0.02; vm.opacity = v.vapor * 0.55;
     if (vap.visible) {
       for (let i = 0; i < NV; i++) {
         const d = vd[i]; d.h += dt * d.s; if (d.h > 3.2) d.h = 0;
@@ -346,7 +371,7 @@ function showFail(e, noWebGL) {
   const n = $('nogl'); n.textContent = '';
   const b = document.createElement('b'), s = document.createElement('span');
   b.textContent = noWebGL ? 'جهازك لا يدعم الرسوم ثلاثية الأبعاد (WebGL)' : 'تعذّر تجهيز المعمل ثلاثي الأبعاد';
-  s.textContent = noWebGL ? 'جرّب متصفح كروم، وتأكد إن تسريع الرسوميات (Hardware acceleration) شغّال.' : 'صوّر الشاشة دي وابعتها للمطوّر. تفاصيل الخطأ:';
+  s.textContent = noWebGL ? 'جرّب متصفح كروم، وتأكد إن تسريع الرسوميات شغّال.' : 'تفاصيل الخطأ:';
   n.append(b, s); const vv = document.createElement('small'); vv.textContent = 'إصدار المعمل: ' + LAB_VERSION; vv.style.opacity = '.5'; n.append(vv);
   if (!noWebGL) { const c = document.createElement('code'); c.textContent = String((e && (e.stack || e.message)) || e).split('\n').slice(0, 3).join(' | ').slice(0, 300); n.appendChild(c); }
   n.hidden = false; hideLoader();
@@ -354,7 +379,6 @@ function showFail(e, noWebGL) {
 { const hud = $('hud'); if (hud) { const c = document.createElement('div'); c.className = 'chip'; c.style.cssText = 'opacity:.55;font-size:.75rem;padding:8px 10px'; c.textContent = LAB_VERSION; hud.appendChild(c); } }
 if (!hasWebGL()) showFail(null, true);
 else { try { api = start3D(); } catch (e) { console.error(e); showFail(e, false); } }
-setTimeout(hideLoader, 10000);   // أمان: لا تعلق شاشة التحميل أبدًا
+setTimeout(hideLoader, 10000);   
 
-// القائمة الجانبية للمنصة (لأن الصفحة دي مابتحمّلش firebase.js بنفسها)
 import('./sidebar.js').catch(() => {});
