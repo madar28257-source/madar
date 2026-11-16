@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>معمل العلوم المتكاملة — MADAR</title>
   <link rel="stylesheet" href="base.css">
-  <link rel="stylesheet" href="css/lab.css?v=5">
+  <link rel="stylesheet" href="css/lab.css?v=6">
   <link rel="manifest" href="manifest.json">
   <script type="importmap">
     { 
@@ -27,7 +27,7 @@
   <div id="rotate-prompt" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#06070b; z-index:20000; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#fff; text-align:center; padding:20px;">
     <div style="font-size: 3.5rem; margin-bottom: 15px;">🎮🧪</div>
     <h2>معمل مدار — نمط الألعاب ثلاثي الأبعاد</h2>
-    <p style="color:#b0bec5; margin: 10px 0 25px 0; max-width: 400px;">استمتع بالتجربة بالمنظور الأفقي وحركة الشخصية الحرة!</p>
+    <p style="color:#b0bec5; margin: 10px 0 25px 0; max-width: 400px;">استمتع التجربة بمنظور الألعاب وحركة الشخصية الحرة!</p>
     <button id="start-lab-btn" style="background:#7c4dff; color:#fff; border:none; padding:14px 35px; border-radius:16px; font-size:1.15rem; font-weight:bold; cursor:pointer; box-shadow: 0 4px 20px rgba(124,77,255,0.5);">
       دخول المعمل والبدء 🚀
     </button>
@@ -41,16 +41,10 @@
         <div class="chip" id="hud-rx">⚗️ اختر مادتين لتبدأ التجربة</div>
       </div>
       
-      <!-- واجهة التحكم الشبيهة بألعاب الباتل رويال (الأنالوج وزر التفاعل) -->
-      <div id="game-controls" style="position: absolute; bottom: 25px; left: 25px; right: 25px; display: flex; justify-content: space-between; align-items: flex-end; pointer-events: none; z-index: 40; user-select: none;">
+      <!-- عصا التحكم (الأنالوج) في مكان منفصل ورايق بعيد عن اللوحة -->
+      <div id="game-controls" style="position: absolute; bottom: 25px; right: 360px; display: flex; gap: 20px; align-items: flex-end; pointer-events: none; z-index: 40; user-select: none;">
         <div id="joystick-zone" style="width: 130px; height: 130px; background: rgba(255, 255, 255, 0.08); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 50%; position: relative; pointer-events: auto; backdrop-filter: blur(5px);">
           <div id="joystick-knob" style="width: 50px; height: 50px; background: #7c4dff; border-radius: 50%; position: absolute; top: 40px; left: 40px; box-shadow: 0 4px 10px rgba(124,77,255,0.5);"></div>
-        </div>
-        <div style="display: flex; gap: 15px; pointer-events: auto;">
-          <button id="action-btn" style="width: 75px; height: 75px; background: linear-gradient(135deg, #ff9800, #f57c00); border: none; border-radius: 50%; color: #fff; font-size: 1rem; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-            <span>🧪</span>
-            <span style="font-size: 0.75rem;">تفاعل</span>
-          </button>
         </div>
       </div>
 
@@ -58,7 +52,7 @@
       <div id="nogl" hidden><b>جهازك لا يدعم الرسوم ثلاثية الأبعاد (WebGL)</b></div>
     </div>
 
-    <!-- لوحة التحكم الجانبية للمواد -->
+    <!-- لوحة التحكم الجانبية للمواد الكيميائية -->
     <aside id="panel">
       <button class="grab" id="grab" aria-label="طي أو فتح اللوحة"></button>
       <div class="tabs" role="tablist">
