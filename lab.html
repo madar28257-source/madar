@@ -8,7 +8,12 @@
   <link rel="stylesheet" href="css/lab.css?v=5">
   <link rel="manifest" href="manifest.json">
   <script type="importmap">
-    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+    { 
+      "imports": { 
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", 
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" 
+      } 
+    }
   </script>
 </head>
 <body>
@@ -16,14 +21,13 @@
   <div class="loading-screen" id="loading-screen">
     <div class="spinner"></div>
     <h2>جاري تجهيز المعمل...</h2>
-    <p>قد يستغرق بضع ثوانٍ حسب سرعة الإنترنت</p>
   </div>
 
-  <!-- شاشة ترحيب وزر بدء اللعبة (لإجبار وضع العرض وتخطي قيود الموبايل) -->
-  <div id="rotate-prompt" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#0b0614; z-index:20000; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#fff; text-align:center; padding:20px;">
+  <!-- شاشة البداية لتجاوز قيود المتصفح وإجبار وضع العرض -->
+  <div id="rotate-prompt" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#06070b; z-index:20000; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#fff; text-align:center; padding:20px;">
     <div style="font-size: 3.5rem; margin-bottom: 15px;">🎮🧪</div>
     <h2>معمل مدار — نمط الألعاب ثلاثي الأبعاد</h2>
-    <p style="color:#b0bec5; margin: 10px 0 25px 0; max-width: 400px; line-height: 1.6;">استمتع بالتجربة الكيميائية بالمنظور الأفقي وحركة الشخصية الحرّة!</p>
+    <p style="color:#b0bec5; margin: 10px 0 25px 0; max-width: 400px;">استمتع بالتجربة بالمنظور الأفقي وحركة الشخصية الحرة!</p>
     <button id="start-lab-btn" style="background:#7c4dff; color:#fff; border:none; padding:14px 35px; border-radius:16px; font-size:1.15rem; font-weight:bold; cursor:pointer; box-shadow: 0 4px 20px rgba(124,77,255,0.5);">
       دخول المعمل والبدء 🚀
     </button>
@@ -31,21 +35,19 @@
 
   <div id="canvas-container">
     <div id="stage">
-      <!-- شريط المعلومات العلوي (HUD) -->
+      <!-- شريط المعلومات العلوي -->
       <div id="hud">
         <div class="chip">🌡️ <b id="hud-temp">25</b>°م</div>
         <div class="chip" id="hud-rx">⚗️ اختر مادتين لتبدأ التجربة</div>
       </div>
       
-      <!-- واجهة التحكم الخاصة بالألعاب (الأنالوج وزر التفاعل) -->
+      <!-- واجهة التحكم الشبيهة بألعاب الباتل رويال (الأنالوج وزر التفاعل) -->
       <div id="game-controls" style="position: absolute; bottom: 25px; left: 25px; right: 25px; display: flex; justify-content: space-between; align-items: flex-end; pointer-events: none; z-index: 40; user-select: none;">
-        <!-- أنالوج الحركة (يسار) -->
         <div id="joystick-zone" style="width: 130px; height: 130px; background: rgba(255, 255, 255, 0.08); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 50%; position: relative; pointer-events: auto; backdrop-filter: blur(5px);">
           <div id="joystick-knob" style="width: 50px; height: 50px; background: #7c4dff; border-radius: 50%; position: absolute; top: 40px; left: 40px; box-shadow: 0 4px 10px rgba(124,77,255,0.5);"></div>
         </div>
-        <!-- زر الأكشن والتفاعل (يمين) -->
         <div style="display: flex; gap: 15px; pointer-events: auto;">
-          <button id="action-btn" style="width: 75px; height: 75px; background: linear-gradient(135deg, #ff9800, #f57c00); border: none; border-radius: 50%; color: #fff; font-size: 1rem; font-weight: bold; box-shadow: 0 6px 20px rgba(255,152,0,0.4); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+          <button id="action-btn" style="width: 75px; height: 75px; background: linear-gradient(135deg, #ff9800, #f57c00); border: none; border-radius: 50%; color: #fff; font-size: 1rem; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;">
             <span>🧪</span>
             <span style="font-size: 0.75rem;">تفاعل</span>
           </button>
@@ -53,10 +55,10 @@
       </div>
 
       <div id="toast" hidden></div>
-      <div id="nogl" hidden><b>جهازك لا يدعم الرسوم ثلاثية الأبعاد (WebGL)</b><span>جرّب متصفحًا آخر أو حدّث المتصفح.</span></div>
+      <div id="nogl" hidden><b>جهازك لا يدعم الرسوم ثلاثية الأبعاد (WebGL)</b></div>
     </div>
 
-    <!-- لوحة التحكم الجانبية / السفلية -->
+    <!-- لوحة التحكم الجانبية للمواد -->
     <aside id="panel">
       <button class="grab" id="grab" aria-label="طي أو فتح اللوحة"></button>
       <div class="tabs" role="tablist">
@@ -66,49 +68,41 @@
       </div>
 
       <section class="pane on" id="pane-mix">
-        <p class="hint">اضغط على مادة (أو على زجاجتها في المعمل) لتُصبّ في الكأس. جرّب مادتين معًا!</p>
+        <p class="hint">اضغط على مادة (أو على زجاجتها في المعمل) لتُصبّ في الكأس.</p>
         <div id="reagents" class="reagents"></div>
         <button id="btn-reset" class="btn-reset">🧹 تفريغ الكأس</button>
       </section>
 
       <section class="pane" id="pane-ctl">
         <label class="ctl"><span>🔥 قوة الموقد <b id="v-heat">0٪</b></span><input id="heat" type="range" min="0" max="100" value="0"></label>
-        <label class="ctl"><span>💡 زاوية الضوء عن الرأسي <b id="v-light">0°</b></span><input id="light" type="range" min="0" max="90" value="0"></label>
+        <label class="ctl"><span>💡 زاوية الضوء <b id="v-light">0°</b></span><input id="light" type="range" min="0" max="90" value="0"></label>
         <div class="gauge"><small>تقدّم التفاعل</small><div class="bar"><i id="g-prog"></i></div></div>
-        <div class="gauge"><small>🦠 نشاط الخلية الحية (ورا الموقد) <em id="g-cell-t"></em></small><div class="bar cell"><i id="g-cell"></i></div></div>
       </section>
 
       <section class="pane" id="pane-res">
-        <p id="res-empty" class="hint">لسه ما حصلش تفاعل. اخلط مادتين وهتظهر هنا النتيجة العلمية.</p>
+        <p id="res-empty" class="hint">لسه ما حصلش تفاعل.</p>
         <div id="res-box" hidden>
           <h3 id="res-name"></h3>
           <div id="res-eq" dir="ltr"></div>
           <div id="res-obs" class="obs"></div>
           <p id="res-why"></p>
-          <p id="res-live" class="live"></p>
         </div>
       </section>
     </aside>
   </div>
 
-  <script type="module" src="js/lab.js?v=7"></script>
+  <script type="module" src="js/lab.js?v=9"></script>
   <script>
-    // تفعيل قفل الشاشة بالعرض عند الضغط على زر البدء
     document.getElementById('start-lab-btn').addEventListener('click', () => {
       if (screen.orientation && screen.orientation.lock) {
         screen.orientation.lock('landscape').catch(err => console.log(err));
       }
       document.getElementById('rotate-prompt').style.display = 'none';
     });
-
-    // ضمان إخفاء شاشة التحميل
     window.addEventListener('load', () => {
       setTimeout(() => {
         const loader = document.getElementById('loading-screen');
-        if (loader) {
-          loader.classList.add('hidden');
-          loader.style.display = 'none';
-        }
+        if (loader) { loader.classList.add('hidden'); loader.style.display = 'none'; }
       }, 1500);
     });
   </script>
