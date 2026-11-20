@@ -108,7 +108,7 @@ function start3D() {
   const gltfLoader = new GLTFLoader();
   gltfLoader.setDRACOLoader(dracoLoader);
 
-  gltfLoader.load('models/character.glb', (gltf) => {
+  gltfLoader.load('models/character.glb?v=2', (gltf) => {
     characterModel = gltf.scene;
     characterModel.scale.set(1, 1, 1);
     characterModel.position.set(playerState.x, 0, playerState.z);
@@ -120,7 +120,10 @@ function start3D() {
       mixer.clipAction(gltf.animations[0]).play();
     }
     hideLoader();
-  }, undefined, (err) => {
+  }, (xhr) => {
+    const h = ($('loading-screen') || document).querySelector('h2');
+    if (h && xhr.total) h.textContent = 'جاري تحميل الشخصية ' + Math.round((xhr.loaded / xhr.total) * 100) + '٪';
+  }, (err) => {
     console.error('خطأ في تحميل نموذج الشخصية:', err);
     hideLoader();
     toast('خطأ في تحميل ملف الشخصية character.glb');
