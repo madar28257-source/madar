@@ -2,10 +2,10 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>معمل العلوم المتكاملة — MADAR</title>
   <link rel="stylesheet" href="base.css">
-  <link rel="stylesheet" href="css/lab.css?v=6">
+  <link rel="stylesheet" href="css/lab.css?v=7">
   <link rel="manifest" href="manifest.json">
   <script type="importmap">
     { 
@@ -27,26 +27,35 @@
   <div id="rotate-prompt" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#06070b; z-index:20000; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#fff; text-align:center; padding:20px;">
     <div style="font-size: 3.5rem; margin-bottom: 15px;">🎮🧪</div>
     <h2>معمل مدار — نمط الألعاب ثلاثي الأبعاد</h2>
-    <p style="color:#b0bec5; margin: 10px 0 25px 0; max-width: 400px;">استمتع التجربة بمنظور الألعاب وحركة الشخصية الحرة!</p>
+    <p style="color:#b0bec5; margin: 10px 0 25px 0; max-width: 400px;">استمتع بالتجربة بالمنظور الأفقي وحركة الشخصية الحرة!</p>
     <button id="start-lab-btn" style="background:#7c4dff; color:#fff; border:none; padding:14px 35px; border-radius:16px; font-size:1.15rem; font-weight:bold; cursor:pointer; box-shadow: 0 4px 20px rgba(124,77,255,0.5);">
       دخول المعمل والبدء 🚀
     </button>
   </div>
 
-  <div id="portrait-warn" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:19000; background:rgba(6,7,11,.97); color:#fff; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:8px;"><div style="font-size:3.2rem">📱↻</div><b>لف الموبايل بالعرض</b><span style="color:#9ca3af">المعمل بيشتغل بالوضع العرضي</span></div>
+  <div id="portrait-warn" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:19000; background:rgba(6,7,11,.97); color:#fff; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:8px;">
+    <div style="font-size:3.2rem">📱↻</div>
+    <b>لف الموبايل بالعرض</b>
+    <span style="color:#9ca3af">المعمل بيشتغل بالوضع العرضي</span>
+  </div>
 
   <div id="canvas-container">
-    <div id="stage">
+    <div id="stage" style="touch-action: none; user-select: none; -webkit-user-select: none;">
       <!-- شريط المعلومات العلوي -->
       <div id="hud">
         <div class="chip">🌡️ <b id="hud-temp">25</b>°م</div>
         <div class="chip" id="hud-rx">⚗️ اختر مادتين لتبدأ التجربة</div>
       </div>
+
+      <!-- زر سريع لفتح/إخفاء لوحة المواد حتى لا تحجب الشاشة -->
+      <button id="toggle-panel-btn" type="button" style="position: absolute; top: 20px; left: 20px; z-index: 60; background: rgba(15, 23, 42, 0.85); color: #fff; border: 1px solid rgba(124, 77, 255, 0.5); padding: 9px 16px; border-radius: 12px; font-weight: bold; cursor: pointer; backdrop-filter: blur(8px);">
+        🧪 المواد
+      </button>
       
-      <!-- عصا التحكم (الأنالوج) في مكان منفصل ورايق بعيد عن اللوحة -->
-      <div id="game-controls" style="position: absolute; bottom: 25px; right: 360px; display: flex; gap: 20px; align-items: flex-end; pointer-events: none; z-index: 40; user-select: none;">
-        <div id="joystick-zone" style="width: 130px; height: 130px; background: rgba(255, 255, 255, 0.08); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 50%; position: relative; pointer-events: auto; backdrop-filter: blur(5px);">
-          <div id="joystick-knob" style="width: 50px; height: 50px; background: #7c4dff; border-radius: 50%; position: absolute; top: 40px; left: 40px; box-shadow: 0 4px 10px rgba(124,77,255,0.5);"></div>
+      <!-- عصا التحكم (الأنالوج) على الشمال مع عزل اللمس لعدم تعارضه مع دوران الكاميرا -->
+      <div id="game-controls" style="position: absolute; bottom: 26px; left: 28px; display: flex; gap: 16px; align-items: flex-end; pointer-events: none; z-index: 40; user-select: none; -webkit-user-select: none; touch-action: none;">
+        <div id="joystick-zone" style="width: 124px; height: 124px; background: rgba(255, 255, 255, 0.08); border: 2px solid rgba(255, 255, 255, 0.22); border-radius: 50%; position: relative; pointer-events: auto; backdrop-filter: blur(5px); touch-action: none;">
+          <div id="joystick-knob" style="width: 48px; height: 48px; background: #7c4dff; border-radius: 50%; position: absolute; top: 38px; left: 38px; box-shadow: 0 4px 12px rgba(124,77,255,0.55); pointer-events: none;"></div>
         </div>
       </div>
 
@@ -55,18 +64,18 @@
     </div>
 
     <!-- لوحة التحكم الجانبية للمواد الكيميائية -->
-    <aside id="panel">
-      <button class="grab" id="grab" aria-label="طي أو فتح اللوحة"></button>
+    <aside id="panel" class="collapsed">
+      <button class="grab" id="grab" type="button" aria-label="طي أو فتح اللوحة">›</button>
       <div class="tabs" role="tablist">
-        <button class="tab on" data-tab="mix">🧪 المواد</button>
-        <button class="tab" data-tab="ctl">🔥 التحكم</button>
-        <button class="tab" data-tab="res">📋 النتيجة<i id="dot" hidden></i></button>
+        <button class="tab on" type="button" data-tab="mix">🧪 المواد</button>
+        <button class="tab" type="button" data-tab="ctl">🔥 التحكم</button>
+        <button class="tab" type="button" data-tab="res">📋 النتيجة<i id="dot" hidden></i></button>
       </div>
 
       <section class="pane on" id="pane-mix">
         <p class="hint">اضغط على مادة (أو على زجاجتها في المعمل) لتُصبّ في الكأس.</p>
         <div id="reagents" class="reagents"></div>
-        <button id="btn-reset" class="btn-reset">🧹 تفريغ الكأس</button>
+        <button id="btn-reset" class="btn-reset" type="button">🧹 تفريغ الكأس</button>
       </section>
 
       <section class="pane" id="pane-ctl">
@@ -87,13 +96,37 @@
     </aside>
   </div>
 
-  <script type="module" src="js/lab.js?v=10"></script>
+  <script type="module" src="js/lab.js?v=11"></script>
   <script>
-    // دخول المعمل: ملء الشاشة أولًا (شرط لقفل الاتجاه على أندرويد)، ثم قفل الوضع العرضي
+    // فتح وغلق لوحة المواد بسهولة دون حجب الشاشة
+    const panelEl = document.getElementById('panel');
+    const grabBtn = document.getElementById('grab');
+    const togglePanelBtn = document.getElementById('toggle-panel-btn');
+    function togglePanel(forceState) {
+      if (!panelEl) return;
+      const nextCollapsed = typeof forceState === 'boolean' ? forceState : !panelEl.classList.contains('collapsed');
+      panelEl.classList.toggle('collapsed', nextCollapsed);
+      if (grabBtn) grabBtn.textContent = nextCollapsed ? '›' : '‹';
+    }
+    grabBtn?.addEventListener('click', () => togglePanel());
+    togglePanelBtn?.addEventListener('click', () => togglePanel());
+
+    // تبديل التبويبات داخل اللوحة
+    document.querySelectorAll('#panel .tab[data-tab]').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const target = tab.getAttribute('data-tab');
+        document.querySelectorAll('#panel .tab').forEach((t) => t.classList.toggle('on', t === tab));
+        document.querySelectorAll('#panel .pane').forEach((p) => p.classList.toggle('on', p.id === `pane-${target}`));
+      });
+    });
+
+    // دخول المعمل: ملء الشاشة أولًا، ثم قفل الوضع العرضي
     const gate = document.getElementById('rotate-prompt');
     const warn = document.getElementById('portrait-warn');
     let entered = false;
-    function checkPortrait() { if (warn) warn.style.display = (entered && window.innerHeight > window.innerWidth) ? 'flex' : 'none'; }
+    function checkPortrait() {
+      if (warn) warn.style.display = (entered && window.innerHeight > window.innerWidth) ? 'flex' : 'none';
+    }
     document.getElementById('start-lab-btn').addEventListener('click', async () => {
       entered = true;
       const root = document.documentElement;
@@ -107,7 +140,7 @@
       gate.style.display = 'none';
       checkPortrait();
     });
-    // لو خرج من ملء الشاشة (زر الرجوع): نفك قفل الاتجاه ونرجّع بوابة الدخول
+
     document.addEventListener('fullscreenchange', () => {
       if (!document.fullscreenElement && entered) {
         entered = false;
@@ -118,9 +151,12 @@
     });
     window.addEventListener('resize', checkPortrait);
     window.addEventListener('orientationchange', checkPortrait);
-    // شاشة التحميل بتتقفل لما الشخصية تخلص تحميل (lab.js). ده احتياطي لو حصل عطل
+
     window.addEventListener('load', () => {
-      setTimeout(() => { const l = document.getElementById('loading-screen'); if (l) { l.classList.add('hidden'); l.style.display = 'none'; } }, 20000);
+      setTimeout(() => {
+        const l = document.getElementById('loading-screen');
+        if (l) { l.classList.add('hidden'); l.style.display = 'none'; }
+      }, 20000);
     });
   </script>
 </body>
