@@ -1,5 +1,5 @@
 // ==========================================
-// 🔬 معمل مدار ثلاثي الأبعاد — تحكم لمس متعدد وحركة أقدام واقعية (v11-MultiTouch)
+// 🔬 معمل مدار ثلاثي الأبعاد — تحكم لمس متعدد وحركة أقدام واقعية + تايكون
 // ==========================================
 
 import * as THREE from 'three';
@@ -11,6 +11,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 
 import { REAGENTS, newState, add, reset, tick, view } from './lab-engine.js?v=4';
 import { G, mouthWorld, pourStance } from './lab-geo.js';
+import { createTycoonSystem } from './tycoon.js';
 
 const $ = (id) => document.getElementById(id);
 const S = newState();
@@ -120,9 +121,9 @@ function start3D() {
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0b0f19);
-  scene.fog = new THREE.FogExp2(0x0b0f19, 0.015);
+  scene.fog = new THREE.FogExp2(0x0b0f19, 0.014);
 
-  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 140);
 
   // إضاءة المعمل
   scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 0.85));
@@ -162,7 +163,7 @@ function start3D() {
 
   // --- أرضية المعمل والطاولة ---
   mesh(
-    new THREE.PlaneGeometry(40, 40),
+    new THREE.PlaneGeometry(60, 60),
     new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.8 }),
     0,
     0,
@@ -203,14 +204,49 @@ function start3D() {
   scene.add(liquid);
   let level = 0;
 
-  // --- تحميل الشخصية الحقيقية (الولد الأنمي) ---
-  const playerState = { x: 0, z: 2.0, angle: Math.PI, speed: 4.2 };
+  // --- تحميل الشخصية الحقيقية (الولد الأنمي) + البالطو الأبيض ---
+  const playerState = { x: 0, y: 0, z: 2.0, angle: Math.PI, speed: 4.5 };
   let characterModel = null;
   let mixer = null;
   let walkAction = null;
   let idleAction = null;
   let limbRig = null;
   let walkPhase = 0;
+  let coatEquipped = false;
+
+  const labCoatMesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.35, 0.48, 0.96, 18),
+    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.42 })
+  );
+  labCoatMesh.position.set(0, 0.85, 0);
+  labCoatMesh.visible = false;
+  scene.add(labCoatMesh);
+
+  function syncCoatVisual() {
+    labCoatMesh.visible = Boolean(coatEquipped);
+    if (characterModel && labCoatMesh.parent !== characterModel) {
+      characterModel.add(labCoatMesh);
+      labCoatMesh.position.set(0, 0.85, 0);
+    } else if (!characterModel && labCoatMesh.parent !== scene) {
+      scene.add(labCoatMesh);
+      labCoatMesh.position.set(playerState.x, playerState.y + 0.85, playerState.z);
+    }
+  }
+
+  // تشغيل نظام التايكون وربطه بالمعمل
+  const tycoon = createTycoonSystem({
+    scene,
+    getPlayerPos: () =>
+      characterModel ? characterModel.position : new THREE.Vector3(playerState.x, playerState.y, playerState.z),
+    onToast: (msg) => toast(msg),
+    onCoatChange: (equipped) => {
+      coatEquipped = Boolean(equipped);
+      syncCoatVisual();
+    },
+    onPartChange: (partData) => {
+      toast(`المرحلة الحالية: ${partData.name}`);
+    },
+  });
 
   const dracoLoader = new DRACOLoader();
   dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
@@ -222,12 +258,13 @@ function start3D() {
     (gltf) => {
       characterModel = gltf.scene;
       characterModel.scale.set(1, 1, 1);
-      characterModel.position.set(playerState.x, 0, playerState.z);
+      characterModel.position.set(playerState.x, playerState.y, playerState.z);
       characterModel.rotation.y = playerState.angle;
       characterModel.traverse((child) => {
         if (child.isMesh) child.castShadow = true;
       });
       scene.add(characterModel);
+      syncCoatVisual();
       limbRig = collectLimbRig(characterModel);
 
       if (gltf.animations && gltf.animations.length) {
@@ -447,9 +484,19 @@ function start3D() {
       playerState.angle += diff * Math.min(1, dt * 14);
     }
 
+    // ارتفاع الأدوار والسلالم من نظام التايكون
+    const floorHeightY = tycoon.getGroundHeightAt(playerState.x, playerState.z, playerState.y);
+    if (playerState.y < floorHeightY) {
+      playerState.y = floorHeightY;
+    } else if (playerState.y > floorHeightY) {
+      playerState.y = Math.max(floorHeightY, playerState.y - 14 * dt);
+    }
+
     if (characterModel) {
-      characterModel.position.set(playerState.x, 0, playerState.z);
+      characterModel.position.set(playerState.x, playerState.y, playerState.z);
       characterModel.rotation.y = playerState.angle;
+    } else if (coatEquipped) {
+      labCoatMesh.position.set(playerState.x, playerState.y + 0.85, playerState.z);
     }
 
     // تحديث أنيميشن الموديل وحركة الرجلين
@@ -465,6 +512,9 @@ function start3D() {
       mixer.update(dt);
     }
     updateLimbWalk(dt, isMoving ? stickMag : 0);
+
+    // تحديث التايكون والتصنيف والآلات والبوابات
+    tycoon.update(dt);
 
     // حركة الصب في الكأس
     if (pour) {
@@ -496,16 +546,16 @@ function start3D() {
       }
     }
 
-    // الكاميرا ورا الشخصية بناءً على زاوية السحب
+    // الكاميرا ورا الشخصية بناءً على زاوية السحب وارتفاع الدور
     const dist = 3.6;
     const targetCamX = playerState.x + Math.sin(camYaw) * dist;
     const targetCamZ = playerState.z + Math.cos(camYaw) * dist;
-    const targetCamY = Math.max(0.8, 1.4 + Math.sin(camPitch) * dist);
+    const targetCamY = Math.max(0.8, playerState.y + 1.4 + Math.sin(camPitch) * dist);
 
     camera.position.x += (targetCamX - camera.position.x) * Math.min(1, dt * 12);
     camera.position.z += (targetCamZ - camera.position.z) * Math.min(1, dt * 12);
     camera.position.y += (targetCamY - camera.position.y) * Math.min(1, dt * 12);
-    camera.lookAt(playerState.x, 1.2, playerState.z);
+    camera.lookAt(playerState.x, playerState.y + 1.2, playerState.z);
 
     tick(S, dt, ctl);
     const v = view(S);
