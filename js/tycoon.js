@@ -1,5 +1,5 @@
 // ==========================================
-// 🏭 نظام التايكون الرئيسي — أدوار، آلات، تصادم، لافتات، لمبة، تصدير، وبالطو
+// 🏭 نظام التايكون الرئيسي — حفظ تلقائي + أدوار + آلات + تصادم + لافتات + لمبة
 // ==========================================
 
 import * as THREE from 'three';
@@ -11,6 +11,7 @@ const BELT_BASE_X = 3.2;
 const BELT_BASE_Z = -1.2;
 const BELT_LENGTH = 5.4;
 const BELT_HALF_LEN = BELT_LENGTH / 2;
+const SAVE_STORAGE_KEY = 'madar_tycoon_save_v1';
 
 function createMaterialGeometry(shape, scale = 1) {
   let geo;
@@ -58,6 +59,7 @@ function makeTextSprite(text, bgColor = 'rgba(15, 23, 42, 0.88)', textColor = '#
 export function createTycoonSystem({
   scene,
   getPlayerPos,
+  setPlayerPos,
   onToast,
   onCoatChange,
   onPartChange,
@@ -69,11 +71,13 @@ export function createTycoonSystem({
   let incomePerSec = 0;
   let buyCooldown = 0;
   let coatToggleCooldown = 0;
+  let saveTimer = 0;
 
   let coatOwned = false;
   let coatEquipped = false;
   let rebirthPortalActive = false;
   let rebirthTriggered = false;
+  let isRestoringSave = false;
 
   const stageEl = document.getElementById('stage') || document.body;
 
@@ -81,7 +85,7 @@ export function createTycoonSystem({
   hudEl.id = 'tycoon-hud';
   hudEl.style.cssText = `
     position: absolute;
-    top: 52px;
+    top: 16px;
     right: 16px;
     z-index: 35;
     pointer-events: none;
@@ -140,6 +144,33 @@ export function createTycoonSystem({
     if (partBadge) partBadge.textContent = `P${part.partNumber}`;
     if (moneyText) moneyText.textContent = formatMoney(money);
     if (rateText) rateText.textContent = `(+${formatMoney(incomePerSec)}/ث)`;
+  }
+
+  function saveProgress() {
+    try {
+      const pPos = getPlayerPos?.();
+      const payload = {
+        partIndex,
+        money,
+        coatOwned,
+        coatEquipped,
+        floorSteps: floorRuntime.map((f) => f.stepIndex),
+        playerPos: pPos ? { x: pPos.x, y: pPos.y, z: pPos.z } : null,
+      };
+      localStorage.setItem(SAVE_STORAGE_KEY, JSON.stringify(payload));
+    } catch (_) {
+      // تجاهل أخطاء التخزين إن وُجدت
+    }
+  }
+
+  function loadSavedProgress() {
+    try {
+      const raw = localStorage.getItem(SAVE_STORAGE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (_) {
+      return null;
+    }
   }
 
   function showNeedMoney(cost, label) {
@@ -212,6 +243,7 @@ export function createTycoonSystem({
     if (!coatOwned) return;
     coatEquipped = Boolean(equipped);
     onCoatChange?.(coatEquipped);
+    saveProgress();
   }
 
   const rebirthGroup = new THREE.Group();
@@ -390,7 +422,6 @@ export function createTycoonSystem({
       colliders.push(entry.box);
     }
 
-    // شكل لمبة معمل حقيقية معلّقة
     const lightGroup = new THREE.Group();
     lightGroup.visible = false;
 
@@ -570,7 +601,9 @@ export function createTycoonSystem({
         onBuy: () => {
           mEntry.unlocked = true;
           mEntry.mesh.visible = true;
-          onToast?.(`تم بناء ${mEntry.data.name} (×${mEntry.data.mult})`);
+          if (!isRestoringSave) {
+            onToast?.(`تم بناء ${mEntry.data.name} (×${mEntry.data.mult})`);
+          }
         },
       });
     }
@@ -583,7 +616,7 @@ export function createTycoonSystem({
       color: 0xeab308,
       onBuy: () => {
         lightGroup.visible = true;
-        onToast?.('تم تركيب لمبة المعمل!');
+        if (!isRestoringSave) onToast?.('تم تركيب لمبة المعمل!');
       },
     });
 
@@ -595,7 +628,7 @@ export function createTycoonSystem({
       color: 0xf59e0b,
       onBuy: () => {
         cratesGroup.visible = true;
-        onToast?.('تم إضافة صناديق التخزين!');
+        if (!isRestoringSave) onToast?.('تم إضافة صناديق التخزين!');
       },
     });
 
@@ -607,7 +640,7 @@ export function createTycoonSystem({
       color: 0x0284c7,
       onBuy: () => {
         shapesGroup.visible = true;
-        onToast?.('تم إضافة المجسمات المعملية!');
+        if (!isRestoringSave) onToast?.('تم إضافة المجسمات المعملية!');
       },
     });
 
@@ -619,7 +652,7 @@ export function createTycoonSystem({
       color: 0x64748b,
       onBuy: () => {
         wallGroup.visible = true;
-        onToast?.('تم بناء سور الدور!');
+        if (!isRestoringSave) onToast?.('تم بناء سور الدور!');
       },
     });
 
@@ -638,7 +671,9 @@ export function createTycoonSystem({
             coatRedPadGroup.position.copy(coatRedPadPos);
             coatRedPadGroup.visible = true;
           }
-          onToast?.('لبست البالطو الأبيض! اقف على المربع الأحمر لخلعه أو لبسه');
+          if (!isRestoringSave) {
+            onToast?.('لبست البالطو الأبيض! اقف على المربع الأحمر لخلعه أو لبسه');
+          }
         },
       });
     }
@@ -652,7 +687,7 @@ export function createTycoonSystem({
         color: 0x475569,
         onBuy: () => {
           ensureRoadBuilt();
-          onToast?.('تم بناء الشارع الخارجي للتصدير!');
+          if (!isRestoringSave) onToast?.('تم بناء الشارع الخارجي للتصدير!');
         },
       });
 
@@ -664,7 +699,7 @@ export function createTycoonSystem({
         color: 0x16a34a,
         onBuy: () => {
           ensureGreeneryBuilt();
-          onToast?.('تمت زراعة المساحة الخارجية والأشجار!');
+          if (!isRestoringSave) onToast?.('تمت زراعة المساحة الخارجية والأشجار!');
         },
       });
 
@@ -677,7 +712,7 @@ export function createTycoonSystem({
         onBuy: () => {
           ensureRoadBuilt();
           ensureExportTruckBuilt();
-          onToast?.('عربية التصدير جاهزة لتحميل الشحنات وتصديرها للخارج!');
+          if (!isRestoringSave) onToast?.('عربية التصدير جاهزة لتحميل الشحنات وتصديرها للخارج!');
         },
       });
     }
@@ -691,7 +726,7 @@ export function createTycoonSystem({
         color: 0xeab308,
         onBuy: () => {
           trophyMesh.visible = true;
-          onToast?.('مبروك! قفلت الدور الخامس بنجاح!');
+          if (!isRestoringSave) onToast?.('مبروك! قفلت الدور الخامس بنجاح!');
         },
       });
     }
@@ -706,7 +741,7 @@ export function createTycoonSystem({
         onBuy: () => {
           stairsGroup.visible = true;
           activateFloor(floorIdx + 1);
-          onToast?.(`تم فتح سلم الدور ${floorIdx + 2}!`);
+          if (!isRestoringSave) onToast?.(`تم فتح سلم الدور ${floorIdx + 2}!`);
         },
       });
     }
@@ -723,6 +758,8 @@ export function createTycoonSystem({
       completed: false,
       stairPos,
       stairsReady: () => Boolean(stairsGroup?.visible),
+      coatStandGroup,
+      coatRedPadPos,
     };
   }
 
@@ -812,11 +849,13 @@ export function createTycoonSystem({
     if (allDone && !rebirthPortalActive) {
       rebirthPortalActive = true;
       rebirthGroup.visible = true;
-      onToast?.('اكتمل بناء كل الأدوار! ادخل البوابة في المنتصف للانتقال للـ Part التالي');
+      if (!isRestoringSave) {
+        onToast?.('اكتمل بناء كل الأدوار! ادخل البوابة في المنتصف للانتقال للـ Part التالي');
+      }
     }
   }
 
-  function loadPart(newPartIdx) {
+  function loadPart(newPartIdx, savedFloorSteps = null) {
     clearWorld();
     partIndex = Math.max(0, Math.min(PARTS_DATA.length - 1, newPartIdx));
     const partData = getCurrentPart();
@@ -824,7 +863,32 @@ export function createTycoonSystem({
     for (let i = 0; i < partData.floors.length; i++) {
       floorRuntime.push(buildFloorStructure(partData.floors[i], i));
     }
-    activateFloor(0);
+
+    if (Array.isArray(savedFloorSteps)) {
+      isRestoringSave = true;
+      for (let i = 0; i < floorRuntime.length; i++) {
+        const fRuntime = floorRuntime[i];
+        const targetSteps = Math.max(0, Math.min(fRuntime.steps.length, Number(savedFloorSteps[i]) || 0));
+        for (let s = 0; s < targetSteps; s++) {
+          fRuntime.steps[s].onBuy();
+          fRuntime.stepIndex += 1;
+        }
+        if (fRuntime.stepIndex >= fRuntime.steps.length) {
+          fRuntime.completed = true;
+        }
+      }
+      isRestoringSave = false;
+
+      // تفعيل أول دور غير مكتمل
+      const nextUnfinished = floorRuntime.findIndex((f) => !f.completed);
+      if (nextUnfinished >= 0) {
+        activateFloor(nextUnfinished);
+      }
+      checkAllFloorsCompleted();
+    } else {
+      activateFloor(0);
+    }
+
     refreshHud();
     onPartChange?.(partData);
   }
@@ -839,6 +903,8 @@ export function createTycoonSystem({
       recentEarned = 0;
       incomePerSec = 0;
       loadPart(nextIdx);
+      setPlayerPos?.(0, 0, 2.2);
+      saveProgress();
       onToast?.(`انتقلت إلى ${PARTS_DATA[nextIdx].name}! صعوبة ومواد جديدة`);
     } else {
       onToast?.('أنت الآن في قمة Part 3 — أنهيت كل المراحل بنجاح!');
@@ -1007,6 +1073,7 @@ export function createTycoonSystem({
           step.onBuy();
           setNextPadForFloor(fRuntime);
           refreshHud();
+          saveProgress();
         } else {
           showNeedMoney(step.cost, step.label);
         }
@@ -1108,6 +1175,12 @@ export function createTycoonSystem({
       innerCore.rotation.z -= 2.4 * safeDt;
     }
 
+    saveTimer += safeDt;
+    if (saveTimer >= 2.0) {
+      saveTimer = 0;
+      saveProgress();
+    }
+
     refreshHud();
     leaderboard.update(safeDt, money, getCurrentPart().partNumber);
   }
@@ -1115,14 +1188,41 @@ export function createTycoonSystem({
   function addMoney(amount) {
     money += Number(amount) || 0;
     refreshHud();
+    saveProgress();
   }
 
-  loadPart(0);
+  // استرجاع التسجيل المحفوظ إن وُجد
+  const saved = loadSavedProgress();
+  if (saved) {
+    money = Number(saved.money) || 0;
+    loadPart(Number(saved.partIndex) || 0, saved.floorSteps);
+    if (saved.coatOwned) {
+      coatOwned = true;
+      coatEquipped = Boolean(saved.coatEquipped);
+      onCoatChange?.(coatEquipped);
+      const thirdFloor = floorRuntime[2];
+      if (thirdFloor?.coatStandGroup) thirdFloor.coatStandGroup.visible = true;
+      if (thirdFloor?.coatRedPadPos) {
+        coatRedPadGroup.position.copy(thirdFloor.coatRedPadPos);
+        coatRedPadGroup.visible = true;
+      }
+    }
+    if (saved.playerPos) {
+      setPlayerPos?.(
+        Number(saved.playerPos.x) || 0,
+        Number(saved.playerPos.y) || 0,
+        Number(saved.playerPos.z) || 2.2
+      );
+    }
+  } else {
+    loadPart(0);
+  }
 
   return {
     update,
     getGroundHeightAt,
     resolveHorizontalCollisions,
+    saveProgress,
     getMoney: () => money,
     getPartNumber: () => getCurrentPart().partNumber,
     hasLabCoat: () => coatEquipped,
