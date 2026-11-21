@@ -1,5 +1,5 @@
 // ==========================================
-// 🔬 معمل مدار ثلاثي الأبعاد — نهار وشمس وسحاب + تصادم + حركة مشي + تايكون
+// 🔬 معمل مدار ثلاثي الأبعاد — نهار وشمس وسحاب + حفظ تلقائي + مشي طبيعي
 // ==========================================
 
 import * as THREE from 'three';
@@ -12,15 +12,66 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { createTycoonSystem } from './tycoon.js';
 
 const $ = (id) => document.getElementById(id);
-const ctl = { heat: 0, light: 0 };
 
-// إزالة قايمة المواد الجانبية وأدوات الصب القديمة عشان الواجهة تبقى مخصصة للتايكون
-const reagentsPanel = $('reagents')?.closest('aside, section, .panel, .sidebar, .drawer') || $('reagents')?.parentElement;
-if (reagentsPanel && reagentsPanel.id !== 'stage') {
-  reagentsPanel.style.display = 'none';
+// إخفاء قايمة المواد والأدوات القديمة بالكامل عشان الشاشة تبقى للتايكون فقط
+function cleanupLegacyLabUI() {
+  const hiddenIds = [
+    'reagents',
+    'btn-reset',
+    'heat',
+    'light',
+    'v-heat',
+    'v-light',
+    'hud-temp',
+  ];
+  for (const id of hiddenIds) {
+    const el = $(id);
+    if (el) el.style.display = 'none';
+  }
+
+  const legacySelectors = [
+    '.panel',
+    '.sidebar',
+    '.drawer',
+    '.controls-panel',
+    '.lab-panel',
+    '[data-reagents]',
+  ];
+  for (const sel of legacySelectors) {
+    document.querySelectorAll(sel).forEach((el) => {
+      if (!el.closest('#tycoon-hud') && !el.closest('#madar-leaderboard') && !el.closest('#joystick-zone')) {
+        el.style.display = 'none';
+      }
+    });
+  }
+
+  // إخفاء أي شريط علوي قديم يعرض حرارة أو "اختر مادتين لتبدأ التجربة"
+  document.querySelectorAll('header, nav, .top-bar, .hud-top, .status-bar, button, div').forEach((el) => {
+    if (el === document.body || el === document.documentElement || el.id === 'stage') return;
+    if (
+      el.closest('#tycoon-hud') ||
+      el.closest('#madar-leaderboard') ||
+      el.closest('#joystick-zone') ||
+      el.closest('#tycoon-pad-prompt') ||
+      el.closest('#toast') ||
+      el.closest('#loading-screen')
+    ) {
+      return;
+    }
+    const txt = (el.textContent || '').trim();
+    if (
+      txt.includes('اختر مادتين لتبدأ التجربة') ||
+      txt.includes('قوة الموقد') ||
+      txt.includes('زاوية الضوء') ||
+      txt.includes('تقدم التفاعل')
+    ) {
+      const target = el.closest('aside, section, .drawer, .panel, .sidebar') || el;
+      target.style.display = 'none';
+    }
+  });
 }
-if ($('reagents')) $('reagents').style.display = 'none';
-if ($('btn-reset')) $('btn-reset').style.display = 'none';
+
+cleanupLegacyLabUI();
 
 let toastTimer;
 function toast(msg) {
@@ -33,15 +84,6 @@ function toast(msg) {
     t.hidden = true;
   }, 2600);
 }
-
-$('heat')?.addEventListener('input', (e) => {
-  ctl.heat = e.target.value / 100;
-  if ($('v-heat')) $('v-heat').textContent = e.target.value + '٪';
-});
-$('light')?.addEventListener('input', (e) => {
-  ctl.light = +e.target.value;
-  if ($('v-light')) $('v-light').textContent = e.target.value + '°';
-});
 
 function hideLoader() {
   const loader = $('loading-screen');
@@ -61,41 +103,14 @@ function collectLimbRig(root) {
   root.traverse((obj) => {
     if (!obj.isBone && !obj.name) return;
     const name = (obj.name || '').toLowerCase();
-    const isLeft =
-      name.includes('left') ||
-      name.includes('_l') ||
-      name.includes('.l') ||
-      name.startsWith('l_') ||
-      name.includes('lef');
-    const isRight =
-      name.includes('right') ||
-      name.includes('_r') ||
-      name.includes('.r') ||
-      name.startsWith('r_') ||
-      name.includes('rig');
+    const isLeft = name.includes('left') || name.includes('_l') || name.includes('.l') || name.startsWith('l_');
+    const isRight = name.includes('right') || name.includes('_r') || name.includes('.r') || name.startsWith('r_');
 
-    if (
-      name.includes('shin') ||
-      name.includes('calf') ||
-      name.includes('lowerleg') ||
-      name.includes('leg_lower') ||
-      name.includes('foot') ||
-      name.includes('toe')
-    ) {
+    if (name.includes('shin') || name.includes('calf') || name.includes('lowerleg') || name.includes('leg_lower')) {
       lowerLegs.push({ bone: obj, baseX: obj.rotation.x });
-    } else if (
-      name.includes('thigh') ||
-      name.includes('upleg') ||
-      name.includes('upperleg') ||
-      name.includes('hip') ||
-      name.includes('leg')
-    ) {
+    } else if (name.includes('thigh') || name.includes('upleg') || name.includes('upperleg') || name.includes('leg')) {
       if (isLeft) leftLegs.push({ bone: obj, baseX: obj.rotation.x });
       else if (isRight) rightLegs.push({ bone: obj, baseX: obj.rotation.x });
-      else {
-        if (obj.position.x < 0) leftLegs.push({ bone: obj, baseX: obj.rotation.x });
-        else rightLegs.push({ bone: obj, baseX: obj.rotation.x });
-      }
     } else if (name.includes('arm') || name.includes('shoulder')) {
       if (isLeft) leftArms.push({ bone: obj, baseX: obj.rotation.x });
       else if (isRight) rightArms.push({ bone: obj, baseX: obj.rotation.x });
@@ -116,14 +131,12 @@ function start3D() {
   renderer.domElement.style.touchAction = 'none';
   stage.prepend(renderer.domElement);
 
-  // سماء نهارية واضحة وأجواء صباحية
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x7dd3fc);
   scene.fog = new THREE.FogExp2(0xbae6fd, 0.0045);
 
   const camera = new THREE.PerspectiveCamera(52, 1, 0.1, 240);
 
-  // إضاءة الشمس والسماء
   const hemiLight = new THREE.HemisphereLight(0xe0f2fe, 0x4ade80, 1.05);
   scene.add(hemiLight);
 
@@ -133,7 +146,6 @@ function start3D() {
   sunLight.shadow.mapSize.set(1024, 1024);
   scene.add(sunLight);
 
-  // قرص الشمس في السماء
   const sunDisc = new THREE.Mesh(
     new THREE.SphereGeometry(2.6, 20, 20),
     new THREE.MeshBasicMaterial({ color: 0xfef08a })
@@ -141,7 +153,6 @@ function start3D() {
   sunDisc.position.set(28, 32, -45);
   scene.add(sunDisc);
 
-  // سحاب متحرك في السماء
   const clouds = [];
   const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
   const cloudCoords = [
@@ -175,7 +186,6 @@ function start3D() {
   composer.addPass(renderScene);
   composer.addPass(bloomPass);
 
-  // أرضية نهارية خضراء واسعة + ساحة خرسانية للمعمل
   const grassGround = new THREE.Mesh(
     new THREE.PlaneGeometry(220, 220),
     new THREE.MeshStandardMaterial({ color: 0x4ade80, roughness: 0.92 })
@@ -193,7 +203,6 @@ function start3D() {
   labYard.receiveShadow = true;
   scene.add(labYard);
 
-  // الشخصية + البالطو الأبيض
   const playerState = { x: 0, y: 0, z: 2.2, angle: Math.PI, speed: 4.6 };
   let characterModel = null;
   let mixer = null;
@@ -226,6 +235,14 @@ function start3D() {
     scene,
     getPlayerPos: () =>
       characterModel ? characterModel.position : new THREE.Vector3(playerState.x, playerState.y, playerState.z),
+    setPlayerPos: (nx, ny, nz) => {
+      playerState.x = nx;
+      playerState.y = ny;
+      playerState.z = nz;
+      if (characterModel) {
+        characterModel.position.set(nx, ny, nz);
+      }
+    },
     onToast: (msg) => toast(msg),
     onCoatChange: (equipped) => {
       coatEquipped = Boolean(equipped);
@@ -290,7 +307,6 @@ function start3D() {
     }
   );
 
-  // تحكم لمس متعدد منفصل
   let moveDir = { x: 0, y: 0 };
   let joystickPointerId = null;
   const joyZone = $('joystick-zone');
@@ -369,6 +385,7 @@ function start3D() {
 
   window.addEventListener('pointerup', releasePointer);
   window.addEventListener('pointercancel', releasePointer);
+  window.addEventListener('beforeunload', () => tycoon.saveProgress?.());
 
   function resize() {
     const w = stage.clientWidth;
@@ -383,40 +400,35 @@ function start3D() {
   resize();
 
   function updateLimbWalk(dt, moveAmount) {
+    if (!limbRig) return;
     const isMoving = moveAmount > 0.04;
     if (isMoving) {
-      walkPhase += dt * (9.5 + moveAmount * 6);
+      walkPhase += dt * (8 + moveAmount * 6);
     } else {
       walkPhase += (0 - walkPhase) * Math.min(1, dt * 10);
     }
 
-    const swing = isMoving ? Math.sin(walkPhase) * 0.72 * moveAmount : 0;
-    const kneeSwing = isMoving ? Math.max(0, -Math.cos(walkPhase)) * 0.62 * moveAmount : 0;
+    const swing = isMoving ? Math.sin(walkPhase) * 0.45 * moveAmount : 0;
+    const kneeSwing = isMoving ? Math.max(0, -Math.cos(walkPhase)) * 0.35 * moveAmount : 0;
 
-    const hasBones =
-      limbRig && (limbRig.leftLegs.length || limbRig.rightLegs.length || limbRig.lowerLegs.length);
-
-    if (hasBones) {
-      for (const item of limbRig.leftLegs) {
-        item.bone.rotation.x += (item.baseX + swing - item.bone.rotation.x) * Math.min(1, dt * 16);
-      }
-      for (const item of limbRig.rightLegs) {
-        item.bone.rotation.x += (item.baseX - swing - item.bone.rotation.x) * Math.min(1, dt * 16);
-      }
-      for (const item of limbRig.lowerLegs) {
-        item.bone.rotation.x += (item.baseX + kneeSwing - item.bone.rotation.x) * Math.min(1, dt * 16);
-      }
-      for (const item of limbRig.leftArms) {
-        item.bone.rotation.x += (item.baseX - swing * 0.55 - item.bone.rotation.x) * Math.min(1, dt * 14);
-      }
-      for (const item of limbRig.rightArms) {
-        item.bone.rotation.x += (item.baseX + swing * 0.55 - item.bone.rotation.x) * Math.min(1, dt * 14);
-      }
+    for (const item of limbRig.leftLegs) {
+      item.bone.rotation.x += (item.baseX + swing - item.bone.rotation.x) * Math.min(1, dt * 14);
+    }
+    for (const item of limbRig.rightLegs) {
+      item.bone.rotation.x += (item.baseX - swing - item.bone.rotation.x) * Math.min(1, dt * 14);
+    }
+    for (const item of limbRig.lowerLegs) {
+      item.bone.rotation.x += (item.baseX + kneeSwing - item.bone.rotation.x) * Math.min(1, dt * 14);
+    }
+    for (const item of limbRig.leftArms) {
+      item.bone.rotation.x += (item.baseX - swing * 0.45 - item.bone.rotation.x) * Math.min(1, dt * 12);
+    }
+    for (const item of limbRig.rightArms) {
+      item.bone.rotation.x += (item.baseX + swing * 0.45 - item.bone.rotation.x) * Math.min(1, dt * 12);
     }
   }
 
   const clock = new THREE.Clock();
-  let hudT = 0;
 
   function frame() {
     const dt = Math.min(clock.getDelta(), 0.1);
@@ -454,13 +466,11 @@ function start3D() {
       playerState.y = Math.max(floorHeightY, playerState.y - 14 * dt);
     }
 
-    const stepBob = isMoving ? Math.abs(Math.sin(walkPhase)) * 0.045 * stickMag : 0;
-
     if (characterModel) {
-      characterModel.position.set(playerState.x, playerState.y + stepBob, playerState.z);
+      characterModel.position.set(playerState.x, playerState.y, playerState.z);
       characterModel.rotation.y = playerState.angle;
     } else if (coatEquipped) {
-      labCoatMesh.position.set(playerState.x, playerState.y + stepBob + 0.85, playerState.z);
+      labCoatMesh.position.set(playerState.x, playerState.y + 0.85, playerState.z);
     }
 
     if (mixer) {
@@ -489,11 +499,6 @@ function start3D() {
     camera.lookAt(playerState.x, playerState.y + 1.25, playerState.z);
 
     composer.render();
-    hudT += dt;
-    if (hudT > 0.15) {
-      hudT = 0;
-      if ($('hud-temp')) $('hud-temp').textContent = Math.round(25 + ctl.heat * 50);
-    }
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
